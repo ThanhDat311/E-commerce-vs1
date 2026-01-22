@@ -22,9 +22,9 @@ class CartService
     public function getCartDetails(): array
     {
         $sessionCart = $this->getCart();
+        // Lấy danh sách ID từ keys của mảng session
         $productIds = array_keys($sessionCart);
 
-        // Nếu giỏ hàng trống, return sớm để tránh lỗi query
         if (empty($productIds)) {
             return [
                 'cartItems' => [],
@@ -38,25 +38,25 @@ class CartService
 
         $cartItems = [];
         $subTotal = 0;
-        $shipping = 3.00;
+        $shipping = 3.00; // Phí ship cố định (có thể tách ra config)
 
-       foreach ($products as $product) {
+        foreach ($products as $product) {
             $id = $product->id;
-            
+
+            // Lấy quantity từ session, fallback = 1
             $quantity = $sessionCart[$id]['quantity'] ?? 1;
 
-            $lineTotal = $product->price * $quantity;
-            $subTotal += $lineTotal;
+            $subtotal = $product->price * $quantity;
+            $subTotal += $subtotal;
 
-            // [FIXED] PHẢI DÙNG $cartItems[$id] (Dùng ID làm Key)
-            // Thay vì $cartItems[] (Dùng số thứ tự 0,1,2 làm Key)
-            $cartItems[$id] = [ 
-                'id'       => $product->id,
-                'name'     => $product->name,
-                'quantity' => $quantity,
-                'price'    => $product->price,
-                'image'    => $product->image_url ?? 'img/product-1.png', 
-                'model'    => $product->sku ?? 'N/A',
+            // Tạo mảng item theo cấu trúc yêu cầu
+            $cartItems[] = [
+                'id'        => $product->id,
+                'name'      => $product->name,
+                'price'     => $product->price,
+                'image_url' => $product->image_url ?? 'img/product-1.png',
+                'quantity'  => $quantity,
+                'subtotal'  => $subtotal
             ];
         }
 
@@ -78,7 +78,7 @@ class CartService
         $cart = $this->getCart();
 
         if (isset($cart[$productId])) {
-           $cart[$productId]['quantity'] += $quantity;
+            $cart[$productId]['quantity'] += $quantity;
         } else {
             $cart[$productId] = [
                 'id' => $productId,
@@ -91,6 +91,49 @@ class CartService
         return ['status' => true, 'message' => 'Product added to cart successfully!'];
     }
 
+    // [NEW] Method cập nhật số lượng (Dùng cho AJAX Update)
+    public function updateQuantity($id, $quantity)
+    {
+        $cart = $this->getCart();
+
+        if (!isset($cart[$id])) {
+            throw new \Exception("Product not found in cart");
+        }
+
+        if ($quantity < 1) {
+            throw new \Exception("Quantity must be at least 1");
+        }
+
+        // Kiểm tra tồn kho thực tế (Optional - Recommended)
+        $product = $this->productRepository->find($id);
+        if ($product && $quantity > $product->stock_quantity) {
+            throw new \Exception("Only {$product->stock_quantity} items left in stock");
+        }
+
+        // Cập nhật session
+        $cart[$id]['quantity'] = $quantity;
+        Session::put('cart', $cart);
+
+        // Tính toán lại tổng tiền để trả về cho Frontend
+        $newData = $this->getCartDetails();
+
+        // Tìm item trong cartItems theo id
+        $itemTotal = 0;
+        foreach ($newData['cartItems'] as $item) {
+            if ($item['id'] == $id) {
+                $itemTotal = $item['subtotal'];
+                break;
+            }
+        }
+
+        return [
+            'success'    => true,
+            'item_total' => $itemTotal,
+            'cart_total' => $newData['total'],
+            'message'    => 'Cart updated successfully'
+        ];
+    }
+
     public function removeFromCart(int $id): void
     {
         $cart = $this->getCart();
@@ -99,7 +142,7 @@ class CartService
             Session::put('cart', $cart);
         }
     }
-    
+
     public function clearCart(): void
     {
         Session::forget('cart');

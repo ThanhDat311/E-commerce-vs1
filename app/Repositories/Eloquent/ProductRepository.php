@@ -93,8 +93,10 @@ class ProductRepository implements ProductRepositoryInterface
 
     public function getProductDetails(int $id)
     {
-        // Eager load category và reviews ngay lập tức để tránh N+1
-        return $this->model->with(['category', 'reviews.user'])->findOrFail($id);
+        // Eager load category, reviews và tính average rating ngay lập tức để tránh N+1
+        return $this->model->with(['category', 'reviews.user'])
+            ->withAvg('ratings', 'rating')
+            ->findOrFail($id);
     }
 
     public function getRelatedProducts($currentProduct, int $limit = 4)

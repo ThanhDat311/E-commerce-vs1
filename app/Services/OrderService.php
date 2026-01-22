@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\AiFeatureStore;
 use App\Models\Product;
 use App\Services\Payment\PaymentFactory;
-use App\Models\OrderHistory; 
+use App\Models\OrderHistory;
 
 use Exception;
 
@@ -68,32 +68,32 @@ class OrderService
             // 2. Lock: Khóa dòng dữ liệu trong DB (lockForUpdate)
             // 3. Decrement: Trừ tồn kho
             // 4. Rollback: Nếu lỗi, hoàn tác toàn bộ Transaction
-            
+
             foreach ($cartItems as $item) {
                 $productId = $item['id'];
                 $requestedQuantity = $item['quantity'];
-                
+
                 // Get product via Repository (Clean Architecture)
                 $product = $this->productRepository->find($productId);
-                
+
                 if (!$product) {
                     throw new Exception("Product #{$productId} not found");
                 }
-                
+
                 // Lock product row for update (tránh race condition)
                 // Note: lockForUpdate() must be called within transaction
                 $product = Product::where('id', $productId)
                     ->lockForUpdate()
                     ->first();
-                
+
                 // Check stock availability
                 if ($product->stock_quantity < $requestedQuantity) {
                     throw new Exception(
                         "Insufficient stock for product: {$product->name}. " .
-                        "Available: {$product->stock_quantity}, Requested: {$requestedQuantity}"
+                            "Available: {$product->stock_quantity}, Requested: {$requestedQuantity}"
                     );
                 }
-                
+
                 // Decrement stock (atomic operation within transaction)
                 $product->stock_quantity -= $requestedQuantity;
                 $product->save();
@@ -191,12 +191,12 @@ class OrderService
         try {
             // Update trạng thái thanh toán
             $order->payment_status = 'paid';
-            
+
             // Có thể update luôn trạng thái đơn hàng nếu muốn
             if ($order->order_status === 'pending') {
                 $order->order_status = 'processing';
             }
-            
+
             $order->save();
 
             // Ghi lịch sử đơn hàng
@@ -212,11 +212,91 @@ class OrderService
             DB::commit();
 
             return $verificationResult;
-
         } catch (Exception $e) {
             DB::rollBack();
             Log::error("Payment Callback DB Error: " . $e->getMessage());
             throw $e;
+        }
+    }
+
+    // Thêm vào trong class OrderService
+
+    /**
+     * Xử lý hủy đơn hàng từ phía Customer
+     * * @param int $orderId
+     * @param int $userId
+     * @param string|null $reason
+     * @return Order
+     * @throws Exception
+     */
+    public function cancelOrder(int $orderId, int $userId, ?string $reason = '')
+    {
+        DB::beginTransaction();
+
+        try {
+            // 1. Tìm đơn hàng (Sử dụng Repository hoặc Eloquent trực tiếp nếu cần eager load)
+            // Ở đây dùng Eloquent để tiện load items và relationship
+            $order = \App\Models\Order::with('items')->find($orderId);
+
+            if (!$order) {
+                throw new Exception("Order not found.");
+            }
+
+            // 2. Security Check: Đảm bảo chính chủ mới được hủy
+            if ($order->user_id !== $userId) {
+                throw new Exception("Unauthorized access to this order.");
+            }
+
+            // 3. State Check: Chỉ cho phép hủy khi đang 'pending'
+            // Nếu đã 'processing' (đang đóng gói) hoặc 'shipped' thì không được hủy
+            if ($order->order_status !== 'pending') {
+                throw new Exception("Cannot cancel order in '{$order->order_status}' state.");
+            }
+
+            // 4. INVENTORY RESTOCK (Quan trọng: Hoàn kho)
+            foreach ($order->items as $item) {
+                $product = $this->productRepository->find($item->product_id);
+
+                if ($product) {
+                    // Lock row để update an toàn
+                    $product = \App\Models\Product::where('id', $item->product_id)
+                        ->lockForUpdate()
+                        ->first();
+
+                    // Cộng lại số lượng tồn kho
+                    $product->stock_quantity += $item->quantity;
+                    $product->save();
+                }
+            }
+
+            // 5. Cập nhật trạng thái đơn hàng
+            $order->order_status = 'cancelled';
+
+            // Nếu đã thanh toán online (VNPay) nhưng chưa ship -> Cần quy trình Refund (Ở đây tạm đánh dấu logic)
+            // if ($order->payment_status === 'paid') { ...trigger refund logic... }
+
+            $order->save();
+
+            // 6. Ghi lịch sử (Audit Log)
+            if (class_exists(\App\Models\OrderHistory::class)) {
+                \App\Models\OrderHistory::create([
+                    'order_id'    => $order->id,
+                    'user_id'     => $userId,
+                    'action'      => 'Order Cancelled',
+                    'description' => "Customer cancelled order. Reason: " . ($reason ?? 'No reason provided')
+                ]);
+            }
+
+            // 7. Gửi Email (Optional - Uncomment nếu đã setup Mail Queue)
+            // Mail::to($order->email)->queue(new \App\Mail\Order\OrderCancelledMail($order));
+
+            DB::commit();
+
+            return $order;
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error("Order Cancellation Failed: " . $e->getMessage());
+            throw $e; // Ném lỗi ra để Controller bắt
         }
     }
 }

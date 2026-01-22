@@ -30,10 +30,11 @@ class ShopController extends Controller
         return view('shop', compact('products', 'categories', 'colors', 'featuredProducts'));
     }
 
-    public function show($id)
+    public function show(\App\Models\Product $product)
     {
-        // 1. Lấy chi tiết sản phẩm (chỉ 1 query Eager Loading)
-        $product = $this->productRepository->getProductDetails($id);
+        // 1. Eager load các relations và tính average rating (tối ưu query)
+        $product->load(['category', 'reviews.user']);
+        $product->loadAvg('ratings', 'rating');
 
         // 2. Lấy sản phẩm liên quan
         $relatedProducts = $this->productRepository->getRelatedProducts($product);

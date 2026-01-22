@@ -15,7 +15,7 @@ use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OrderController;
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
 
 // ====================================================
 // PUBLIC ROUTES (Khách vãng lai có thể truy cập)
@@ -25,7 +25,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // [FIX QUAN TRỌNG] Đổi name thành 'shop.index' để khớp với Sidebar Filter
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
-Route::get('/product/{id}', [ShopController::class, 'show'])->name('product.detail');
+Route::get('/product/{product}', [ShopController::class, 'show'])->name('product.detail');
 
 // Route nhận kết quả từ VNPay
 Route::get('/payment/vnpay/callback', [PaymentController::class, 'vnpayCallback'])->name('payment.vnpay.callback');
@@ -37,7 +37,7 @@ Route::group(['prefix' => 'cart', 'as' => 'cart.'], function () {
     Route::get('/', [CartController::class, 'index'])->name('index');
     Route::get('/add/{id}', [CartController::class, 'addToCart'])->name('add');
     Route::get('/remove/{id}', [CartController::class, 'removeFromCart'])->name('remove');
-    Route::get('/update/{id}', [CartController::class, 'updateCart'])->name('update');
+    Route::patch('/update/{id}', [CartController::class, 'updateCart'])->name('update');
     Route::get('/clear', [CartController::class, 'clearCart'])->name('clear');
     Route::get('/checkout', function () {
         return redirect()->route('checkout.index');
@@ -49,7 +49,7 @@ Route::group(['prefix' => 'cart', 'as' => 'cart.'], function () {
 // AUTHENTICATED ROUTES (Phải đăng nhập mới vào được)
 // ====================================================
 Route::middleware(['auth', 'verified'])->group(function () {
-    
+
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
@@ -77,10 +77,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->group(function () {
 
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
-
-    // Resource Controller
+    
+    // ... Các route Resource khác (products, categories, users)
     Route::resource('products', AdminProductController::class);
     Route::resource('categories', AdminCategoryController::class);
+    Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
+
+    // ====================================================
+    // [START] THÊM ĐOẠN NÀY VÀO ĐÂY
+    // ====================================================
+    Route::controller(\App\Http\Controllers\Admin\ReportController::class)
+        ->prefix('reports')
+        ->name('reports.')
+        ->group(function () {
+            Route::get('/revenue', 'revenue')->name('revenue');           // -> route('admin.reports.revenue')
+            Route::get('/top-products', 'topProducts')->name('top_products');
+            Route::get('/low-stock', 'lowStock')->name('low_stock');
+        });
 
     // Custom Order Routes cho Admin
     Route::controller(AdminOrderController::class)->prefix('orders')->name('orders.')->group(function () {
@@ -126,6 +139,16 @@ Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'role:vendor'])->g
     });
 });
 
+
+// Address Management Routes
+Route::group(['prefix' => 'my-addresses', 'as' => 'addresses.'], function () {
+    Route::get('/', [App\Http\Controllers\Customer\AddressController::class, 'index'])->name('index');
+    Route::post('/', [App\Http\Controllers\Customer\AddressController::class, 'store'])->name('store');
+    Route::put('/{address}', [App\Http\Controllers\Customer\AddressController::class, 'update'])->name('update');
+    Route::delete('/{address}', [App\Http\Controllers\Customer\AddressController::class, 'destroy'])->name('destroy');
+    Route::post('/{address}/default', [App\Http\Controllers\Customer\AddressController::class, 'setDefault'])->name('default');
+});
+
 // ====================================================
 // API ROUTES (JSON responses for admin panels)
 // ====================================================
@@ -141,6 +164,14 @@ Route::middleware(['auth'])->prefix('api')->name('api.')->group(function () {
         Route::put('/{order}/status', 'updateStatus')->name('update-status');
     });
 });
+
+// User Orders History
+Route::get('/my-orders', [App\Http\Controllers\OrderController::class, 'index'])->name('orders.index');
+Route::get('/my-orders/{order}', [App\Http\Controllers\OrderController::class, 'show'])->name('orders.show');
+
+// [NEW] Order Cancellation Route
+Route::post('/my-orders/{order}/cancel', \App\Http\Controllers\Customer\OrderCancellationController::class)
+    ->name('orders.cancel');
 
 // Test route for CSRF token
 Route::get('/test-csrf', function () {
@@ -162,7 +193,7 @@ Route::get('/debug-session', function () {
     if (!config('app.debug')) {
         abort(404);
     }
-    
+
     return response()->json([
         'session_id' => session()->getId(),
         'session_data' => session()->all(),

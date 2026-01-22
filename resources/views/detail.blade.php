@@ -53,16 +53,33 @@
 
                         {{-- Rating Stars (Dynamic) --}}
                         <div class="d-flex mb-4">
-                            @php $rating = $product->averageRating() ?? 5; @endphp
-                            @for($i = 0; $i < 5; $i++)
-                                <i class="fa fa-star {{ $i < $rating ? 'text-secondary' : '' }}"></i>
-                                @endfor
-                                <span class="ms-2 text-muted">({{ $product->reviews->count() }} reviews)</span>
+                            @php 
+                                $rating = $product->ratings_avg_rating ?? ($product->averageRating() ?? 0);
+                                $rating = round($rating, 1);
+                            @endphp
+                            @for($i = 1; $i <= 5; $i++)
+                                @if($i <= floor($rating))
+                                    <i class="fa fa-star text-warning"></i>
+                                @elseif($i - 0.5 <= $rating)
+                                    <i class="fa fa-star-half-alt text-warning"></i>
+                                @else
+                                    <i class="fa fa-star text-secondary"></i>
+                                @endif
+                            @endfor
+                            <span class="ms-2 text-muted">({{ $rating > 0 ? $rating : 'N/A' }}) - {{ $product->reviews->count() }} reviews</span>
                         </div>
 
                         <div class="d-flex flex-column mb-3">
                             <small>SKU: <span class="text-muted">{{ $product->sku ?? 'N/A' }}</span></small>
-                            <small>Stock: <strong class="text-success">In Stock ({{ $product->stock_quantity ?? 'Unchecked' }})</strong></small>
+                            @php 
+                                $stockQuantity = $product->stock_quantity ?? 0;
+                                $isInStock = $stockQuantity > 0;
+                            @endphp
+                            <small>Stock: 
+                                <strong class="{{ $isInStock ? 'text-success' : 'text-danger' }}">
+                                    {{ $isInStock ? 'In Stock' : 'Out of Stock' }} ({{ $stockQuantity }})
+                                </strong>
+                            </small>
                         </div>
 
                         <p class="mb-4 text-muted">
@@ -71,10 +88,16 @@
 
                         {{-- FORM ADD TO CART VỚI SỐ LƯỢNG --}}
                         <div class="d-flex align-items-center mb-4">
+                            @php 
+                                $stockQuantity = $product->stock_quantity ?? 0;
+                                $isInStock = $stockQuantity > 0;
+                                $maxQuantity = min($stockQuantity, 999);
+                            @endphp
                             <div class="input-group quantity me-3" style="width: 130px;">
                                 {{-- NÚT TRỪ: Giữ class 'btn-minus' để main.js làm việc --}}
                                 <div class="input-group-btn">
-                                    <button class="btn btn-sm btn-minus rounded-circle bg-light border">
+                                    <button class="btn btn-sm btn-minus rounded-circle bg-light border {{ !$isInStock ? 'disabled' : '' }}" 
+                                        {{ !$isInStock ? 'disabled' : '' }}>
                                         <i class="fa fa-minus"></i>
                                     </button>
                                 </div>
@@ -83,21 +106,30 @@
                                 <input type="text"
                                     id="product-quantity"
                                     class="form-control form-control-sm text-center border-0"
-                                    value="1">
+                                    value="{{ $isInStock ? '1' : '0' }}"
+                                    max="{{ $maxQuantity }}"
+                                    {{ !$isInStock ? 'readonly' : '' }}>
 
                                 {{-- NÚT CỘNG: Giữ class 'btn-plus' để main.js làm việc --}}
                                 <div class="input-group-btn">
-                                    <button class="btn btn-sm btn-plus rounded-circle bg-light border">
+                                    <button class="btn btn-sm btn-plus rounded-circle bg-light border {{ !$isInStock ? 'disabled' : '' }}" 
+                                        {{ !$isInStock ? 'disabled' : '' }}>
                                         <i class="fa fa-plus"></i>
                                     </button>
                                 </div>
                             </div>
 
                             {{-- NÚT ADD TO CART --}}
-                            <a href="javascript:void(0);" onclick="addToCartWithQty({{ $product->id }})"
-                                class="btn btn-primary border border-secondary rounded-pill px-4 py-2 text-white">
-                                <i class="fa fa-shopping-bag me-2"></i> Add to cart
-                            </a>
+                            @if($isInStock)
+                                <a href="javascript:void(0);" onclick="addToCartWithQty({{ $product->id }})"
+                                    class="btn btn-primary border border-secondary rounded-pill px-4 py-2 text-white">
+                                    <i class="fa fa-shopping-bag me-2"></i> Add to cart
+                                </a>
+                            @else
+                                <button class="btn btn-secondary border border-secondary rounded-pill px-4 py-2 text-white" disabled>
+                                    <i class="fa fa-ban me-2"></i> Out of Stock
+                                </button>
+                            @endif
                         </div>
                     </div>
 

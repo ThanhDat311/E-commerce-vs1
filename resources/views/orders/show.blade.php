@@ -16,30 +16,30 @@
     <div class="container py-5">
         {{-- Order Status Alert --}}
         @if($order->order_status === 'pending')
-            <div class="alert alert-warning mb-4">
-                <i class="fas fa-clock me-2"></i>
-                <strong>Order Status:</strong> Your order is pending and will be processed soon.
-            </div>
+        <div class="alert alert-warning mb-4">
+            <i class="fas fa-clock me-2"></i>
+            <strong>Order Status:</strong> Your order is pending and will be processed soon.
+        </div>
         @elseif($order->order_status === 'processing')
-            <div class="alert alert-info mb-4">
-                <i class="fas fa-cog me-2"></i>
-                <strong>Order Status:</strong> Your order is being processed.
-            </div>
+        <div class="alert alert-info mb-4">
+            <i class="fas fa-cog me-2"></i>
+            <strong>Order Status:</strong> Your order is being processed.
+        </div>
         @elseif($order->order_status === 'shipped')
-            <div class="alert alert-primary mb-4">
-                <i class="fas fa-shipping-fast me-2"></i>
-                <strong>Order Status:</strong> Your order has been shipped.
-            </div>
+        <div class="alert alert-primary mb-4">
+            <i class="fas fa-shipping-fast me-2"></i>
+            <strong>Order Status:</strong> Your order has been shipped.
+        </div>
         @elseif($order->order_status === 'completed')
-            <div class="alert alert-success mb-4">
-                <i class="fas fa-check-circle me-2"></i>
-                <strong>Order Status:</strong> Your order has been completed. Thank you for your purchase!
-            </div>
+        <div class="alert alert-success mb-4">
+            <i class="fas fa-check-circle me-2"></i>
+            <strong>Order Status:</strong> Your order has been completed. Thank you for your purchase!
+        </div>
         @elseif($order->order_status === 'cancelled')
-            <div class="alert alert-danger mb-4">
-                <i class="fas fa-times-circle me-2"></i>
-                <strong>Order Status:</strong> Your order has been cancelled.
-            </div>
+        <div class="alert alert-danger mb-4">
+            <i class="fas fa-times-circle me-2"></i>
+            <strong>Order Status:</strong> Your order has been cancelled.
+        </div>
         @endif
 
         <div class="row">
@@ -68,20 +68,20 @@
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 @if($item->product && $item->product->image_url)
-                                                    <img src="{{ asset($item->product->image_url) }}" 
-                                                         alt="{{ $item->product_name }}" 
-                                                         class="me-3 rounded" 
-                                                         style="width: 60px; height: 60px; object-fit: cover;">
+                                                <img src="{{ asset($item->product->image_url) }}"
+                                                    alt="{{ $item->product_name }}"
+                                                    class="me-3 rounded"
+                                                    style="width: 60px; height: 60px; object-fit: cover;">
                                                 @else
-                                                    <img src="{{ asset('img/no-image.png') }}" 
-                                                         alt="No image" 
-                                                         class="me-3 rounded" 
-                                                         style="width: 60px; height: 60px; object-fit: cover;">
+                                                <img src="{{ asset('img/no-image.png') }}"
+                                                    alt="No image"
+                                                    class="me-3 rounded"
+                                                    style="width: 60px; height: 60px; object-fit: cover;">
                                                 @endif
                                                 <div>
                                                     <h6 class="mb-0">{{ $item->product_name }}</h6>
                                                     @if($item->product)
-                                                        <small class="text-muted">SKU: {{ $item->product->sku ?? 'N/A' }}</small>
+                                                    <small class="text-muted">SKU: {{ $item->product->sku ?? 'N/A' }}</small>
                                                     @endif
                                                 </div>
                                             </div>
@@ -118,8 +118,8 @@
                             @foreach($order->histories->sortByDesc('created_at') as $history)
                             <div class="d-flex mb-3">
                                 <div class="flex-shrink-0">
-                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" 
-                                         style="width: 40px; height: 40px;">
+                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
+                                        style="width: 40px; height: 40px;">
                                         <i class="fas fa-check"></i>
                                     </div>
                                 </div>
@@ -222,9 +222,22 @@
                         <i class="fas fa-arrow-left me-2"></i>Back to Orders
                     </a>
                     @if($order->order_status === 'pending')
-                    <button type="button" class="btn btn-outline-danger" onclick="confirmCancel()">
-                        <i class="fas fa-times me-2"></i>Cancel Order
-                    </button>
+                    <div class="mt-4 border-t pt-4">
+                        <h4 class="text-lg font-medium text-red-600">Danger Zone</h4>
+                        <p class="text-sm text-gray-500 mb-2">Do you want to cancel this order?</p>
+
+                        <form action="{{ route('orders.cancel', $order->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this order? This action cannot be undone.');">
+                            @csrf
+
+                            <div class="mb-3">
+                                <input type="text" name="reason" placeholder="Reason for cancellation (optional)" class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm w-full md:w-1/2">
+                            </div>
+
+                            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                                Cancel Order
+                            </button>
+                        </form>
+                    </div>
                     @endif
                 </div>
             </div>
@@ -234,12 +247,12 @@
 
 @if($order->order_status === 'pending')
 <script>
-function confirmCancel() {
-    if (confirm('Are you sure you want to cancel this order?')) {
-        // TODO: Implement cancel order functionality
-        alert('Cancel order functionality will be implemented soon.');
+    function confirmCancel() {
+        if (confirm('Are you sure you want to cancel this order?')) {
+            // TODO: Implement cancel order functionality
+            alert('Cancel order functionality will be implemented soon.');
+        }
     }
-}
 </script>
 @endif
 @endsection

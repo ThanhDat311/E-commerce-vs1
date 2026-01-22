@@ -53,7 +53,11 @@
                                                 <i class="fa fa-minus"></i>
                                             </button>
                                         </div>
-                                        <input type="text" class="form-control form-control-sm text-center border-0" value="{{ $item['quantity'] }}">
+                                        <input type="number"
+                                            class="form-control form-control-sm text-center border-0 quantity-input"
+                                            value="{{ $item['quantity'] }}"
+                                            min="1"
+                                            data-id="{{ $id }}">
                                         <div class="input-group-btn">
                                             <button class="btn btn-sm btn-plus rounded-circle bg-light border">
                                                 <i class="fa fa-plus"></i>
@@ -138,3 +142,69 @@
     </div>
 </div>
 @endsection
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Chọn tất cả input có class .quantity-input
+        const quantityInputs = document.querySelectorAll('.quantity-input');
+
+        quantityInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                const productId = this.dataset.id;
+                const quantity = this.value;
+                const url = "{{ route('cart.update', ':id') }}".replace(':id', productId);
+
+                // Reset styling lỗi nếu có
+                this.classList.remove('is-invalid');
+
+                fetch(url, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json' // Bắt buộc để Laravel trả về JSON lỗi
+                        },
+                        body: JSON.stringify({
+                            quantity: quantity
+                        })
+                    })
+                    .then(async response => {
+                        const data = await response.json();
+
+                        // Xử lý lỗi 422 (Validation Error)
+                        if (!response.ok) {
+                            if (response.status === 422) {
+                                // Hiển thị thông báo lỗi cụ thể từ Laravel
+                                const errorMsg = data.errors?.quantity ? data.errors.quantity[0] : data.message;
+                                alert(errorMsg);
+                                // Hoặc thêm class đỏ vào input
+                                this.classList.add('is-invalid');
+                                // Reset lại số lượng cũ (tùy chọn)
+                                // location.reload(); 
+                            } else {
+                                alert(data.message || 'Error updating cart');
+                            }
+                            return; // Dừng xử lý
+                        }
+
+                        // Nếu thành công (response.ok)
+                        if (data.success) {
+                            // Cập nhật giao diện giá tiền
+                            const itemTotalEl = document.querySelector(`#item-total-${productId}`);
+                            const cartTotalEl = document.querySelector('#cart-total');
+
+                            if (itemTotalEl) itemTotalEl.innerText = '$' + new Intl.NumberFormat('en-US').format(data.item_total);
+                            if (cartTotalEl) cartTotalEl.innerText = '$' + new Intl.NumberFormat('en-US').format(data.cart_total);
+
+                            // Hiển thị Toast hoặc thông báo nhỏ (Optional)
+                            // console.log('Updated successfully');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Something went wrong. Please check console.');
+                    });
+            });
+        });
+    });
+</script>

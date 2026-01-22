@@ -41,8 +41,15 @@
                                     <input type="tel" class="form-control form-control-lg" name="phone" value="{{ old('phone', Auth::user()->phone ?? '') }}" placeholder="0901234567" required>
                                 </div>
                                 <div class="col-12">
-                                    <label class="form-label required fw-bold">Địa chỉ nhận hàng</label>
-                                    <input type="text" class="form-control form-control-lg" name="address" value="{{ old('address', Auth::user()->address ?? '') }}" placeholder="Số nhà, đường, phường/xã..." required>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <label class="form-label required fw-bold mb-0">Địa chỉ nhận hàng</label>
+                                        @auth
+                                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addressModal">
+                                            <i class="fas fa-map-marker-alt me-1"></i> Chọn địa chỉ đã lưu
+                                        </button>
+                                        @endauth
+                                    </div>
+                                    <input type="text" class="form-control form-control-lg" id="address" name="address" value="{{ old('address', Auth::user()->address ?? '') }}" placeholder="Số nhà, đường, phường/xã..." required>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label fw-bold">Ghi chú đơn hàng (Tùy chọn)</label>
@@ -123,6 +130,75 @@
     </div>
 </div>
 
+<!-- Modal chọn địa chỉ -->
+@auth
+<div class="modal fade" id="addressModal" tabindex="-1" aria-labelledby="addressModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addressModalLabel">
+                    <i class="fas fa-map-marker-alt me-2 text-primary"></i> Chọn địa chỉ giao hàng
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @php
+                    $userAddresses = Auth::user()->addresses ?? collect();
+                @endphp
+                @if($userAddresses->count() > 0)
+                    <div class="list-group" id="addressList">
+                        @foreach($userAddresses as $address)
+                            <button type="button" 
+                                    class="list-group-item list-group-item-action address-item p-3 mb-2 border rounded" 
+                                    data-address-id="{{ $address->id }}"
+                                    data-recipient-name="{{ $address->recipient_name }}"
+                                    data-phone="{{ $address->phone_contact }}"
+                                    data-address-line="{{ $address->address_line1 }}"
+                                    data-city="{{ $address->city ?? '' }}"
+                                    data-country="{{ $address->country ?? '' }}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <h6 class="mb-0 fw-bold">{{ $address->recipient_name }}</h6>
+                                            @if($address->is_default)
+                                                <span class="badge bg-primary ms-2">Mặc định</span>
+                                            @endif
+                                        </div>
+                                        <p class="mb-1 text-muted small">
+                                            <i class="fas fa-phone me-1"></i> {{ $address->phone_contact }}
+                                        </p>
+                                        <p class="mb-0 text-dark">
+                                            <i class="fas fa-map-marker-alt me-1 text-danger"></i> 
+                                            {{ $address->address_line1 }}
+                                            @if($address->city)
+                                                , {{ $address->city }}
+                                            @endif
+                                            @if($address->country)
+                                                , {{ $address->country }}
+                                            @endif
+                                        </p>
+                                    </div>
+                                    <i class="fas fa-check-circle text-primary ms-3" style="font-size: 1.5rem; opacity: 0;"></i>
+                                </div>
+                            </button>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="text-center py-5">
+                        <i class="fas fa-map-marker-alt text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-3">Bạn chưa có địa chỉ nào được lưu.</p>
+                        <p class="text-muted small">Vui lòng nhập thông tin địa chỉ bên dưới.</p>
+                    </div>
+                @endif
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+@endauth
+
 <style>
     /* CSS Tùy chỉnh nhỏ để giao diện đẹp hơn */
     .cursor-pointer { cursor: pointer; }
@@ -130,5 +206,86 @@
     .hover-scale { transition: transform 0.2s; }
     .hover-scale:hover { transform: scale(1.02); }
     .form-check-input:checked { background-color: #0d6efd; border-color: #0d6efd; }
+    
+    /* Address selection styles */
+    .address-item {
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .address-item:hover {
+        background-color: #f8f9fa;
+        border-color: #0d6efd !important;
+    }
+    .address-item.selected {
+        background-color: #e7f3ff;
+        border-color: #0d6efd !important;
+    }
+    .address-item.selected .fa-check-circle {
+        opacity: 1 !important;
+    }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const addressItems = document.querySelectorAll('.address-item');
+    const addressModal = document.getElementById('addressModal');
+    
+    addressItems.forEach(item => {
+        item.addEventListener('click', function() {
+            // Remove selected class from all items
+            addressItems.forEach(addr => addr.classList.remove('selected'));
+            
+            // Add selected class to clicked item
+            this.classList.add('selected');
+            
+            // Get address data
+            const recipientName = this.getAttribute('data-recipient-name') || '';
+            const phone = this.getAttribute('data-phone') || '';
+            const addressLine = this.getAttribute('data-address-line') || '';
+            const city = this.getAttribute('data-city') || '';
+            const country = this.getAttribute('data-country') || '';
+            
+            // Split recipient name into first and last name
+            const nameParts = recipientName.trim().split(/\s+/);
+            const firstName = nameParts.length > 1 ? nameParts.slice(0, -1).join(' ') : nameParts[0] || '';
+            const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+            
+            // Auto-fill form fields
+            const firstNameInput = document.querySelector('input[name="first_name"]');
+            const lastNameInput = document.querySelector('input[name="last_name"]');
+            const phoneInput = document.querySelector('input[name="phone"]');
+            const addressInput = document.getElementById('address');
+            
+            if (firstNameInput && firstName) {
+                firstNameInput.value = firstName;
+            }
+            if (lastNameInput && lastName) {
+                lastNameInput.value = lastName;
+            }
+            if (phoneInput && phone) {
+                phoneInput.value = phone;
+            }
+            if (addressInput && addressLine) {
+                // Combine address line, city, and country
+                let fullAddress = addressLine;
+                if (city) {
+                    fullAddress += ', ' + city;
+                }
+                if (country) {
+                    fullAddress += ', ' + country;
+                }
+                addressInput.value = fullAddress;
+            }
+            
+            // Close modal after a short delay for better UX
+            setTimeout(() => {
+                const modal = bootstrap.Modal.getInstance(addressModal);
+                if (modal) {
+                    modal.hide();
+                }
+            }, 300);
+        });
+    });
+});
+</script>
 @endsection

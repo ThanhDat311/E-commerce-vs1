@@ -6,7 +6,8 @@ use App\Services\CartService;
 use App\Services\OrderService;
 use Illuminate\Http\Request;
 use App\Http\Requests\CheckoutRequest;
-use Illuminate\Support\Facades\Auth; // Đảm bảo có dòng này
+use App\Http\Requests\Cart\UpdateCartRequest; // Import Request validate
+use Illuminate\Support\Facades\Auth;
 
 class CartController extends Controller
 {
@@ -25,9 +26,11 @@ class CartController extends Controller
         return view('cart', $data);
     }
 
+    // [UPDATED] Theo yêu cầu của bạn
     public function addToCart(Request $request, $id)
     {
         $quantity = $request->input('quantity', 1);
+        // Cast int để đảm bảo an toàn dữ liệu
         $result = $this->cartService->addToCart($id, (int)$quantity);
 
         if (!$result['status']) {
@@ -35,6 +38,26 @@ class CartController extends Controller
         }
 
         return redirect()->back()->with('success', $result['message']);
+    }
+
+    // [NEW] Method xử lý cập nhật số lượng (AJAX)
+    public function updateCart(UpdateCartRequest $request, $id)
+    {
+        try {
+            // Lấy quantity đã validate
+            $quantity = $request->input('quantity');
+
+            // Gọi Service
+            $result = $this->cartService->updateQuantity($id, (int)$quantity);
+
+            // Trả về JSON cho Frontend
+            return response()->json($result);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 400); // Bad Request
+        }
     }
 
     public function remove($id)

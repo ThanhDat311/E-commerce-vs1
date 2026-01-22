@@ -13,12 +13,13 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name',
-        'email',
-        'password',
-        'role_id',
-        'status',
-        'phone',
-        'address',
+    'email',
+    'password',
+    'role_id',      // Dùng role_id để phân quyền
+    'phone_number', // Giữ cái này (đã có sẵn trong DB)
+    'address',      // [NEW] Thêm trường này
+    'is_active',
+    'email_verified_at',
     ];
 
     protected $hidden = [
@@ -26,11 +27,11 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    public function role()
+    public function assignedRole()
     {
-        return $this->belongsTo(Role::class);
+        return $this->belongsTo(Role::class, 'role_id');
     }
-
+    
     public function addresses()
     {
         return $this->hasMany(Address::class);

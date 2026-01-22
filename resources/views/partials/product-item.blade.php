@@ -5,10 +5,8 @@
             {{-- 1. ẢNH SẢN PHẨM --}}
             <div class="overflow-hidden rounded-top">
                 {{-- Dùng $product->id thay vì $product['id'] --}}
-                <a href="{{ route('product.detail', ['id' => $product->id]) }}">
-                    {{-- Dùng $product->image_url (theo migration DB) thay vì $product['image'] --}}
-                    {{-- Sử dụng asset() để load ảnh đúng đường dẫn --}}
-                    <img src="{{ asset($product->image_url ?? 'img/default.png') }}" 
+                <a href="{{ route('product.detail', $product) }}">
+                    <img src="{{ asset($product->image_url ?? 'img/default.png') }}"
                         class="img-fluid w-100 rounded-top"
                         style="height: 230px; object-fit: cover;"
                         alt="{{ $product->name }}">
@@ -23,7 +21,9 @@
 
             {{-- 3. Nút xem nhanh --}}
             <div class="product-details position-absolute end-0 top-0">
-                <a href="{{ route('product.detail', ['id' => $product->id]) }}" class="btn btn-primary rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                {{-- CŨ: route('product.detail', ['id' => $product->id]) --}}
+                {{-- MỚI: --}}
+                <a href="{{ route('product.detail', $product) }}" class="btn btn-primary rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
                     <i class="fa fa-eye text-white"></i>
                 </a>
             </div>
@@ -35,7 +35,8 @@
             <a href="#" class="d-block mb-2 text-muted small text-uppercase">
                 {{ $product->category->name ?? 'Electronics' }}
             </a>
-            <a href="{{ route('product.detail', ['id' => $product->id]) }}" class="d-block h5 mb-2 text-dark fw-bold text-decoration-none">
+
+            <a href="{{ route('product.detail', $product) }}" class="d-block h5 mb-2 text-dark fw-bold text-decoration-none">
                 {{ $product->name }}
             </a>
 
@@ -59,14 +60,14 @@
         <div class="d-flex justify-content-between align-items-center">
             <div class="d-flex text-secondary small">
                 {{-- Giả sử rating mặc định là 5 nếu chưa có chức năng đánh giá --}}
-                @php $rating = 5; @endphp 
+                @php $rating = 5; @endphp
                 @for($i = 0; $i < 5; $i++)
                     @if($i < $rating)
                     <i class="fas fa-star text-primary"></i>
                     @else
                     <i class="fas fa-star"></i>
                     @endif
-                @endfor
+                    @endfor
             </div>
             {{-- ... icons ... --}}
         </div>

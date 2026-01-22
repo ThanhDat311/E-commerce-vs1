@@ -3,7 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\ProductRequest; 
+use App\Http\Requests\StoreProductRequest; // [FIX] Dùng đúng tên file
+use App\Http\Requests\UpdateProductRequest; // [FIX] Import file mới tạo
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -11,31 +12,27 @@ use Illuminate\Support\Facades\File;
 
 class ProductController extends Controller
 {
-    // 1. Danh sách sản phẩm
     public function index()
     {
         $products = Product::with('category')->orderBy('created_at', 'desc')->paginate(10);
         return view('admin.products.index', compact('products'));
     }
 
-    // 2. Form thêm mới
     public function create()
     {
         $categories = Category::all(); 
         return view('admin.products.create', compact('categories'));
     }
 
-    // 3. Xử lý lưu (Store)
-    public function store(ProductRequest $request)
+    // [FIX] Sử dụng StoreProductRequest
+    public function store(StoreProductRequest $request)
     {
         $data = $request->validated();
 
-        // Xử lý Upload Ảnh
         if ($request->hasFile('image')) {
             $file = $request->file('image');
             $filename = time() . '_' . $file->getClientOriginalName();
             
-            // Đảm bảo thư mục tồn tại
             if (!File::exists(public_path('img/products'))) {
                 File::makeDirectory(public_path('img/products'), 0755, true);
             }
@@ -44,7 +41,7 @@ class ProductController extends Controller
             $data['image_url'] = 'img/products/' . $filename;
         }
 
-        // Checkbox logic
+        // Xử lý checkbox (Nếu không check thì request không gửi lên -> mặc định là 0)
         $data['is_new'] = $request->has('is_new') ? 1 : 0;
         $data['is_featured'] = $request->has('is_featured') ? 1 : 0;
 
@@ -53,25 +50,23 @@ class ProductController extends Controller
         return redirect()->route('admin.products.index')->with('success', 'Product created successfully.');
     }
 
-    // 4. Form sửa (Edit)
     public function edit(Product $product)
     {
         $categories = Category::all();
         return view('admin.products.edit', compact('product', 'categories'));
     }
 
-    // 5. Xử lý cập nhật (Update)
-    public function update(ProductRequest $request, Product $product)
+    // [FIX] Sử dụng UpdateProductRequest để tránh lỗi Unique
+    public function update(UpdateProductRequest $request, Product $product)
     {
         $data = $request->validated();
 
         if ($request->hasFile('image')) {
-            // Xóa ảnh cũ
+            // Xóa ảnh cũ nếu có
             if ($product->image_url && File::exists(public_path($product->image_url))) {
                 File::delete(public_path($product->image_url));
             }
 
-            // Lưu ảnh mới
             $file = $request->file('image');
             $filename = time() . '_' . $file->getClientOriginalName();
             $file->move(public_path('img/products'), $filename);
@@ -86,7 +81,6 @@ class ProductController extends Controller
         return redirect()->route('admin.products.index')->with('success', 'Product updated successfully.');
     }
 
-    // 6. Xóa (Delete)
     public function destroy(Product $product)
     {
         if ($product->image_url && File::exists(public_path($product->image_url))) {
