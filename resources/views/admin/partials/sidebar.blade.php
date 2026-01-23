@@ -18,24 +18,27 @@
 
     <hr class="sidebar-divider">
 
+    {{-- Reports Section - Admin Only --}}
+    @role('admin')
     <div class="sidebar-heading px-3 mt-3 mb-1 text-muted text-xs font-weight-bold text-uppercase">
-    Analytics
-</div>
-
-<li class="nav-item">
-    <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseReports" aria-expanded="false" aria-controls="collapseReports">
-        <i class="fas fa-fw fa-chart-line"></i>
-        <span>Reports</span>
-    </a>
-    <div id="collapseReports" class="collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionSidebar">
-        <div class="bg-white py-2 collapse-inner rounded">
-            <h6 class="collapse-header">Select Report:</h6>
-            <a class="collapse-item" href="{{ route('admin.reports.revenue') }}">Revenue</a>
-            <a class="collapse-item" href="{{ route('admin.reports.top_products') }}">Top Products</a>
-            <a class="collapse-item" href="{{ route('admin.reports.low_stock') }}">Low Stock</a>
-        </div>
+        Analytics
     </div>
-</li>
+
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseReports" aria-expanded="false" aria-controls="collapseReports">
+            <i class="fas fa-fw fa-chart-line"></i>
+            <span>Reports</span>
+        </a>
+        <div id="collapseReports" class="collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <h6 class="collapse-header">Select Report:</h6>
+                <a class="collapse-item" href="{{ route('admin.reports.revenue') }}">Revenue</a>
+                <a class="collapse-item" href="{{ route('admin.reports.top_products') }}">Top Products</a>
+                <a class="collapse-item" href="{{ route('admin.reports.low_stock') }}">Low Stock</a>
+            </div>
+        </div>
+    </li>
+    @endrole
 
     <hr class="sidebar-divider">
 
@@ -64,8 +67,17 @@
         </a>
     </li>
 
+    <li class="nav-item {{ Route::is('admin.price-suggestions.*') ? 'active' : '' }}">
+        <a class="nav-link" href="{{ route('admin.price-suggestions.index') }}">
+            <i class="fas fa-fw fa-dollar-sign"></i>
+            <span>Price Suggestions</span>
+        </a>
+    </li>
+
     <hr class="sidebar-divider">
 
+    {{-- System Section - Admin Only --}}
+    @role('admin')
     <div class="sidebar-heading px-3 mt-3 mb-1 text-muted text-xs font-weight-bold text-uppercase">
         System
     </div>
@@ -75,6 +87,7 @@
             <i class="fas fa-fw fa-users"></i> <span>Users</span>
         </a>
     </li>
+    @endrole
 
     <hr class="sidebar-divider d-none d-md-block">
 
