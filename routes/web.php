@@ -77,7 +77,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->group(function () {
 
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
-    
+
     // ... Các route Resource khác (products, categories, users)
     Route::resource('products', AdminProductController::class);
     Route::resource('categories', AdminCategoryController::class);
@@ -101,6 +101,43 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
         Route::get('/{id}', 'show')->name('show');
         Route::put('/{id}', 'update')->name('update');
     });
+
+    // Price Suggestions Management
+    Route::controller(\App\Http\Controllers\Admin\PriceSuggestionController::class)
+        ->prefix('price-suggestions')
+        ->name('price-suggestions.')
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::post('/{suggestion}/approve', 'approve')->name('approve');
+            Route::post('/{suggestion}/reject', 'reject')->name('reject');
+        });
+
+    // Audit Logs Management
+    Route::controller(\App\Http\Controllers\AuditLogController::class)
+        ->prefix('audit-logs')
+        ->name('audit-logs.')
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/{auditLog}', 'show')->name('show');
+            Route::get('/model/history', 'modelHistory')->name('model-history');
+            Route::get('/statistics', 'statistics')->name('statistics');
+            Route::get('/export', 'export')->name('export');
+        });
+
+    // Risk Rules Management
+    Route::controller(\App\Http\Controllers\Admin\RiskRuleController::class)
+        ->prefix('risk-rules')
+        ->name('risk-rules.')
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/{riskRule}/edit', 'edit')->name('edit');
+            Route::put('/{riskRule}', 'update')->name('update');
+            Route::patch('/{riskRule}/toggle', 'toggle')->name('toggle');
+            Route::post('/reset', 'reset')->name('reset');
+            Route::get('/statistics', 'statistics')->name('statistics');
+            Route::get('/export', 'export')->name('export');
+            Route::post('/import', 'import')->name('import');
+        });
 });
 
 // ====================================================
@@ -127,15 +164,17 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'role:staff'])->grou
 // ====================================================
 Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'role:vendor'])->group(function () {
 
-    Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+    // Dashboard
+    Route::get('/', [\App\Http\Controllers\Vendor\DashboardController::class, 'index'])->name('dashboard');
 
     // Only their own products
-    Route::resource('products', AdminProductController::class);
+    Route::resource('products', \App\Http\Controllers\Vendor\ProductController::class);
 
     // Orders containing their products
-    Route::controller(AdminOrderController::class)->prefix('orders')->name('orders.')->group(function () {
+    Route::controller(\App\Http\Controllers\Vendor\OrderController::class)->prefix('orders')->name('orders.')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/{id}', 'show')->name('show');
+        Route::put('/{id}/status', 'updateStatus')->name('update-status');
     });
 });
 
