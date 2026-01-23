@@ -3,41 +3,102 @@
 namespace App\Repositories\Eloquent;
 
 use App\Models\Product;
-use App\Models\Category; 
+use App\Models\Category;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class ProductRepository implements ProductRepositoryInterface
 {
     protected $model;
+
+    /**
+     * Cache key for home page products
+     */
+    const CACHE_KEY_HOME_PRODUCTS = 'home_products';
+
+    /**
+     * Cache TTL in minutes (60 minutes = 3600 seconds)
+     */
+    const CACHE_TTL = 3600;
 
     public function __construct(Product $model)
     {
         $this->model = $model;
     }
 
-    public function find($id) { return $this->model->find($id); }
-    public function all() { return $this->model->all(); }
-    public function findByIds(array $ids) { return $this->model->whereIn('id', $ids)->get(); }
-    public function create(array $data) { return Product::create($data); }
-    
+    public function find($id)
+    {
+        return $this->model->find($id);
+    }
+    public function all()
+    {
+        return $this->model->all();
+    }
+    public function findByIds(array $ids)
+    {
+        return $this->model->whereIn('id', $ids)->get();
+    }
+
+    /**
+     * Create a new product and invalidate home page cache
+     */
+    public function create(array $data)
+    {
+        $product = Product::create($data);
+
+        // Invalidate cache to reflect changes immediately on frontend
+        $this->invalidateHomePageCache();
+
+        return $product;
+    }
+
+    /**
+     * Update a product and invalidate home page cache
+     */
     public function update(int $id, array $data)
     {
         $product = $this->find($id);
         if ($product) {
             $product->update($data);
+
+            // Invalidate cache to reflect changes immediately on frontend
+            $this->invalidateHomePageCache();
+
             return $product;
         }
         return null;
     }
 
+    /**
+     * Delete a product and invalidate home page cache
+     */
     public function delete(int $id)
     {
         $product = $this->find($id);
-        return $product ? $product->delete() : false;
+        if ($product) {
+            $result = $product->delete();
+
+            // Invalidate cache to reflect changes immediately on frontend
+            $this->invalidateHomePageCache();
+
+            return $result;
+        }
+        return false;
     }
 
-    // --- IMPLEMENTATION CÁC HÀM MỚI ---
+    // --- HELPER METHOD FOR CACHE INVALIDATION ---
+
+    /**
+     * Invalidate home page products cache
+     * Called automatically when products are created, updated, or deleted
+     */
+    private function invalidateHomePageCache()
+    {
+        Cache::forget(self::CACHE_KEY_HOME_PRODUCTS);
+    }
+
+    // --- IMPLEMENTATION CÁC HÀM CỌC ---
 
     public function getFilteredProducts(array $filters, int $perPage = 6)
     {
@@ -88,7 +149,7 @@ class ProductRepository implements ProductRepositoryInterface
     {
         // Lấy category và đếm số sản phẩm active
         // Yêu cầu Model Category phải có relation products()
-        return Category::withCount('products')->get(); 
+        return Category::withCount('products')->get();
     }
 
     public function getProductDetails(int $id)
@@ -119,10 +180,55 @@ class ProductRepository implements ProductRepositoryInterface
                 ->whereNotIn('id', $related->pluck('id'))
                 ->take($limit - $related->count())
                 ->get();
-            
+
             $related = $related->merge($more);
         }
 
         return $related;
+    }
+
+    /**
+     * Get home page products with Redis caching
+     * 
+     * Fetches latest 8 products and new arrivals (is_new = true) or random fallback
+     * Results are cached for 60 minutes to improve performance
+     * Cache is automatically invalidated when products are created, updated, or deleted
+     * 
+     * @param int $limit Number of products to fetch per category (default: 8)
+     * @return array Array containing 'newProducts' and 'arrivals' keys
+     */
+    public function getHomePageProducts(int $limit = 8)
+    {
+        return Cache::remember(
+            self::CACHE_KEY_HOME_PRODUCTS,
+            self::CACHE_TTL,
+            function () use ($limit) {
+                // Get latest 8 products for Tab 1 (All Products)
+                $newProducts = $this->model
+                    ->latest()
+                    ->take($limit)
+                    ->get();
+
+                // Get 8 products marked as new for Tab 2 (New Arrivals)
+                $arrivals = $this->model
+                    ->where('is_new', true)
+                    ->latest()
+                    ->take($limit)
+                    ->get();
+
+                // If no arrivals marked, use random selection for better UX
+                if ($arrivals->isEmpty()) {
+                    $arrivals = $this->model
+                        ->inRandomOrder()
+                        ->take($limit)
+                        ->get();
+                }
+
+                return [
+                    'newProducts' => $newProducts,
+                    'arrivals' => $arrivals
+                ];
+            }
+        );
     }
 }
