@@ -2,11 +2,15 @@
 
 namespace App\Services;
 
+use App\Models\RiskRule;
+
 /**
  * AI Decision Engine - Stateless Service
  * 
  * Quy tắc Vàng: Stateless - Không lưu trạng thái, không query DB trực tiếp
  * Chỉ nhận dữ liệu -> Xử lý -> Trả kết quả
+ * 
+ * Rules are loaded from database and cached
  * 
  * @see doc/AI_DECISION_ENGINE.md
  * @see doc/ELECTRO-AI-ENGINE.md
@@ -14,18 +18,16 @@ namespace App\Services;
 class AIDecisionEngine
 {
     /**
-     * Risk Rules Configuration
+     * Get Risk Rules from Cache
+     * 
      * Score: 0-100 (0 = No risk, 100 = Maximum risk)
+     * 
+     * @return array
      */
-    private const RISK_RULES = [
-        'guest_checkout' => 20,
-        'new_user_24h' => 15,
-        'high_value_5000' => 25,
-        'high_value_1000' => 10,
-        'suspicious_time' => 30,
-        'large_quantity' => 20,
-        'round_amount' => 10,
-    ];
+    private function getRiskRules(): array
+    {
+        return RiskRule::getRules();
+    }
 
     /**
      * Decision Thresholds
@@ -48,10 +50,11 @@ class AIDecisionEngine
     {
         $score = 0;
         $reasons = [];
+        $rules = $this->getRiskRules();
 
         // 1. Guest Checkout
         if (empty($userData['id'])) {
-            $score += self::RISK_RULES['guest_checkout'];
+            $score += $rules['guest_checkout'] ?? 0;
             $reasons[] = 'Guest checkout increases risk';
         }
 
@@ -59,7 +62,7 @@ class AIDecisionEngine
         if (!empty($userData['created_at'])) {
             $userAge = now()->diffInHours($userData['created_at']);
             if ($userAge < 24) {
-                $score += self::RISK_RULES['new_user_24h'];
+                $score += $rules['new_user_24h'] ?? 0;
                 $reasons[] = 'New user account (< 24h)';
             }
         }
@@ -67,30 +70,30 @@ class AIDecisionEngine
         // 3. High Value Orders
         $totalAmount = $orderData['total'] ?? 0;
         if ($totalAmount > 5000) {
-            $score += self::RISK_RULES['high_value_5000'];
+            $score += $rules['high_value_5000'] ?? 0;
             $reasons[] = "High value order (\${$totalAmount})";
         } elseif ($totalAmount > 1000) {
-            $score += self::RISK_RULES['high_value_1000'];
+            $score += $rules['high_value_1000'] ?? 0;
             $reasons[] = "Medium value order (\${$totalAmount})";
         }
 
         // 4. Suspicious Timing (12:00 AM - 4:00 AM)
         $hour = $contextData['hour'] ?? now()->hour;
         if ($hour >= 0 && $hour <= 4) {
-            $score += self::RISK_RULES['suspicious_time'];
+            $score += $rules['suspicious_time'] ?? 0;
             $reasons[] = 'Order placed during suspicious hours (12AM-4AM)';
         }
 
         // 5. Large Quantities
         $quantity = $orderData['quantity'] ?? 1;
         if ($quantity > 10) {
-            $score += self::RISK_RULES['large_quantity'];
+            $score += $rules['large_quantity'] ?? 0;
             $reasons[] = "Large quantity ordered ({$quantity} items)";
         }
 
         // 6. Round Number Amounts (suspicious pattern)
         if ($totalAmount > 0 && $totalAmount % 100 == 0) {
-            $score += self::RISK_RULES['round_amount'];
+            $score += $rules['round_amount'] ?? 0;
             $reasons[] = 'Round number amount (suspicious pattern)';
         }
 
@@ -280,11 +283,11 @@ class AIDecisionEngine
     public function getRules(?string $category = null): array
     {
         if ($category === 'risk') {
-            return self::RISK_RULES;
+            return $this->getRiskRules();
         }
 
         return [
-            'risk' => self::RISK_RULES,
+            'risk' => $this->getRiskRules(),
             'thresholds' => [
                 'block' => self::THRESHOLD_BLOCK,
                 'flag' => self::THRESHOLD_FLAG,
