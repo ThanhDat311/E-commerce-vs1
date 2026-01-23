@@ -11,13 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('risk_rules', function (Blueprint $table) {
+        Schema::create('price_suggestions', function (Blueprint $table) {
             $table->id();
-            $table->string('rule_name');
-            $table->text('condition_logic');
-            $table->float('risk_weight');
-            $table->string('action_trigger');
-            $table->boolean('is_active')->default(true);
+            $table->foreignId('product_id')->constrained()->onDelete('cascade');
+            $table->decimal('old_price', 10, 2);
+            $table->decimal('new_price', 10, 2);
+            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->timestamps();
         });
     }
@@ -27,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('risk_rules');
+        Schema::dropIfExists('price_suggestions');
     }
 };

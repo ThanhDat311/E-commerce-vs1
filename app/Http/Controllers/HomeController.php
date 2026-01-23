@@ -3,21 +3,27 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Product;
+use App\Repositories\Interfaces\ProductRepositoryInterface;
 
 class HomeController extends Controller
 {
+    protected $productRepository;
+
+    public function __construct(ProductRepositoryInterface $productRepository)
+    {
+        $this->productRepository = $productRepository;
+    }
+
     public function index()
     {
-        // 1. Thay vì dùng mảng cứng, ta query từ Database
-        // Lấy 8 sản phẩm mới nhất (sắp xếp theo ngày tạo)
-        // Hoặc lấy theo cờ is_new: Product::where('is_new', true)->take(8)->get();
-        $newProducts = Product::latest()
-                        ->take(8)
-                        ->get();
+        // Get home page products from repository with Redis caching
+        // Cache key: 'home_products' | TTL: 60 minutes (3600 seconds)
+        // Cache is automatically invalidated when products are created, updated, or deleted
+        $products = $this->productRepository->getHomePageProducts(8);
 
-        $featuredProducts = Product::inRandomOrder()->take(8)->get();
-
-        return view('home', compact('newProducts', 'featuredProducts'));
+        return view('home', [
+            'newProducts' => $products['newProducts'],
+            'arrivals' => $products['arrivals']
+        ]);
     }
 }

@@ -18,4 +18,10 @@ interface ProductRepositoryInterface
     public function getProductDetails(int $id);
 
     public function getRelatedProducts($currentProduct, int $limit = 4);
+
+    /**
+     * Get home page products (latest & new arrivals) with Redis caching
+     * TTL: 60 minutes | Cache Key: home_products
+     */
+    public function getHomePageProducts(int $limit = 8);
 }

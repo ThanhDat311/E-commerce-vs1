@@ -13,6 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
+    ->withSchedule(function ($schedule) {
+        $schedule->command('pricing:generate-suggestions')->dailyAt('02:00');
+    })
     ->withMiddleware(function ($middleware) {
         $middleware->alias([
             'permission' => CheckPermission::class,
