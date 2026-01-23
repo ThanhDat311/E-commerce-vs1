@@ -14,44 +14,42 @@ class StoreProductRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Thêm unique cho name nếu bạn muốn tên cũng không được trùng
-            'name'           => ['required', 'string', 'max:255', 'unique:products,name'], 
-            
-            // Rule này đang hoạt động tốt
-            'sku'            => ['required', 'string', 'max:50', 'unique:products,sku'],
-            
-            'price'          => ['required', 'numeric', 'min:0'],
-            'sale_price'     => ['nullable', 'numeric', 'min:0', 'lt:price'],
-            'stock_quantity' => ['required', 'integer', 'min:0'],
-            'category_id'    => ['required', 'exists:categories,id'],
-            'description'    => ['nullable', 'string'],
-            'image'          => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
+            'name'           => ['required', 'string', 'max:255'],
+            'sku'            => ['nullable', 'string', 'max:50', 'unique:products,sku'],
+            'price'          => ['required', 'numeric', 'min:0.01'],
+            'quantity'       => ['required', 'integer', 'min:0'],
+            'category_id'    => ['nullable', 'exists:categories,id'],
+            'description'    => ['required', 'string'],
+            'image'          => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+            'is_new'         => ['nullable', 'boolean'],
+            'is_featured'    => ['nullable', 'boolean'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            // --- SỬA LẠI ĐOẠN NÀY CHO KHỚP VỚI RULES ---
-            
-            // Custom cho Name
-            'name.required'      => 'Vui lòng nhập tên sản phẩm.',
-            'name.unique'        => 'Tên sản phẩm này đã tồn tại, vui lòng chọn tên khác.',
-            
-            // Custom cho SKU (Đây là cái bạn đang cần)
-            'sku.required'       => 'Mã SKU là bắt buộc.',
-            'sku.unique'         => 'Mã SKU này đã tồn tại trong hệ thống. Vui lòng kiểm tra lại.',
-            
-            // Các field khác
-            'price.required'     => 'Giá sản phẩm không được để trống.',
-            'price.min'          => 'Giá sản phẩm không được âm.',
-            'sale_price.lt'      => 'Giá khuyến mãi phải nhỏ hơn giá gốc.',
-            'category_id.exists' => 'Danh mục đã chọn không hợp lệ.',
-            'image.max'          => 'Kích thước ảnh quá lớn (Tối đa 2MB).',
-            'image.image'        => 'File tải lên phải là hình ảnh.',
+            'name.required'      => 'Product name is required.',
+            'name.string'        => 'Product name must be a string.',
+            'name.max'           => 'Product name cannot exceed 255 characters.',
 
-            'is_new'         => ['nullable', 'boolean'],
-            'is_featured'    => ['nullable', 'boolean'],
+            'sku.unique'         => 'This SKU already exists. Please use a different SKU.',
+            'sku.max'            => 'SKU cannot exceed 50 characters.',
+
+            'price.required'     => 'Price is required.',
+            'price.numeric'      => 'Price must be a number.',
+            'price.min'          => 'Price must be greater than 0.',
+
+            'quantity.required'  => 'Stock quantity is required.',
+            'quantity.integer'   => 'Stock quantity must be an integer.',
+            'quantity.min'       => 'Stock quantity cannot be negative.',
+
+            'description.required' => 'Description is required.',
+            'description.string'   => 'Description must be text.',
+
+            'image.image'        => 'File must be an image.',
+            'image.mimes'        => 'Image must be JPG, PNG, or GIF.',
+            'image.max'          => 'Image cannot exceed 2MB.',
         ];
     }
 }
