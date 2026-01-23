@@ -5,11 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Scopes\VendorScope;
+use App\Traits\Auditable;
 
 
 class Product extends Model
 {
-    use HasFactory;
+    use HasFactory, Auditable;
 
     protected static function boot()
     {
@@ -18,6 +19,7 @@ class Product extends Model
     }
 
     protected $fillable = [
+        'vendor_id',
         'category_id',
         'name',
         'sku',
@@ -64,5 +66,10 @@ class Product extends Model
     public function vendor()
     {
         return $this->belongsTo(User::class, 'vendor_id');
+    }
+
+    public function priceSuggestions()
+    {
+        return $this->hasMany(PriceSuggestion::class);
     }
 }
