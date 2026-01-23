@@ -11,8 +11,12 @@
     </div>
     @endforeach
     @else
-    <div class="col-12 text-center">
-        <p>Không có sản phẩm nào để hiển thị.</p>
+    <div class="col-12 text-center py-5">
+        <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+        <p class="text-muted mt-3">Không có sản phẩm nào để hiển thị.</p>
+        <a href="{{ route('shop.index') }}" class="btn btn-primary btn-sm">
+            <i class="fas fa-arrow-right"></i> Khám phá cửa hàng
+        </a>
     </div>
     @endif
 </div>
