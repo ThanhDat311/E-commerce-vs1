@@ -10,6 +10,7 @@ use App\Models\AiFeatureStore;
 use App\Models\Product;
 use App\Services\Payment\PaymentFactory;
 use App\Models\OrderHistory;
+use App\Events\OrderPlaced;
 
 use Exception;
 
@@ -144,6 +145,9 @@ class OrderService
             // -------------------------------------------------------------
 
             DB::commit();
+
+            // Dispatch OrderPlaced event for real-time admin notifications
+            event(new OrderPlaced($order));
 
             // Xóa giỏ hàng sau khi đặt thành công
             $this->cartService->clearCart();
