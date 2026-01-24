@@ -6,12 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Scopes\VendorScope;
 use App\Traits\Auditable;
+use App\Traits\HasFlashSalePrice;
 use Laravel\Scout\Searchable;
 
 
 class Product extends Model
 {
-    use HasFactory, Auditable, Searchable;
+    use HasFactory, Auditable, HasFlashSalePrice, Searchable;
 
     protected static function boot()
     {
