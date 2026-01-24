@@ -16,41 +16,40 @@ class VnpayGateway implements PaymentGatewayInterface
         $vnp_TmnCode = config('services.vnpay.tmn_code');
         $vnp_HashSecret = config('services.vnpay.hash_secret');
 
-        $vnp_TxnRef = $order->id;
+        $vnp_TxnRef = $order->id; //Mã giao dịch thanh toán tham chiếu của merchant
+        $vnp_Amount = intval($order->total); // Số tiền thanh toán
+        $vnp_Locale = 'vn'; //Ngôn ngữ chuyển hướng thanh toán
+        $vnp_BankCode = ''; //Mã phương thức thanh toán
+        $vnp_IpAddr = $_SERVER['REMOTE_ADDR']; //IP Khách hàng thanh toán
 
-        // [FIX 1] Bỏ ký tự đặc biệt # để tránh lỗi encode
-        $vnp_OrderInfo = "Thanh toan don hang " . $order->id;
-
-        $vnp_OrderType = "billpayment";
-        $vnp_Amount = intval($order->total);
-        $vnp_Locale = 'vn';
-
-        // [FIX 2] QUAN TRỌNG: Ép cứng IPv4 cho môi trường Local
-        // VNPay Sandbox thường từ chối IP ::1 của Laragon
-        $vnp_IpAddr = '103.72.97.188';
         $startTime = date("YmdHis");
-
         $expire = date('YmdHis', strtotime('+15 minutes', strtotime($startTime)));
 
-        $vnpayData = [
-            "vnp_Version"    => "2.1.0",
-            "vnp_TmnCode"    => $vnp_TmnCode,
-            "vnp_Amount"     => $vnp_Amount * 100,
-            "vnp_Command"    => "pay",
+        $inputData = array(
+            "vnp_Version" => "2.1.0",
+            "vnp_TmnCode" => $vnp_TmnCode,
+            "vnp_Amount" => $vnp_Amount * 100,
+            "vnp_Command" => "pay",
             "vnp_CreateDate" => date('YmdHis'),
-            "vnp_CurrCode"   => "VND",
-            "vnp_IpAddr"     => $_SERVER['REMOTE_ADDR'],
-            "vnp_Locale"     => 'vn',
-            "vnp_OrderInfo"  => __('Thanh toán hóa đơn') . ' HD' . $vnp_TxnRef,
-            "vnp_ReturnUrl"  => env('APP_URL') . "/payment-callback",
-            "vnp_TxnRef"     => $vnp_TxnRef,
-        ];
+            "vnp_CurrCode" => "VND",
+            "vnp_IpAddr" => $vnp_IpAddr,
+            "vnp_Locale" => $vnp_Locale,
+            "vnp_OrderInfo" => "Thanh toan GD:" . $vnp_TxnRef,
+            "vnp_OrderType" => "other",
+            "vnp_ReturnUrl" => $vnp_Returnurl,
+            "vnp_TxnRef" => $vnp_TxnRef,
+            "vnp_ExpireDate" => $expire
+        );
 
-        ksort($vnpayData);
+        if (isset($vnp_BankCode) && $vnp_BankCode != "") {
+            $inputData['vnp_BankCode'] = $vnp_BankCode;
+        }
+
+        ksort($inputData);
         $query = "";
         $i = 0;
         $hashdata = "";
-        foreach ($vnpayData as $key => $value) {
+        foreach ($inputData as $key => $value) {
             if ($i == 1) {
                 $hashdata .= '&' . urlencode($key) . "=" . urlencode($value);
             } else {
@@ -61,9 +60,11 @@ class VnpayGateway implements PaymentGatewayInterface
         }
 
         $vnp_Url = $vnp_Url . "?" . $query;
+        if (isset($vnp_HashSecret)) {
+            $vnpSecureHash = hash_hmac('sha512', $hashdata, $vnp_HashSecret);
+            $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
+        }
 
-        $vnpSecureHash =   hash_hmac('sha512', $hashdata, $vnp_HashSecret);
-        $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
         return [
             'success' => true,
             'is_redirect' => true,
