@@ -6,11 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Scopes\VendorScope;
 use App\Traits\Auditable;
+use Laravel\Scout\Searchable;
 
 
 class Product extends Model
 {
-    use HasFactory, Auditable;
+    use HasFactory, Auditable, Searchable;
 
     protected static function boot()
     {
@@ -71,5 +72,26 @@ class Product extends Model
     public function priceSuggestions()
     {
         return $this->hasMany(PriceSuggestion::class);
+    }
+
+    /**
+     * Get the indexable data array for the model.
+     * 
+     * Defines which fields Scout should index for full-text search
+     * (name, description, price, category_id)
+     *
+     * @return array
+     */
+    public function toSearchableArray()
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'description' => $this->description,
+            'price' => $this->price,
+            'category_id' => $this->category_id,
+            'vendor_id' => $this->vendor_id,
+            'sku' => $this->sku,
+        ];
     }
 }
