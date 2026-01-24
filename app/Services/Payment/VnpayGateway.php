@@ -77,6 +77,7 @@ class VnpayGateway implements PaymentGatewayInterface
             'url' => $vnp_Url,
             'input_data' => $inputData,
             'hash_data' => $hashdata,
+            'vnp_HashSecret' => $vnp_HashSecret,
             'secure_hash' => $vnpSecureHash ?? null
         ]);
         return [
