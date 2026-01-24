@@ -17,17 +17,17 @@ class VnpayGateway implements PaymentGatewayInterface
         $vnp_HashSecret = config('services.vnpay.hash_secret');
 
         $vnp_TxnRef = $order->id;
-        
+
         // [FIX 1] Bỏ ký tự đặc biệt # để tránh lỗi encode
-        $vnp_OrderInfo = "Thanh toan don hang " . $order->id; 
-        
+        $vnp_OrderInfo = "Thanh toan don hang " . $order->id;
+
         $vnp_OrderType = "billpayment";
         $vnp_Amount = intval($order->total * 100);
         $vnp_Locale = 'vn';
-        
+
         // [FIX 2] QUAN TRỌNG: Ép cứng IPv4 cho môi trường Local
         // VNPay Sandbox thường từ chối IP ::1 của Laragon
-        $vnp_IpAddr = '127.0.0.1'; 
+        $vnp_IpAddr = '103.72.97.188';
 
         $inputData = array(
             "vnp_Version" => "2.1.0",
@@ -70,7 +70,14 @@ class VnpayGateway implements PaymentGatewayInterface
             $vnpSecureHash = hash_hmac('sha512', $hashdata, $vnp_HashSecret);
             $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
         }
-
+        \Log::info('VNPay Payment Request', [
+            'order_id' => $order->id,
+            'amount' => $vnp_Amount,
+            'url' => $vnp_Url,
+            'input_data' => $inputData,
+            'hash_data' => $hashdata,
+            'secure_hash' => $vnpSecureHash ?? null
+        ]);
         return [
             'success' => true,
             'is_redirect' => true,
@@ -80,9 +87,32 @@ class VnpayGateway implements PaymentGatewayInterface
 
     public function verify(Request $request): array
     {
+        // Validate required parameters
+        $requiredParams = ['vnp_TxnRef', 'vnp_Amount', 'vnp_ResponseCode'];
+        foreach ($requiredParams as $param) {
+            if (!$request->has($param) || $request->input($param) === null || $request->input($param) === '') {
+                return [
+                    'success' => false,
+                    'message' => "Missing required parameter: {$param}"
+                ];
+            }
+        }
+
+        // Enforce strict types
+        $txnRef = (string) $request->input('vnp_TxnRef');
+        $amount = (int) $request->input('vnp_Amount');
+        $responseCode = (string) $request->input('vnp_ResponseCode');
+
+        if (!is_numeric($request->input('vnp_Amount'))) {
+            return [
+                'success' => false,
+                'message' => 'Invalid amount format'
+            ];
+        }
+
         $inputData = $request->toArray();
         $vnp_SecureHash = $inputData['vnp_SecureHash'] ?? '';
-        
+
         if (isset($inputData['vnp_SecureHash'])) {
             unset($inputData['vnp_SecureHash']);
         }
@@ -105,26 +135,28 @@ class VnpayGateway implements PaymentGatewayInterface
         $vnp_HashSecret = config('services.vnpay.hash_secret');
         $secureHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
 
-        if ($secureHash === $vnp_SecureHash) {
-            if (isset($inputData['vnp_ResponseCode']) && $inputData['vnp_ResponseCode'] == '00') {
-                return [
-                    'success' => true,
-                    'order_id' => $inputData['vnp_TxnRef'],
-                    'amount' => $inputData['vnp_Amount'] / 100,
-                    'transaction_no' => $inputData['vnp_TransactionNo'],
-                    'message' => 'Giao dịch thành công'
-                ];
-            } else {
-                return [
-                    'success' => false,
-                    'order_id' => $inputData['vnp_TxnRef'],
-                    'message' => 'Giao dịch lỗi (Code: ' . ($inputData['vnp_ResponseCode'] ?? 'Unknown') . ')'
-                ];
-            }
+        if ($secureHash !== $vnp_SecureHash) {
+            return [
+                'success' => false,
+                'message' => 'Invalid signature'
+            ];
+        }
+
+        if ($responseCode === '00') {
+            return [
+                'success' => true,
+                'order_id' => $txnRef,
+                'amount' => $amount / 100,
+                'transaction_no' => $request->input('vnp_TransactionNo', ''),
+                'message' => 'Transaction successful'
+            ];
         } else {
             return [
                 'success' => false,
-                'message' => 'Chữ ký không hợp lệ'
+                'order_id' => $txnRef,
+                'amount' => $amount / 100,
+                'response_code' => $responseCode,
+                'message' => 'Transaction failed (Code: ' . $responseCode . ')'
             ];
         }
     }
