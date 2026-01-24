@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
+use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\SearchController;
@@ -62,6 +63,18 @@ Route::prefix('v1')->group(function () {
         Route::delete('remove/{productId}', [CartController::class, 'remove'])->name('api.cart.remove');
         Route::delete('clear', [CartController::class, 'clear'])->name('api.cart.clear');
         Route::post('coupon', [CartController::class, 'applyCoupon'])->name('api.cart.apply-coupon');
+    });
+
+    // ==================== Coupon Routes ====================
+    Route::prefix('coupons')->group(function () {
+        // Public endpoint - validate coupon
+        Route::post('validate', [CouponController::class, 'validateCoupon'])->name('api.coupons.validate');
+
+        // Protected endpoints
+        Route::middleware('auth:sanctum')->group(function () {
+            Route::get('history', [CouponController::class, 'history'])->name('api.coupons.history');
+            Route::post('check-usage', [CouponController::class, 'checkUsage'])->name('api.coupons.check-usage');
+        });
     });
 
     // ==================== Order Routes ====================
