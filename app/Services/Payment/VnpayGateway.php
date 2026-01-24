@@ -42,7 +42,7 @@ class VnpayGateway implements PaymentGatewayInterface
             "vnp_IpAddr"     => $_SERVER['REMOTE_ADDR'],
             "vnp_Locale"     => 'vn',
             "vnp_OrderInfo"  => __('Thanh toán hóa đơn') . ' HD' . $vnp_TxnRef,
-            "vnp_ReturnUrl"  => config('app.CLIENT_URL') . "/payment-callback",
+            "vnp_ReturnUrl"  => env('APP_URL') . "/payment-callback",
             "vnp_TxnRef"     => $vnp_TxnRef,
         ];
 
@@ -60,7 +60,7 @@ class VnpayGateway implements PaymentGatewayInterface
             $query .= urlencode($key) . "=" . urlencode($value) . '&';
         }
 
-        $vnp_Url = config('app.VNPAY_API') . "?" . $query;
+        $vnp_Url = $vnp_Url . "?" . $query;
 
         $vnpSecureHash =   hash_hmac('sha512', $hashdata, $vnp_HashSecret);
         $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
