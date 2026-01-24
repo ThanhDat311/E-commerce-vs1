@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\SearchController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -32,6 +33,13 @@ Route::prefix('v1')->group(function () {
             Route::get('me', [AuthController::class, 'me'])->name('api.auth.me');
             Route::post('refresh-token', [AuthController::class, 'refreshToken'])->name('api.auth.refresh-token');
         });
+    });
+
+    // ==================== Search Routes ====================
+    Route::prefix('search')->group(function () {
+        Route::get('/', [SearchController::class, 'search'])->name('api.search.products');
+        Route::get('suggestions', [SearchController::class, 'suggestions'])->name('api.search.suggestions');
+        Route::post('reindex', [SearchController::class, 'reindex'])->name('api.search.reindex');
     });
 
     // ==================== Profile Routes ====================
