@@ -32,31 +32,25 @@ class VnpayGateway implements PaymentGatewayInterface
 
         $expire = date('YmdHis', strtotime('+15 minutes', strtotime($startTime)));
 
-        $inputData = array(
-            "vnp_Version" => "2.1.0",
-            "vnp_TmnCode" => $vnp_TmnCode,
-            "vnp_Amount" => $vnp_Amount * 100,
-            "vnp_Command" => "pay",
+        $vnpayData = [
+            "vnp_Version"    => "2.1.0",
+            "vnp_TmnCode"    => $vnp_TmnCode,
+            "vnp_Amount"     => $vnp_Amount * 100,
+            "vnp_Command"    => "pay",
             "vnp_CreateDate" => date('YmdHis'),
-            "vnp_CurrCode" => "VND",
-            "vnp_IpAddr" => $vnp_IpAddr,
-            "vnp_Locale" => $vnp_Locale,
-            "vnp_OrderInfo" => "Thanh toan GD:" . $vnp_TxnRef,
-            "vnp_OrderType" => "other",
-            "vnp_ReturnUrl" => $vnp_Returnurl,
-            "vnp_TxnRef" => $vnp_TxnRef,
-            "vnp_ExpireDate" => $expire
-        );
+            "vnp_CurrCode"   => "VND",
+            "vnp_IpAddr"     => $_SERVER['REMOTE_ADDR'],
+            "vnp_Locale"     => 'vn',
+            "vnp_OrderInfo"  => __('Thanh toán hóa đơn') . ' HD' . $vnp_TxnRef,
+            "vnp_ReturnUrl"  => config('app.CLIENT_URL') . "/payment-callback",
+            "vnp_TxnRef"     => $vnp_TxnRef,
+        ];
 
-        if (isset($vnp_BankCode) && $vnp_BankCode != "") {
-            $inputData['vnp_BankCode'] = $vnp_BankCode;
-        }
-
-        ksort($inputData);
+        ksort($vnpayData);
         $query = "";
         $i = 0;
         $hashdata = "";
-        foreach ($inputData as $key => $value) {
+        foreach ($vnpayData as $key => $value) {
             if ($i == 1) {
                 $hashdata .= '&' . urlencode($key) . "=" . urlencode($value);
             } else {
@@ -66,20 +60,10 @@ class VnpayGateway implements PaymentGatewayInterface
             $query .= urlencode($key) . "=" . urlencode($value) . '&';
         }
 
-        $vnp_Url = $vnp_Url . "?" . $query;
-        if (isset($vnp_HashSecret)) {
-            $vnpSecureHash = hash_hmac('sha512', $hashdata, $vnp_HashSecret);
-            $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
-        }
-        \Log::info('VNPay Payment Request', [
-            'order_id' => $order->id,
-            'amount' => $vnp_Amount,
-            'url' => $vnp_Url,
-            'input_data' => $inputData,
-            'hash_data' => $hashdata,
-            'vnp_HashSecret' => $vnp_HashSecret,
-            'secure_hash' => $vnpSecureHash ?? null
-        ]);
+        $vnp_Url = config('app.VNPAY_API') . "?" . $query;
+
+        $vnpSecureHash =   hash_hmac('sha512', $hashdata, $vnp_HashSecret);
+        $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
         return [
             'success' => true,
             'is_redirect' => true,
