@@ -22,33 +22,34 @@ class VnpayGateway implements PaymentGatewayInterface
         $vnp_OrderInfo = "Thanh toan don hang " . $order->id;
 
         $vnp_OrderType = "billpayment";
-        $vnp_Amount = intval($order->total * 100);
+        $vnp_Amount = intval($order->total);
         $vnp_Locale = 'vn';
 
         // [FIX 2] QUAN TRỌNG: Ép cứng IPv4 cho môi trường Local
         // VNPay Sandbox thường từ chối IP ::1 của Laragon
         $vnp_IpAddr = '103.72.97.188';
+        $startTime = date("YmdHis");
+
+        $expire = date('YmdHis', strtotime('+15 minutes', strtotime($startTime)));
 
         $inputData = array(
             "vnp_Version" => "2.1.0",
             "vnp_TmnCode" => $vnp_TmnCode,
-            "vnp_Amount" => $vnp_Amount,
+            "vnp_Amount" => $vnp_Amount * 100,
             "vnp_Command" => "pay",
             "vnp_CreateDate" => date('YmdHis'),
             "vnp_CurrCode" => "VND",
             "vnp_IpAddr" => $vnp_IpAddr,
             "vnp_Locale" => $vnp_Locale,
-            "vnp_OrderInfo" => $vnp_OrderInfo,
-            "vnp_OrderType" => $vnp_OrderType,
+            "vnp_OrderInfo" => "Thanh toan GD:" + $vnp_TxnRef,
+            "vnp_OrderType" => "other",
             "vnp_ReturnUrl" => $vnp_Returnurl,
-            "vnp_TxnRef" => $vnp_TxnRef
+            "vnp_TxnRef" => $vnp_TxnRef,
+            "vnp_ExpireDate" => $expire
         );
 
-        // Lọc bỏ dữ liệu rỗng
-        foreach ($inputData as $key => $value) {
-            if (is_null($value) || $value === '') {
-                unset($inputData[$key]);
-            }
+        if (isset($vnp_BankCode) && $vnp_BankCode != "") {
+            $inputData['vnp_BankCode'] = $vnp_BankCode;
         }
 
         ksort($inputData);
