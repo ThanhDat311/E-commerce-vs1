@@ -9,6 +9,7 @@ use App\Repositories\Eloquent\ProductRepository;
 use App\Repositories\Interfaces\OrderRepositoryInterface;
 use App\Repositories\Eloquent\OrderRepository;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -31,5 +32,7 @@ class AppServiceProvider extends ServiceProvider
         Auth::viaRemember(function ($user) {
             return $user->load('role.permissions');
         });
+
+        URL::forceScheme('https');
     }
 }
