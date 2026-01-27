@@ -23,12 +23,6 @@ return [
         ],
     ],
 
-    // 'vnpay' => [
-    //     'tmn_code' => "RDXULP40",
-    //     'hash_secret' => "V3XRWP1HBJ0YAW3R5CSBKCQKP91CL55B",
-    //     'url' => env('VNPAY_URL', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'),
-    // ],
-
     'vnpay' => [
         'tmn_code' => env('VNPAY_TMN_CODE'),
         'hash_secret' => env('VNPAY_HASH_SECRET'),
