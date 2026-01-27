@@ -29,6 +29,7 @@ Route::get('/product/{product}', [ShopController::class, 'show'])->name('product
 
 // Route nhận kết quả từ VNPay
 Route::get('/payment/vnpay/callback', [PaymentController::class, 'vnpayCallback'])->name('payment.vnpay.callback');
+Route::post('/payment/vnpay/ipn', [PaymentController::class, 'vnpayIpn'])->name('payment.vnpay.ipn');
 
 // ====================================================
 // CART ROUTES (Giỏ hàng) - Dòng 36 bắt đầu ở đây

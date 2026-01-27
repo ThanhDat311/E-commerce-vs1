@@ -164,61 +164,130 @@ class OrderService
         }
     }
 
-    public function handlePaymentCallback(string $gatewayName, \Illuminate\Http\Request $request): array
+    public function handlePaymentCallback(string $gatewayName, \Illuminate\Http\Request $request, bool $isIpn = false): array
     {
-        // 1. Lấy Gateway từ Factory (đã inject từ trước)
+        Log::info("Payment callback received", [
+            'gateway' => $gatewayName,
+            'is_ipn' => $isIpn,
+            'params' => $request->all()
+        ]);
+
+        // 1. Lấy Gateway từ Factory
         $gateway = $this->paymentFactory->getGateway($gatewayName);
 
-        // 2. Xác thực dữ liệu (Gọi hàm verify vừa viết ở bước 1)
+        // 2. Xác thực dữ liệu
         $verificationResult = $gateway->verify($request);
 
         if (!$verificationResult['success']) {
-            return $verificationResult; // Trả về lỗi nếu chữ ký sai hoặc GD thất bại
+            Log::warning("Payment verification failed", [
+                'gateway' => $gatewayName,
+                'message' => $verificationResult['message']
+            ]);
+            return $verificationResult;
         }
 
-        // 3. Tìm Order trong DB
+        // 3. Tìm Order trong DB với lockForUpdate để tránh race condition
         $orderId = $verificationResult['order_id'];
-        $order = $this->orderRepository->find($orderId); // Đảm bảo repo có hàm find($id)
+        $order = \App\Models\Order::with('items')->lockForUpdate()->find($orderId);
 
         if (!$order) {
+            Log::error("Order not found", ['order_id' => $orderId]);
             return ['success' => false, 'message' => 'Order not found'];
         }
 
-        // 4. Idempotency Check (Quan trọng): Kiểm tra xem đơn đã được xử lý trước đó chưa
-        // Để tránh trường hợp User refresh trang callback hoặc IPN gọi nhiều lần
-        if ($order->payment_status === 'paid') {
-            return ['success' => true, 'order_id' => $orderId, 'message' => 'Order already processed'];
+        // 4. Amount validation for fraud protection
+        $expectedAmount = intval($order->total * 100);
+        $receivedAmount = intval($verificationResult['amount'] * 100);
+
+        if ($expectedAmount !== $receivedAmount) {
+            Log::error("Amount mismatch detected", [
+                'order_id' => $orderId,
+                'expected' => $expectedAmount,
+                'received' => $receivedAmount
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Amount validation failed'
+            ];
         }
 
-        // 5. Cập nhật trạng thái trong Transaction
+        // 5. Idempotency Check
+        if (in_array($order->payment_status, ['paid', 'failed', 'cancelled'])) {
+            Log::info("Order already processed", [
+                'order_id' => $orderId,
+                'status' => $order->payment_status
+            ]);
+            return [
+                'success' => $order->payment_status === 'paid',
+                'order_id' => $orderId,
+                'message' => 'Order already processed'
+            ];
+        }
+
+        // 6. Xử lý trong Transaction
         DB::beginTransaction();
         try {
-            // Update trạng thái thanh toán
-            $order->payment_status = 'paid';
+            $isSuccess = $verificationResult['success'];
 
-            // Có thể update luôn trạng thái đơn hàng nếu muốn
-            if ($order->order_status === 'pending') {
-                $order->order_status = 'processing';
-            }
+            if ($isSuccess) {
+                // Success: Update to paid/processing
+                $order->payment_status = 'paid';
+                if ($order->order_status === 'pending') {
+                    $order->order_status = 'processing';
+                }
 
-            $order->save();
-
-            // Ghi lịch sử đơn hàng
-            if (class_exists(OrderHistory::class)) {
+                // Log success
                 OrderHistory::create([
                     'order_id' => $order->id,
-                    'user_id' => $order->user_id, // Hoặc null nếu không xác định
+                    'user_id' => $order->user_id,
                     'action' => 'Payment Received',
-                    'description' => "Received payment via {$gatewayName}. TransNo: " . ($verificationResult['transaction_no'] ?? 'N/A')
+                    'description' => "Payment successful via {$gatewayName}. TransNo: " . ($verificationResult['transaction_no'] ?? 'N/A')
+                ]);
+
+                Log::info("Payment processed successfully", [
+                    'order_id' => $orderId,
+                    'gateway' => $gatewayName,
+                    'amount' => $verificationResult['amount']
+                ]);
+            } else {
+                // Failure: Set to cancelled and restore inventory
+                $order->payment_status = 'failed';
+                $order->order_status = 'cancelled';
+
+                // Restore inventory
+                foreach ($order->items as $item) {
+                    $product = Product::where('id', $item->product_id)->lockForUpdate()->first();
+                    if ($product) {
+                        $product->stock_quantity += $item->quantity;
+                        $product->save();
+                    }
+                }
+
+                // Log failure
+                OrderHistory::create([
+                    'order_id' => $order->id,
+                    'user_id' => $order->user_id,
+                    'action' => 'Payment Failed',
+                    'description' => "Payment failed via {$gatewayName}. Code: " . ($verificationResult['response_code'] ?? 'Unknown')
+                ]);
+
+                Log::warning("Payment failed, inventory restored", [
+                    'order_id' => $orderId,
+                    'gateway' => $gatewayName,
+                    'response_code' => $verificationResult['response_code'] ?? 'Unknown'
                 ]);
             }
 
+            $order->save();
             DB::commit();
 
-            return $verificationResult;
+            return array_merge($verificationResult, ['order_id' => $orderId]);
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error("Payment Callback DB Error: " . $e->getMessage());
+            Log::error("Payment callback DB error", [
+                'order_id' => $orderId,
+                'error' => $e->getMessage()
+            ]);
             throw $e;
         }
     }

@@ -17,9 +17,6 @@
     </li>
 
     <hr class="sidebar-divider">
-
-    {{-- Reports Section - Admin Only --}}
-    @role('admin')
     <div class="sidebar-heading px-3 mt-3 mb-1 text-muted text-xs font-weight-bold text-uppercase">
         Analytics
     </div>
@@ -38,7 +35,6 @@
             </div>
         </div>
     </li>
-    @endrole
 
     <hr class="sidebar-divider">
 
@@ -76,8 +72,6 @@
 
     <hr class="sidebar-divider">
 
-    {{-- System Section - Admin Only --}}
-    @role('admin')
     <div class="sidebar-heading px-3 mt-3 mb-1 text-muted text-xs font-weight-bold text-uppercase">
         System
     </div>
@@ -87,7 +81,6 @@
             <i class="fas fa-fw fa-users"></i> <span>Users</span>
         </a>
     </li>
-    @endrole
 
     <hr class="sidebar-divider d-none d-md-block">
 

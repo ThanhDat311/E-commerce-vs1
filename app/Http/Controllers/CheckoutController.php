@@ -24,8 +24,8 @@ class CheckoutController extends Controller
     public function show()
     {
         // Bây giờ $this->cartService đã được khởi tạo và có thể sử dụng
-        $cartData = $this->cartService->getCartDetails(); 
-        
+        $cartData = $this->cartService->getCartDetails();
+
         return view('checkout', $cartData);
     }
 
@@ -34,14 +34,13 @@ class CheckoutController extends Controller
         try {
             // Prepare customer data from request
             $customerData = $request->validated();
-            
+
             // Get User ID if authenticated
             $userId = Auth::id();
 
             // Call the Service
             // Lưu ý: processCheckout bây giờ trả về mảng ['order' => ..., 'payment_result' => ...]
             $result = $this->orderService->processCheckout($customerData, $userId);
-
             $order = $result['order'];
             $paymentResult = $result['payment_result'];
 
@@ -52,7 +51,6 @@ class CheckoutController extends Controller
 
             // Nếu là COD hoặc thanh toán tại chỗ
             return redirect()->route('checkout.success')->with('order_id', $order->id);
-
         } catch (Exception $e) {
             return redirect()->back()->withErrors(['error' => $e->getMessage()])->withInput();
         }

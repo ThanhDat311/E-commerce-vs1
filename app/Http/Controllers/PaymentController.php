@@ -42,4 +42,33 @@ class PaymentController extends Controller
                 ->withErrors(['error' => 'Lỗi hệ thống khi xử lý thanh toán.']);
         }
     }
+
+    /**
+     * Xử lý IPN từ VNPay (server-to-server webhook)
+     */
+    public function vnpayIpn(Request $request)
+    {
+        try {
+            // Gọi Service để xử lý IPN
+            $result = $this->orderService->handlePaymentCallback('vnpay', $request, true); // true = is IPN
+
+            if ($result['success']) {
+                return response()->json([
+                    'RspCode' => '00',
+                    'Message' => 'Confirm Success'
+                ]);
+            } else {
+                return response()->json([
+                    'RspCode' => '99',
+                    'Message' => 'Confirm Failed: ' . $result['message']
+                ]);
+            }
+        } catch (Exception $e) {
+            Log::error('Vnpay IPN Error: ' . $e->getMessage());
+            return response()->json([
+                'RspCode' => '99',
+                'Message' => 'System Error'
+            ]);
+        }
+    }
 }
