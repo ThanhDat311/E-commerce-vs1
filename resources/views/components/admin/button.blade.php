@@ -1,4 +1,4 @@
-@props(['variant' => 'primary', 'size' => 'md', 'disabled' => false, 'loading' => false, 'icon' => null, 'href' => null])
+@props(['variant' => 'primary', 'size' => 'md', 'type' => 'button', 'disabled' => false, 'loading' => false, 'icon' => null, 'href' => null])
 
 @php
 $baseClasses = 'font-semibold transition-colors duration-200 inline-flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2';
@@ -33,7 +33,7 @@ $disabledState = $disabled || $loading;
 </a>
 @else
 <button
-    type="button"
+    type="{{ $type }}"
     @disabled($disabledState)
     {{ $attributes->merge(['class' => $buttonClass]) }}>
     @if($loading)

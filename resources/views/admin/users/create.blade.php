@@ -1,66 +1,124 @@
 @extends('layouts.admin')
 @section('title', 'Create User')
 @section('content')
-<div class="container-fluid px-4">
-    <h1 class="mt-4">Create User</h1>
-    <ol class="breadcrumb mb-4">
-        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-        <li class="breadcrumb-item"><a href="{{ route('admin.users.index') }}">Users</a></li>
-        <li class="breadcrumb-item active">Create</li>
-    </ol>
-    <div class="card mb-4">
-        <div class="card-header"><i class="fas fa-user-plus me-1"></i> Create New User</div>
-        <div class="card-body">
-            <form action="{{ route('admin.users.store') }}" method="POST">
-                @csrf
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="name" class="form-label">Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="name" value="{{ old('name') }}" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
-                        <input type="email" class="form-control" name="email" value="{{ old('email') }}" required>
-                    </div>
-                </div>
+<x-admin.header 
+    title="Create User" 
+    subtitle="Add a new user account to the system"
+    icon="user-plus"
+    background="blue"
+/>
 
-                <div class="row mb-3">
-                    {{-- [UPDATED] Phone Number --}}
-                    <div class="col-md-6">
-                        <label for="phone_number" class="form-label">Phone Number</label>
-                        <input type="text" class="form-control" id="phone_number" name="phone_number" value="{{ old('phone_number') }}">
-                    </div>
-                    <div class="col-md-6">
-                        <label for="role_id" class="form-label">Role <span class="text-danger">*</span></label>
-                        <select class="form-select" name="role_id" required>
-                            <option value="">-- Select Role --</option>
-                            @foreach($roles as $role)
-                                <option value="{{ $role->id }}" {{ old('role_id') == $role->id ? 'selected' : '' }}>{{ $role->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-                
-                {{-- [ADDED] Address --}}
-                <div class="mb-3">
-                    <label for="address" class="form-label">Address</label>
-                    <input type="text" class="form-control" id="address" name="address" value="{{ old('address') }}" placeholder="Street address, City...">
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
-                        <input type="password" class="form-control" name="password" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="password_confirmation" class="form-label">Confirm Password <span class="text-danger">*</span></label>
-                        <input type="password" class="form-control" name="password_confirmation" required>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Create User</button>
-            </form>
-        </div>
+<div class="max-w-4xl mx-auto px-6 py-8">
+    {{-- Breadcrumb --}}
+    <div class="mb-6 flex items-center gap-2 text-sm">
+        <a href="{{ route('admin.dashboard') }}" class="text-blue-600 hover:text-blue-700">Dashboard</a>
+        <span class="text-gray-400">/</span>
+        <a href="{{ route('admin.users.index') }}" class="text-blue-600 hover:text-blue-700">Users</a>
+        <span class="text-gray-400">/</span>
+        <span class="text-gray-700 font-medium">Create</span>
     </div>
+
+    <x-admin.card variant="white" border="left" borderColor="blue">
+        <form action="{{ route('admin.users.store') }}" method="POST" class="space-y-6">
+            @csrf
+
+            {{-- Name & Email Row --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <x-admin.input 
+                    name="name" 
+                    label="Full Name"
+                    type="text"
+                    required
+                    value="{{ old('name') }}"
+                    placeholder="John Doe"
+                    :error="$errors->first('name')"
+                />
+                <x-admin.input 
+                    name="email" 
+                    label="Email Address"
+                    type="email"
+                    required
+                    value="{{ old('email') }}"
+                    placeholder="john@example.com"
+                    :error="$errors->first('email')"
+                />
+            </div>
+
+            {{-- Phone & Role Row --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <x-admin.input 
+                    name="phone_number" 
+                    label="Phone Number"
+                    type="text"
+                    value="{{ old('phone_number') }}"
+                    placeholder="+1 (555) 123-4567"
+                    :error="$errors->first('phone_number')"
+                />
+                <x-admin.select 
+                    name="role_id" 
+                    label="Role"
+                    required
+                    :error="$errors->first('role_id')"
+                >
+                    <option value="">-- Select Role --</option>
+                    @foreach($roles as $role)
+                        <option value="{{ $role->id }}" {{ old('role_id') == $role->id ? 'selected' : '' }}>
+                            {{ $role->name }}
+                        </option>
+                    @endforeach
+                </x-admin.select>
+            </div>
+
+            {{-- Address --}}
+            <div>
+                <x-admin.input 
+                    name="address" 
+                    label="Address"
+                    type="text"
+                    value="{{ old('address') }}"
+                    placeholder="Street address, City, State, ZIP code"
+                    :error="$errors->first('address')"
+                />
+            </div>
+
+            {{-- Password & Confirmation Row --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <x-admin.input 
+                    name="password" 
+                    label="Password"
+                    type="password"
+                    required
+                    placeholder="Enter a secure password"
+                    :error="$errors->first('password')"
+                />
+                <x-admin.input 
+                    name="password_confirmation" 
+                    label="Confirm Password"
+                    type="password"
+                    required
+                    placeholder="Confirm password"
+                    :error="$errors->first('password_confirmation')"
+                />
+            </div>
+
+            {{-- Action Buttons --}}
+            <div class="flex gap-3 pt-6 border-t border-gray-200">
+                <x-admin.button 
+                    type="submit" 
+                    variant="primary"
+                    icon="save"
+                >
+                    Create User
+                </x-admin.button>
+                <x-admin.button 
+                    href="{{ route('admin.users.index') }}"
+                    variant="secondary"
+                    icon="times"
+                >
+                    Cancel
+                </x-admin.button>
+            </div>
+        </form>
+    </x-admin.card>
 </div>
 @endsection

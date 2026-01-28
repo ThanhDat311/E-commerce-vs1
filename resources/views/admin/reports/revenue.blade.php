@@ -2,74 +2,95 @@
 @section('title', 'Revenue Report')
 
 @section('content')
-<div class="container-fluid px-4">
-    <h1 class="mt-4">Revenue Report</h1>
-    
+<x-admin.header 
+    title="Revenue Report" 
+    subtitle="Monitor your sales performance and revenue trends"
+    icon="chart-line"
+    background="green"
+/>
+
+<div class="max-w-7xl mx-auto px-6 py-8">
     {{-- Form lọc ngày --}}
-    <div class="card mb-4 mt-3">
-        <div class="card-body">
-            <form action="{{ route('admin.reports.revenue') }}" method="GET" class="row g-3 align-items-end">
-                <div class="col-md-4">
-                    <label class="form-label fw-bold">From Date</label>
-                    <input type="date" name="start_date" class="form-control" value="{{ $startDate }}">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label fw-bold">To Date</label>
-                    <input type="date" name="end_date" class="form-control" value="{{ $endDate }}">
-                </div>
-                <div class="col-md-4">
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-filter me-1"></i> Filter</button>
-                    <a href="{{ route('admin.reports.revenue') }}" class="btn btn-outline-secondary">Reset</a>
-                </div>
-            </form>
-        </div>
+    <x-admin.card variant="white" border="top" borderColor="gray" class="mb-6">
+        <form action="{{ route('admin.reports.revenue') }}" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">From Date</label>
+                <x-admin.input 
+                    type="date" 
+                    name="start_date" 
+                    :value="$startDate"
+                />
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">To Date</label>
+                <x-admin.input 
+                    type="date" 
+                    name="end_date" 
+                    :value="$endDate"
+                />
+            </div>
+            <div class="flex items-end gap-2">
+                <button type="submit" class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+                <a href="{{ route('admin.reports.revenue') }}" class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-300 transition">
+                    <i class="fas fa-redo"></i> Reset
+                </a>
+            </div>
+        </form>
+    </x-admin.card>
+
+    {{-- Metrics Cards --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <x-admin.stat-card 
+            title="Total Revenue (Selected Period)"
+            stat="${{ number_format($summary['total_revenue'], 2) }}"
+            icon="dollar-sign"
+            iconBg="green"
+        />
+        <x-admin.stat-card 
+            title="Total Orders"
+            stat="{{ number_format($summary['total_orders']) }}"
+            icon="shopping-cart"
+            iconBg="blue"
+        />
     </div>
 
-    {{-- Thẻ tổng quan --}}
-    <div class="row">
-        <div class="col-xl-6 col-md-6">
-            <div class="card bg-success text-white mb-4">
-                <div class="card-body">
-                    <div>Total Revenue (Selected Period)</div>
-                    <h2 class="fw-bold">${{ number_format($summary['total_revenue'], 2) }}</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-6 col-md-6">
-            <div class="card bg-primary text-white mb-4">
-                <div class="card-body">
-                    <div>Total Orders</div>
-                    <h2 class="fw-bold">{{ number_format($summary['total_orders']) }}</h2>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Bảng chi tiết --}}
-    <div class="card mb-4">
-        <div class="card-header"><i class="fas fa-table me-1"></i> Daily Breakdown</div>
-        <div class="card-body">
-            <table class="table table-bordered table-striped">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Orders Count</th>
-                        <th>Revenue</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($revenues as $item)
-                    <tr>
-                        <td>{{ \Carbon\Carbon::parse($item->date)->format('d/m/Y') }}</td>
-                        <td>{{ $item->total_orders }}</td>
-                        <td class="fw-bold text-success">${{ number_format($item->total_revenue, 2) }}</td>
-                    </tr>
-                    @empty
-                    <tr><td colspan="3" class="text-center">No data found for this period.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
+    {{-- Daily Breakdown Table --}}
+    <x-admin.card variant="white" border="left" borderColor="gray">
+        <table class="w-full">
+            <thead class="bg-gradient-to-r from-gray-900 to-gray-800 text-white">
+                <tr>
+                    <th class="px-6 py-3 text-left text-sm font-semibold">Date</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold">Orders Count</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold">Revenue</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($revenues as $item)
+                <tr class="border-b border-gray-200 hover:bg-gray-50 transition">
+                    <td class="px-6 py-4 text-sm text-gray-900 font-medium">
+                        {{ \Carbon\Carbon::parse($item->date)->format('d/m/Y') }}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-900">
+                        <x-admin.badge variant="info">{{ $item->total_orders }} orders</x-admin.badge>
+                    </td>
+                    <td class="px-6 py-4 text-sm font-semibold text-green-600">
+                        ${{ number_format($item->total_revenue, 2) }}
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="3" class="px-6 py-8 text-center text-gray-600">
+                        <div class="flex flex-col items-center gap-2">
+                            <i class="fas fa-inbox text-3xl text-gray-400"></i>
+                            <p class="font-medium">No data found for this period.</p>
+                        </div>
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </x-admin.card>
 </div>
 @endsection

@@ -2,55 +2,63 @@
 @section('title', 'Low Stock Alert')
 
 @section('content')
-<div class="container-fluid px-4">
-    <h1 class="mt-4 text-danger">Low Stock Alert</h1>
-    <p class="text-muted">Products with stock quantity <= 10. <span class="fw-bold">Please restock soon!</span></p>
+<x-admin.header 
+    title="Low Stock Alert" 
+    subtitle="Products with stock quantity <= 10. Please restock soon!"
+    icon="exclamation-triangle"
+    background="red"
+/>
 
-    <div class="card mb-4 border-danger">
-        <div class="card-header bg-danger text-white"><i class="fas fa-exclamation-triangle me-1"></i> Critical Inventory</div>
-        <div class="card-body">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Product</th>
-                        <th>SKU</th>
-                        <th>Current Stock</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($lowStockProducts as $product)
-                    <tr>
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <img src="{{ asset($product->image_url) }}" width="40" class="me-2 rounded">
-                                {{ $product->name }}
-                            </div>
-                        </td>
-                        <td>{{ $product->sku }}</td>
-                        <td class="fw-bold {{ $product->stock_quantity == 0 ? 'text-danger' : 'text-warning' }}">
-                            {{ $product->stock_quantity }}
-                        </td>
-                        <td>
-                            @if($product->stock_quantity == 0)
-                                <span class="badge bg-danger">Out of Stock</span>
-                            @else
-                                <span class="badge bg-warning text-dark">Low Stock</span>
-                            @endif
-                        </td>
-                        <td>
-                            <a href="{{ route('admin.products.edit', $product->id) }}" class="btn btn-sm btn-primary">
-                                <i class="fas fa-plus"></i> Restock
-                            </a>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr><td colspan="5" class="text-center text-success"><i class="fas fa-check-circle me-1"></i> Good news! No products are low in stock.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
+<div class="max-w-7xl mx-auto px-6 py-8">
+    <x-admin.card variant="red" border="left" borderColor="red">
+        <table class="w-full">
+            <thead class="bg-gradient-to-r from-red-900 to-red-800 text-white">
+                <tr>
+                    <th class="px-6 py-3 text-left text-sm font-semibold">Product</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold">SKU</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold">Current Stock</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold">Status</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($lowStockProducts as $product)
+                <tr class="border-b border-gray-200 hover:bg-red-50 transition">
+                    <td class="px-6 py-4 text-sm text-gray-900">
+                        <div class="flex items-center gap-3">
+                            <img src="{{ asset($product->image_url) }}" width="40" class="rounded-md object-cover">
+                            <span class="font-medium">{{ $product->name }}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-900">{{ $product->sku }}</td>
+                    <td class="px-6 py-4 text-sm font-semibold {{ $product->stock_quantity == 0 ? 'text-red-600' : 'text-orange-600' }}">
+                        {{ $product->stock_quantity }}
+                    </td>
+                    <td class="px-6 py-4 text-sm">
+                        @if($product->stock_quantity == 0)
+                            <x-admin.badge variant="critical" animated>Out of Stock</x-admin.badge>
+                        @else
+                            <x-admin.badge variant="warning">Low Stock</x-admin.badge>
+                        @endif
+                    </td>
+                    <td class="px-6 py-4 text-sm">
+                        <a href="{{ route('admin.products.edit', $product->id) }}" class="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 text-white text-xs font-semibold rounded-md hover:bg-blue-700 transition">
+                            <i class="fas fa-plus"></i> Restock
+                        </a>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="5" class="px-6 py-8 text-center text-gray-600">
+                        <div class="flex flex-col items-center gap-2">
+                            <i class="fas fa-check-circle text-3xl text-green-600"></i>
+                            <p class="font-medium">Good news! No products are low in stock.</p>
+                        </div>
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </x-admin.card>
 </div>
 @endsection
