@@ -7,6 +7,10 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\SearchController;
+use App\Http\Controllers\ContactController;
+use App\Http\Controllers\HelpController;
+use App\Http\Controllers\WishlistController;
 
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
@@ -30,6 +34,34 @@ Route::get('/product/{product}', [ShopController::class, 'show'])->name('product
 // Route nhận kết quả từ VNPay
 Route::get('/payment/vnpay/callback', [PaymentController::class, 'vnpayCallback'])->name('payment.vnpay.callback');
 Route::post('/payment/vnpay/ipn', [PaymentController::class, 'vnpayIpn'])->name('payment.vnpay.ipn');
+
+// Search route
+Route::get('/search', [SearchController::class, 'search'])->name('search');
+
+// Localization and Currency routes
+Route::get('/lang/{lang}', function ($lang) {
+    session(['locale' => $lang]);
+    return redirect()->back();
+})->name('lang.switch');
+
+Route::get('/currency/{currency}', function ($currency) {
+    session(['currency' => $currency]);
+    return redirect()->back();
+})->name('currency.switch');
+
+// User Contact us
+Route::get('/contact-us', [ContactController::class, 'index'])->name('contact.index');
+Route::post('/contact-us', [ContactController::class, 'store'])->name('contact.store');
+
+Route::get('/help-support', [HelpController::class, 'index'])->name('help.index');
+
+// Wishlist routes (placeholder)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
+    Route::post('/wishlist/add', [WishlistController::class, 'add'])->name('wishlist.add');
+    Route::delete('/wishlist/remove/{productId}', [WishlistController::class, 'remove'])->name('wishlist.remove');
+    Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
+});
 
 // ====================================================
 // CART ROUTES (Giỏ hàng) - Dòng 36 bắt đầu ở đây

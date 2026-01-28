@@ -19,41 +19,53 @@
     <link href="{{ asset('lib/animate/animate.min.css') }}" rel="stylesheet">
     <link href="{{ asset('lib/owlcarousel/assets/owl.carousel.min.css') }}" rel="stylesheet">
 
+    {{-- CSS Bootstrap (Nên đảm bảo file này là phiên bản 4 để đồng bộ với JS bên dưới) --}}
     <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
 
     <link href="{{ asset('css/style.css') }}" rel="stylesheet">
-
     <link href="{{ asset('css/custom.css') }}" rel="stylesheet">
 
     @stack('styles')
 </head>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <body>
-
+    {{-- Spinner Loading --}}
     <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
         <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
             <span class="sr-only">Loading...</span>
         </div>
     </div>
+
     @include('layouts.header')
 
     @yield('content')
 
     @include('layouts.footer')
 
+    {{-- Back to Top Button --}}
     <a href="#" class="btn btn-primary btn-lg-square back-to-top"><i class="fa fa-arrow-up"></i></a>
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+    {{-- ======================================================= --}}
+    {{-- JAVASCRIPT LIBRARIES (Updated for Compatibility) --}}
+    {{-- ======================================================= --}}
+
+    {{-- 1. jQuery (Bắt buộc load đầu tiên) --}}
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+
+    {{-- 2. Bootstrap Bundle JS (V4.4.1 - Chứa Popper, hỗ trợ Accordion/Dropdown cũ) --}}
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
+
+    {{-- 3. Các thư viện hiệu ứng bổ trợ --}}
+    <script src="{{ asset('lib/easing/easing.min.js') }}"></script>
     <script src="{{ asset('lib/wow/wow.min.js') }}"></script>
     <script src="{{ asset('lib/owlcarousel/owl.carousel.min.js') }}"></script>
 
+    {{-- 4. Template Main JS --}}
     <script src="{{ asset('js/main.js') }}"></script>
 
+    {{-- 5. SweetAlert2 --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
+
     @include('partials.toast')
 
     @stack('scripts')

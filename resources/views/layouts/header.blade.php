@@ -3,9 +3,9 @@
         {{-- LEFT: Help / Support --}}
         <div class="col-lg-4 text-center text-lg-start mb-lg-0">
             <div class="d-inline-flex align-items-center" style="height: 45px;">
-                <a href="#" class="text-muted me-2"> Help</a><small> / </small>
-                <a href="#" class="text-muted mx-2"> Support</a><small> / </small>
-                <a href="#" class="text-muted ms-2"> Contact</a>
+                <a href="{{ route('help.index') }}" class="text-muted me-2"> Help</a><small> / </small>
+                <a href="{{ route('help.index') }}" class="text-muted mx-2"> Support</a><small> / </small>
+                <a href="{{ route('contact.index') }}" class="text-muted ms-2"> Contact</a>
             </div>
         </div>
 
@@ -21,19 +21,19 @@
 
                 {{-- Currency Dropdown --}}
                 <div class="dropdown">
-                    <a href="#" class="dropdown-toggle text-muted me-2" data-bs-toggle="dropdown"><small> USD</small></a>
+                    <a href="#" class="dropdown-toggle text-muted me-2" data-bs-toggle="dropdown"><small> {{ session('currency', 'USD') }}</small></a>
                     <div class="dropdown-menu rounded">
-                        <a href="#" class="dropdown-item"> Euro</a>
-                        <a href="#" class="dropdown-item"> Dolar</a>
+                        <a href="{{ route('currency.switch', 'USD') }}" class="dropdown-item {{ session('currency') == 'USD' ? 'active' : '' }}"> USD</a>
+                        <a href="{{ route('currency.switch', 'EUR') }}" class="dropdown-item {{ session('currency') == 'EUR' ? 'active' : '' }}"> EUR</a>
                     </div>
                 </div>
 
                 {{-- Language Dropdown --}}
                 <div class="dropdown">
-                    <a href="#" class="dropdown-toggle text-muted mx-2" data-bs-toggle="dropdown"><small> English</small></a>
+                    <a href="#" class="dropdown-toggle text-muted mx-2" data-bs-toggle="dropdown"><small> {{ session('locale', 'en') == 'en' ? 'English' : 'Vietnamese' }}</small></a>
                     <div class="dropdown-menu rounded">
-                        <a href="#" class="dropdown-item"> English</a>
-                        <a href="#" class="dropdown-item"> Vietnamese</a>
+                        <a href="{{ route('lang.switch', 'en') }}" class="dropdown-item {{ session('locale') == 'en' ? 'active' : '' }}"> English</a>
+                        <a href="{{ route('lang.switch', 'vi') }}" class="dropdown-item {{ session('locale') == 'vi' ? 'active' : '' }}"> Vietnamese</a>
                     </div>
                 </div>
 
@@ -56,10 +56,14 @@
                 <div class="dropdown ms-3">
                     <a href="#" class="dropdown-toggle d-flex align-items-center text-decoration-none" data-bs-toggle="dropdown">
                         {{-- Avatar --}}
+                        @if(Auth::user()->avatar)
+                        <img src="{{ asset('storage/' . Auth::user()->avatar) }}" alt="Avatar" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                        @else
                         <div class="rounded-circle bg-primary d-flex justify-content-center align-items-center text-white fw-bold me-2"
                             style="width: 32px; height: 32px; font-size: 14px;">
                             {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                         </div>
+                        @endif
                         <small class="text-dark fw-bold">{{ Auth::user()->name }}</small>
                     </a>
 
@@ -72,12 +76,12 @@
                         <div class="dropdown-divider"></div>
                         @endif
 
-                        <a href="#" class="dropdown-item"><i class="fas fa-user me-2"></i>My Profile</a>
-                        
+                        <a href="{{ route('profile.edit') }}" class="dropdown-item"><i class="fas fa-user me-2"></i>My Profile</a>
+
                         {{-- ĐÃ SỬA LỖI Ở DÒNG DƯỚI ĐÂY (Thêm dấu nháy đơn ') --}}
                         <a href="{{ route('orders.index') }}" class="dropdown-item"><i class="fas fa-history me-2"></i>Order History</a>
-                        
-                        <a href="#" class="dropdown-item"><i class="fas fa-heart me-2"></i>Wishlist</a>
+
+                        <a href="{{ route('wishlist.index') }}" class="dropdown-item"><i class="fas fa-heart me-2"></i>Wishlist</a>
 
                         <div class="dropdown-divider"></div>
 
@@ -108,16 +112,16 @@
         </div>
         <div class="col-md-4 col-lg-6 text-center">
             <div class="position-relative ps-4">
-                <div class="d-flex border rounded-pill">
-                    <input class="form-control border-0 rounded-pill w-100 py-3" type="text" placeholder="Search Looking For?">
-                    <button type="button" class="btn btn-primary rounded-pill py-3 px-5" style="border: 0;"><i class="fas fa-search"></i></button>
-                </div>
+                <form method="GET" action="{{ route('search') }}" class="d-flex border rounded-pill">
+                    <input name="q" class="form-control border-0 rounded-pill w-100 py-3" type="text" placeholder="Search Looking For?" value="{{ request('q') }}">
+                    <button type="submit" class="btn btn-primary rounded-pill py-3 px-5" style="border: 0;"><i class="fas fa-search"></i></button>
+                </form>
             </div>
         </div>
         <div class="col-md-4 col-lg-3 text-center text-lg-end">
             <div class="d-inline-flex align-items-center">
                 <a href="#" class="text-muted d-flex align-items-center justify-content-center me-3"><span class="rounded-circle btn-md-square border"><i class="fas fa-heart"></i></span></a>
-                <a href="{{ route('cart.index') }}" class="text-muted d-flex align-items-center justify-content-center"><span class="rounded-circle btn-md-square border"><i class="fas fa-shopping-cart"></i></span> <span class="text-dark ms-2">$0.00</span></a>
+                <a href="{{ route('cart.index') }}" class="text-muted d-flex align-items-center justify-content-center"><span class="rounded-circle btn-md-square border"><i class="fas fa-shopping-cart"></i></span> <span class="text-dark ms-2">${{ number_format($cartTotal, 2) }} ({{ $cartCount }})</span></a>
             </div>
         </div>
     </div>
@@ -134,8 +138,26 @@
                 <div class="collapse navbar-collapse rounded-bottom" id="allCat">
                     <div class="navbar-nav ms-auto py-0">
                         <ul class="list-unstyled categories-bars">
-                            <li><div class="categories-bars-item"><a href="#">Accessories</a><span>(3)</span></div></li>
-                            <li><div class="categories-bars-item"><a href="#">Mobiles</a><span>(8)</span></div></li>
+                            @foreach($categories as $category)
+                            <li>
+                                <div class="categories-bars-item">
+                                    <a href="{{ route('shop.index', ['category' => $category->slug]) }}">{{ $category->name }}</a>
+                                    <span>({{ $category->products->count() }})</span>
+                                </div>
+                                @if($category->children->count() > 0)
+                                <ul class="list-unstyled ms-3">
+                                    @foreach($category->children as $child)
+                                    <li>
+                                        <div class="categories-bars-item">
+                                            <a href="{{ route('shop.index', ['category' => $child->slug]) }}">{{ $child->name }}</a>
+                                            <span>({{ $child->products->count() }})</span>
+                                        </div>
+                                    </li>
+                                    @endforeach
+                                </ul>
+                                @endif
+                            </li>
+                            @endforeach
                         </ul>
                     </div>
                 </div>
@@ -153,26 +175,26 @@
                     <div class="navbar-nav ms-auto py-0">
                         <a href="{{ route('home') }}" class="nav-item nav-link {{ request()->routeIs('home') ? 'active' : '' }}">Home</a>
                         <a href="{{ route('shop.index') }}" class="nav-item nav-link {{ request()->routeIs('shop') ? 'active' : '' }}">Shop</a>
-                        <a href="#" class="nav-item nav-link">Contact</a>
-                        
+                        <a href="{{ route('contact.index') }}" class="nav-item nav-link">Contact</a>
+
                         {{-- MENU MOBILE: Login/Register/Logout --}}
                         @guest
-                            <a href="{{ route('login') }}" class="nav-item nav-link">Login</a>
-                            <a href="{{ route('register') }}" class="nav-item nav-link">Register</a>
+                        <a href="{{ route('login') }}" class="nav-item nav-link">Login</a>
+                        <a href="{{ route('register') }}" class="nav-item nav-link">Register</a>
                         @else
-                            <div class="nav-item dropdown">
-                                <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">{{ Auth::user()->name }}</a>
-                                <div class="dropdown-menu m-0 bg-secondary rounded-0">
-                                    <a href="#" class="dropdown-item">My Profile</a>
-                                    <a href="{{ route('orders.index') }}" class="dropdown-item">Order History</a>
-                                    
-                                    {{-- Form Logout Mobile --}}
-                                    <form method="POST" action="{{ route('logout') }}">
-                                        @csrf
-                                        <button type="submit" class="dropdown-item">Logout</button>
-                                    </form>
-                                </div>
+                        <div class="nav-item dropdown">
+                            <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">{{ Auth::user()->name }}</a>
+                            <div class="dropdown-menu m-0 bg-secondary rounded-0">
+                                <a href="{{ route('profile.edit') }}" class="dropdown-item">My Profile</a>
+                                <a href="{{ route('orders.index') }}" class="dropdown-item">Order History</a>
+
+                                {{-- Form Logout Mobile --}}
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item">Logout</button>
+                                </form>
                             </div>
+                        </div>
                         @endguest
                     </div>
                     <a href="#" class="btn btn-secondary rounded-pill py-2 px-4 px-lg-3 mb-3 mb-md-3 mb-lg-0 d-none d-lg-block"><i class="fa fa-mobile-alt me-2"></i> +0123 456 7890</a>

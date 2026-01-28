@@ -97,7 +97,7 @@
                         <a href="#" class=""><i class="fas fa-angle-right me-2"></i> Brands</a>
                         <a href="#" class=""><i class="fas fa-angle-right me-2"></i> Gift Vouchers</a>
                         <a href="#" class=""><i class="fas fa-angle-right me-2"></i> Affiliates</a>
-                        <a href="#" class=""><i class="fas fa-angle-right me-2"></i> Wishlist</a>
+                        <a href="wishlist.index" class=""><i class="fas fa-angle-right me-2"></i> Wishlist</a>
                         <a href="#" class=""><i class="fas fa-angle-right me-2"></i> Order History</a>
                         <a href="#" class=""><i class="fas fa-angle-right me-2"></i> Track Your Order</a>
                         <a href="#" class=""><i class="fas fa-angle-right me-2"></i> Track Your Order</a>

@@ -10,6 +10,8 @@ use App\Repositories\Interfaces\OrderRepositoryInterface;
 use App\Repositories\Eloquent\OrderRepository;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\View;
+use App\Http\ViewComposers\HeaderComposer;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -34,5 +36,8 @@ class AppServiceProvider extends ServiceProvider
         });
 
         URL::forceScheme('https');
+
+        // Register View Composer for header
+        View::composer('layouts.header', HeaderComposer::class);
     }
 }
