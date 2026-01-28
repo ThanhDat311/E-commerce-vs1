@@ -16,6 +16,8 @@ class RiskRule extends Model
         'rule_key',
         'weight',
         'description',
+        'risk_level',
+        'settings',
         'is_active',
     ];
 
@@ -27,6 +29,7 @@ class RiskRule extends Model
     protected $casts = [
         'weight' => 'integer',
         'is_active' => 'boolean',
+        'settings' => 'array',
     ];
 
     /**
@@ -118,5 +121,41 @@ class RiskRule extends Model
         $result = self::where('rule_key', $ruleKey)->update(['weight' => $weight]);
         self::clearCache();
         return $result > 0;
+    }
+
+    /**
+     * Get risk level badge color
+     */
+    public function getRiskLevelColor(): string
+    {
+        return match ($this->risk_level) {
+            'critical' => 'red',
+            'high' => 'orange',
+            'medium' => 'amber',
+            'low' => 'green',
+            default => 'gray',
+        };
+    }
+
+    /**
+     * Get risk level label
+     */
+    public function getRiskLevelLabel(): string
+    {
+        return ucfirst($this->risk_level) . ' Risk';
+    }
+
+    /**
+     * Get risk level icon
+     */
+    public function getRiskLevelIcon(): string
+    {
+        return match ($this->risk_level) {
+            'critical' => 'fa-skull-crossbones',
+            'high' => 'fa-exclamation-triangle',
+            'medium' => 'fa-exclamation-circle',
+            'low' => 'fa-shield-alt',
+            default => 'fa-question-circle',
+        };
     }
 }

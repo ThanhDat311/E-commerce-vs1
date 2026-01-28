@@ -116,6 +116,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::resource('categories', AdminCategoryController::class);
     Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
 
+    // User Management - Additional Routes
+    Route::patch('users/{user}/toggle-status', [\App\Http\Controllers\Admin\UserController::class, 'toggleStatus'])->name('users.toggle_status');
+    Route::patch('users/{user}/update-role', [\App\Http\Controllers\Admin\UserController::class, 'updateRole'])->name('users.update_role');
+
     // ====================================================
     // [START] THÊM ĐOẠN NÀY VÀO ĐÂY
     // ====================================================
@@ -171,6 +175,17 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
             Route::get('/export', 'export')->name('export');
             Route::post('/import', 'import')->name('import');
         });
+
+    // AI Management
+    Route::controller(\App\Http\Controllers\Admin\AiController::class)
+        ->prefix('ai')
+        ->name('ai.')
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+        });
+
+    // Analytics Management
+    Route::get('/analytics', [\App\Http\Controllers\RevenueAnalyticsController::class, 'index'])->name('analytics.index');
 });
 
 // ====================================================

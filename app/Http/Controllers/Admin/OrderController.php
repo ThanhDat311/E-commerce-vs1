@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 class OrderController extends Controller
 {
     /**
-     * 1. DANH SÁCH ĐƠN HÀNG (Kèm bộ lọc)
+     * 1. DANH SÁCH ĐƠN HÀNG (Kèm bộ lọc nâng cao)
      */
     public function index(Request $request)
     {
@@ -19,19 +19,19 @@ class OrderController extends Controller
         $query = Order::with('user');
 
         // --- BỘ LỌC TÌM KIẾM ---
-        
+
         // 1. Tìm theo từ khóa (Mã đơn, Tên, Email)
         if ($request->filled('keyword')) {
             $keyword = $request->keyword;
-            $query->where(function($q) use ($keyword) {
+            $query->where(function ($q) use ($keyword) {
                 $q->where('id', 'like', "%$keyword%")
-                  ->orWhere('first_name', 'like', "%$keyword%")
-                  ->orWhere('last_name', 'like', "%$keyword%")
-                  ->orWhere('email', 'like', "%$keyword%");
+                    ->orWhere('first_name', 'like', "%$keyword%")
+                    ->orWhere('last_name', 'like', "%$keyword%")
+                    ->orWhere('email', 'like', "%$keyword%");
             });
         }
 
-        // 2. Lọc theo Trạng thái đơn hàng
+        // 2. Lọc theo Trạng thái đơn hàng (có giá trị: pending, processing, shipped, completed, cancelled)
         if ($request->filled('status')) {
             $query->where('order_status', $request->status);
         }
@@ -41,10 +41,16 @@ class OrderController extends Controller
             $query->where('payment_status', $request->payment_status);
         }
 
-        // 4. Lọc theo Ngày tháng
+        // 4. Lọc theo phương thức thanh toán
+        if ($request->filled('payment_method')) {
+            $query->where('payment_method', $request->payment_method);
+        }
+
+        // 5. Lọc theo Ngày tháng (From)
         if ($request->filled('date_from')) {
             $query->whereDate('created_at', '>=', $request->date_from);
         }
+        // 6. Lọc theo Ngày tháng (To)
         if ($request->filled('date_to')) {
             $query->whereDate('created_at', '<=', $request->date_to);
         }
@@ -62,65 +68,104 @@ class OrderController extends Controller
     {
         // Eager load: Lấy kèm sản phẩm, user, và lịch sử đơn hàng
         $order = Order::with(['orderItems.product', 'user', 'histories.user'])->findOrFail($id);
-        
+
         return view('admin.orders.show', compact('order'));
     }
 
     /**
-     * 3. CẬP NHẬT ĐƠN HÀNG
+     * 3. CẬP NHẬT ĐƠN HÀNG (Status, Payment Status, Tracking, Admin Notes)
      */
     public function update(Request $request, $id)
     {
         $order = Order::findOrFail($id);
-        
+
         // Mảng lưu lại các thay đổi để ghi log
         $actionDescription = [];
+        $hasChanges = false;
 
         // --- XỬ LÝ LOGIC CẬP NHẬT ---
 
         // 1. Cập nhật Trạng thái đơn hàng (order_status)
         if ($request->has('status') && $request->status != $order->order_status) {
-            $actionDescription[] = "Changed status from '{$order->order_status}' to '{$request->status}'";
-            $order->order_status = $request->status;
+            $oldStatus = $order->order_status;
+            $newStatus = $request->status;
+            $actionDescription[] = "Status changed from '{$oldStatus}' to '{$newStatus}'";
+            $order->order_status = $newStatus;
+            $hasChanges = true;
         }
 
         // 2. Cập nhật Trạng thái thanh toán (payment_status)
         if ($request->has('payment_status') && $request->payment_status != $order->payment_status) {
-            $actionDescription[] = "Payment status changed to '{$request->payment_status}'";
-            $order->payment_status = $request->payment_status;
+            $oldPaymentStatus = $order->payment_status;
+            $newPaymentStatus = $request->payment_status;
+            $actionDescription[] = "Payment status changed from '{$oldPaymentStatus}' to '{$newPaymentStatus}'";
+            $order->payment_status = $newPaymentStatus;
+            $hasChanges = true;
         }
 
         // 3. Cập nhật Vận chuyển (Carrier & Tracking)
         if ($request->filled('tracking_number')) {
-             // Chỉ ghi log nếu tracking thay đổi
-             if ($order->tracking_number != $request->tracking_number) {
-                 $actionDescription[] = "Updated tracking info: {$request->tracking_number}";
-             }
-             $order->tracking_number = $request->tracking_number;
-             $order->shipping_carrier = $request->shipping_carrier;
-        }
-        
-        // 4. Ghi chú nội bộ (Admin Note)
-        if ($request->filled('admin_note')) {
-            $order->admin_note = $request->admin_note;
-        }
-
-        // Lưu vào Database
-        $order->save();
-
-        // --- GHI LỊCH SỬ (LOG) ---
-        if (!empty($actionDescription)) {
-            // Kiểm tra xem Model OrderHistory có tồn tại không để tránh lỗi
-            if (class_exists(OrderHistory::class)) {
-                OrderHistory::create([
-                    'order_id' => $order->id,
-                    'user_id' => Auth::id(), // Người thực hiện (Admin đang đăng nhập)
-                    'action' => 'Update',
-                    'description' => implode('. ', $actionDescription),
-                ]);
+            // Chỉ ghi log nếu tracking thay đổi
+            if ($order->tracking_number != $request->tracking_number) {
+                $actionDescription[] = "Updated tracking info: {$request->tracking_number}";
+                $order->tracking_number = $request->tracking_number;
+                $order->shipping_carrier = $request->shipping_carrier ?? $order->shipping_carrier;
+                $hasChanges = true;
             }
         }
 
-        return back()->with('success', 'Order updated successfully.');
+        // 4. Ghi chú nội bộ (Admin Note)
+        if ($request->filled('admin_note')) {
+            $order->admin_note = $request->admin_note;
+            $hasChanges = true;
+        }
+
+        // Lưu vào Database nếu có thay đổi
+        if ($hasChanges) {
+            $order->save();
+
+            // --- GHI LỊCH SỬ (LOG) ---
+            if (!empty($actionDescription)) {
+                // Kiểm tra xem Model OrderHistory có tồn tại không để tránh lỗi
+                if (class_exists(OrderHistory::class)) {
+                    OrderHistory::create([
+                        'order_id' => $order->id,
+                        'user_id' => Auth::id(), // Người thực hiện (Admin đang đăng nhập)
+                        'action' => 'Update',
+                        'description' => implode('. ', $actionDescription),
+                    ]);
+                }
+            }
+
+            return back()->with('success', 'Order updated successfully.');
+        }
+
+        return back()->with('info', 'No changes made to the order.');
+    }
+
+    /**
+     * 4. CÓ THỂ THÊM: XÓA ĐƠN HÀNG (Nếu cần thiết)
+     */
+    public function destroy($id)
+    {
+        $order = Order::findOrFail($id);
+
+        // Chỉ cho phép xóa các đơn hàng bị hủy hoặc chưa xử lý
+        if (!in_array($order->order_status, ['cancelled', 'pending'])) {
+            return back()->with('error', 'Cannot delete orders that are already processing or completed.');
+        }
+
+        // Xóa các OrderItem liên quan trước (vì có foreign key)
+        $order->orderItems()->delete();
+
+        // Xóa OrderHistory liên quan
+        if (class_exists(OrderHistory::class)) {
+            OrderHistory::where('order_id', $order->id)->delete();
+        }
+
+        // Xóa Order
+        $order->delete();
+
+        return redirect()->route('admin.orders.index')->with('success', 'Order deleted successfully.');
     }
 }

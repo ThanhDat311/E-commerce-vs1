@@ -13,6 +13,13 @@ export default {
         extend: {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                display: ['Inter', ...defaultTheme.fontFamily.sans], // Thêm font cho admin
+            },
+            colors: {
+                // ĐỔI TÊN 'primary' THÀNH 'admin-primary'
+                "admin-primary": "#1111d4",
+                "background-light": "#f6f6f8",
+                "background-dark": "#101022",
             },
         },
     },

@@ -3,18 +3,33 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Models\Role;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::with('assignedRole')->latest()->paginate(10);
-        return view('admin.users.index', compact('users'));
+        $query = User::with('assignedRole')->latest();
+
+        // Filter by role
+        if ($request->filled('role')) {
+            $query->where('role_id', $request->role);
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('is_active', $request->status === 'active');
+        }
+
+        $users = $query->paginate(15);
+        $roles = Role::orderBy('name')->get();
+
+        return view('admin.users.index', compact('users', 'roles'));
     }
 
     public function create()
@@ -86,11 +101,52 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
-        if ($user->id === auth()->id()) {
+        if ($user->id === Auth::id()) {
             return redirect()->back()->with('error', 'You cannot delete yourself!');
         }
 
         $user->delete();
         return redirect()->route('admin.users.index')->with('success', 'User deleted successfully.');
+    }
+
+    public function toggleStatus(User $user)
+    {
+        if ($user->id === Auth::id()) {
+            return back()->with('error', 'You cannot lock/unlock yourself!');
+        }
+
+        $user->update([
+            'is_active' => ! $user->is_active
+        ]);
+
+        $message = $user->is_active
+            ? 'User account has been unlocked.'
+            : 'User account has been locked.';
+
+        return back()->with('success', $message);
+    }
+
+    public function updateRole(Request $request, User $user)
+    {
+        $request->validate([
+            'role_id' => ['required', 'exists:roles,id'],
+        ]);
+
+        if ($user->id === Auth::id() && Auth::user()->role_id !== $request->role_id) {
+            return back()->with('error', 'You cannot change your own role!');
+        }
+
+        $oldRole = $user->assignedRole->name ?? 'Unknown';
+
+        $user->update([
+            'role_id' => $request->role_id
+        ]);
+
+        $newRole = $user->fresh()->assignedRole->name ?? 'Unknown';
+
+        return back()->with(
+            'success',
+            "Role updated from {$oldRole} to {$newRole}."
+        );
     }
 }

@@ -1,3 +1,4 @@
+<!-- htmlhint style-disabled-in-attr: false, script-disabled-in-attr: false -->
 @extends('layouts.admin')
 
 @section('title', 'Edit Risk Rule: ' . $riskRule->rule_key)
