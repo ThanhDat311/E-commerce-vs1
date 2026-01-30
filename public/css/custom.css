@@ -1,16 +1,23 @@
 /* Màu chủ đạo của web bạn (dựa trên ảnh) */
 :root {
-    --primary-color: #f28b00; /* Màu cam */
-    --primary-hover: #d97c00;
+    /* Brand Colors */
+    --primary-color: #f28b00; /* Màu cam chính */
+    --primary-hover: #d97c00; /* Màu cam đậm khi hover */
+
+    /* Bootstrap Overrides - Ép Bootstrap dùng màu cam */
+    --bs-primary: #f28b00;
+    --bs-primary-rgb: 242, 139, 0;
+    --bs-link-color: #f28b00;
+    --bs-link-hover-color: #d97c00;
 }
 
 /* Tùy chỉnh Bootstrap */
 .text-primary {
-    color: var(--primary-color) !important;
+    color: var(--bs-primary) !important;
 }
 .btn-primary {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
 }
 .btn-primary:hover {
     background-color: var(--primary-hover);
@@ -111,6 +118,7 @@
     transition: all 0.3s ease;
     text-decoration: none;
     background-color: #fff;
+    color: var(--bs-dark);
 }
 
 /* 3. Hiệu ứng khi di chuột vào (Hover) */
@@ -142,4 +150,14 @@
 .pagination .page-link span {
     font-size: 1.1rem;
     line-height: 1;
+}
+
+/* Global Link Overrides to ensure Orange everywhere */
+a {
+    color: var(--bs-primary);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+a:hover {
+    color: var(--bs-link-hover-color);
 }
