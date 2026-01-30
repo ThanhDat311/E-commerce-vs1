@@ -16,8 +16,23 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
+        $user = $request->user();
+
+        if ($user->isAdmin()) {
+            return view('admin.profile.edit', [
+                'user' => $user,
+            ]);
+        }
+
+        if ($user->isVendor()) {
+            return view('vendor.profile.edit', [
+                'user' => $user,
+            ]);
+        }
+
         return view('profile.edit', [
-            'user' => $request->user(),
+            'user' => $user,
+            'addresses' => $user->addresses, // Pass addresses for customer view
         ]);
     }
 

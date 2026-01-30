@@ -19,8 +19,8 @@
     <link href="{{ asset('lib/animate/animate.min.css') }}" rel="stylesheet">
     <link href="{{ asset('lib/owlcarousel/assets/owl.carousel.min.css') }}" rel="stylesheet">
 
-    {{-- CSS Bootstrap (Nên đảm bảo file này là phiên bản 4 để đồng bộ với JS bên dưới) --}}
-    <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
+    {{-- CSS Bootstrap 5 --}}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <link href="{{ asset('css/style.css') }}" rel="stylesheet">
     <link href="{{ asset('css/custom.css') }}" rel="stylesheet">
@@ -46,14 +46,14 @@
     <a href="#" class="btn btn-primary btn-lg-square back-to-top"><i class="fa fa-arrow-up"></i></a>
 
     {{-- ======================================================= --}}
-    {{-- JAVASCRIPT LIBRARIES (Updated for Compatibility) --}}
+    {{-- JAVASCRIPT LIBRARIES --}}
     {{-- ======================================================= --}}
 
-    {{-- 1. jQuery (Bắt buộc load đầu tiên) --}}
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    {{-- 1. jQuery (Bắt buộc giữ lại cho plugins cũ: OwlCarousel, WOW) --}}
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 
-    {{-- 2. Bootstrap Bundle JS (V4.4.1 - Chứa Popper, hỗ trợ Accordion/Dropdown cũ) --}}
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
+    {{-- 2. Bootstrap 5 Bundle JS (Chứa Popper) --}}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     {{-- 3. Các thư viện hiệu ứng bổ trợ --}}
     <script src="{{ asset('lib/easing/easing.min.js') }}"></script>
@@ -69,6 +69,7 @@
     @include('partials.toast')
 
     @stack('scripts')
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </body>
 
 </html>
