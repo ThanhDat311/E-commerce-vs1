@@ -1,4 +1,4 @@
-@props(['title', 'striped' => true, 'hoverable' => true])
+@props(['title' => null, 'striped' => true, 'hoverable' => true])
 
 @php
 $tableClass = 'w-full';

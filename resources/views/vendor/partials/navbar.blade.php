@@ -1,47 +1,38 @@
-<nav class="navbar navbar-expand navbar-light topbar mb-4 static-top">
-
-    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
-        <i class="fa fa-bars"></i>
-    </button>
-
-    <form class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search ms-3">
-        <div class="input-group">
-            <input type="text" class="form-control bg-light border-0 small" placeholder="Search for..." aria-label="Search">
-            <div class="input-group-append">
-                <button class="btn btn-primary" type="button" style="background-color: var(--brand-primary); border-color: var(--brand-primary)">
-                    <i class="fas fa-search fa-sm"></i>
-                </button>
-            </div>
+<header class="h-16 border-b border-gray-200 bg-white flex items-center justify-between px-8 sticky top-0 z-10 backdrop-blur-md shadow-sm">
+    <div class="flex items-center flex-1 max-w-lg">
+        <div class="relative w-full">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <input class="w-full bg-gray-100 border border-gray-200 rounded-lg py-2.5 pl-10 pr-4 text-sm placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none"
+                placeholder="Search orders, products..." type="text" />
         </div>
-    </form>
+    </div>
 
-    <ul class="navbar-nav ms-auto">
+    <div class="flex items-center gap-6 ml-8">
+        <button class="relative p-2 text-gray-600 hover:text-indigo-600 hover:bg-gray-100 rounded-full transition-all group">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+            </svg>
+            <span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white shadow-md"></span>
+        </button>
 
-        <div class="topbar-divider d-none d-sm-block" style="width: 0; border-right: 1px solid #e3e6f0; height: calc(4.375rem - 2rem); margin: auto 1rem;"></div>
+        <div class="h-8 w-px bg-gray-200"></div>
 
-        <li class="nav-item dropdown no-arrow pe-3">
-            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <span class="me-2 d-none d-lg-inline text-gray-600 small" style="color: var(--sidebar-text); font-weight: 600;">
-                    {{ Auth::user()->name ?? 'Vendor' }}
-                </span>
-                <img class="img-profile rounded-circle" src="https://source.unsplash.com/QAB-WJcbgJk/60x60" style="height: 2rem; width: 2rem;">
-            </a>
-            <div class="dropdown-menu dropdown-menu-end shadow animated--grow-in" aria-labelledby="userDropdown">
-                <a class="dropdown-item" href="{{ route('profile.edit') }}">
-                    <i class="fas fa-user fa-sm fa-fw me-2 text-gray-400"></i>
-                    Profile
-                </a>
-                <div class="dropdown-divider"></div>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="dropdown-item">
-                        <i class="fas fa-sign-out-alt fa-sm fa-fw me-2 text-gray-400"></i>
-                        Logout
-                    </button>
-                </form>
-            </div>
-        </li>
+        <p class="text-sm font-semibold text-gray-700 min-w-max">
+            {{ \Carbon\Carbon::now()->format('l, M d') }}
+        </p>
 
-    </ul>
-
-</nav>
+        <div class="relative ml-3">
+             <div class="flex items-center gap-3">
+                 <div class="text-right hidden md:block">
+                     <p class="text-sm font-bold text-gray-700">{{ Auth::user()->name }}</p>
+                     <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Vendor</p>
+                 </div>
+                 <img class="w-9 h-9 rounded-full border border-gray-200 shadow-sm"
+                     src="{{ Auth::user()->profile_photo_url ?? 'https://ui-avatars.com/api/?name='.urlencode(Auth::user()->name).'&background=3b82f6&color=fff' }}"
+                     alt="{{ Auth::user()->name }}">
+             </div>
+        </div>
+    </div>
+</header>
