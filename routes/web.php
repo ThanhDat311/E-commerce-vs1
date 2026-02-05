@@ -25,6 +25,12 @@ require __DIR__ . '/auth.php';
 // PUBLIC ROUTES (Khách vãng lai có thể truy cập)
 // ====================================================
 
+// Google Auth
+Route::controller(\App\Http\Controllers\Auth\GoogleController::class)->group(function () {
+    Route::get('auth/google', 'redirectToGoogle')->name('auth.google');
+    Route::get('auth/google/callback', 'handleGoogleCallback')->name('auth.google.callback');
+});
+
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // [FIX QUAN TRỌNG] Đổi name thành 'shop.index' để khớp với Sidebar Filter

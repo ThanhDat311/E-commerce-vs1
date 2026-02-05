@@ -70,6 +70,12 @@
                                 </button>
                             </div>
                             
+                            <div class="d-grid gap-2 mt-3">
+                                <a href="{{ route('auth.google') }}" class="btn btn-danger text-white py-2 fw-bold rounded-pill shadow-sm">
+                                    <i class="fab fa-google me-2"></i> LOGIN WITH GOOGLE
+                                </a>
+                            </div>
+
                             <hr class="my-4">
                             
                             <div class="text-center">

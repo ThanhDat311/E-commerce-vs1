@@ -21,6 +21,7 @@ class User extends Authenticatable
         'address',      // [NEW] Thêm trường này
         'is_active',
         'email_verified_at',
+        'google_id',
     ];
 
     protected $hidden = [
