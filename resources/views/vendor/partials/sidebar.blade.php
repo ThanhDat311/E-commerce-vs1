@@ -11,7 +11,7 @@ $ordersOpen = request()->routeIs('vendor.orders.*');
             <i class="fas fa-store text-white"></i>
         </div>
         <div>
-            <h1 class="text-lg font-bold bg-gradient-to-r from-orange-400 to-red-300 bg-clip-text text-transparent">
+            <h1 class="text-lg font-bold bg-gradient-to-r from-orange-400 to-red-300 bg-clip-text">
                 Vendor Portal
             </h1>
             <p class="text-xs text-orange-300/70 font-medium uppercase tracking-tighter">Shop Manager</p>
