@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
@@ -22,7 +22,7 @@ class CategoryController extends Controller
         // Build tree structure
         $tree = $this->buildCategoryTree($categories);
 
-        return view('admin.categories.index', compact('categories', 'tree'));
+        return view('pages.admin.categories.index', compact('categories', 'tree'));
     }
 
     /**
@@ -36,16 +36,16 @@ class CategoryController extends Controller
             if (is_null($category->parent_id)) {
                 $tree[$category->id] = [
                     'category' => $category,
-                    'children' => []
+                    'children' => [],
                 ];
             }
         }
 
         foreach ($categories as $category) {
-            if (!is_null($category->parent_id) && isset($tree[$category->parent_id])) {
+            if (! is_null($category->parent_id) && isset($tree[$category->parent_id])) {
                 $tree[$category->parent_id]['children'][$category->id] = [
                     'category' => $category,
-                    'children' => []
+                    'children' => [],
                 ];
             }
         }
@@ -55,7 +55,7 @@ class CategoryController extends Controller
 
     public function create()
     {
-        return view('admin.categories.create');
+        return view('pages.admin.categories.create');
     }
 
     public function store(Request $request)
@@ -66,7 +66,7 @@ class CategoryController extends Controller
             'slug' => 'nullable|string|max:255|unique:categories,slug',
             'description' => 'nullable|string|max:1000',
             'is_active' => 'boolean',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120'
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
         ]);
 
         // Auto-generate slug if not provided
@@ -74,14 +74,14 @@ class CategoryController extends Controller
 
         // Handle image upload
         if ($request->hasFile('image')) {
-            if (!File::exists(public_path('img/categories'))) {
+            if (! File::exists(public_path('img/categories'))) {
                 File::makeDirectory(public_path('img/categories'), 0755, true);
             }
 
             $file = $request->file('image');
-            $filename = time() . '_' . Str::slug($data['name']) . '.' . $file->getClientOriginalExtension();
+            $filename = time().'_'.Str::slug($data['name']).'.'.$file->getClientOriginalExtension();
             $file->move(public_path('img/categories'), $filename);
-            $data['image_url'] = 'img/categories/' . $filename;
+            $data['image_url'] = 'img/categories/'.$filename;
         }
 
         $data['is_active'] = $request->has('is_active') ? 1 : 0;
@@ -96,18 +96,19 @@ class CategoryController extends Controller
         $categories = Category::where('id', '!=', $category->id)
             ->orderBy('name')
             ->get();
-        return view('admin.categories.edit', compact('category', 'categories'));
+
+        return view('pages.admin.categories.edit', compact('category', 'categories'));
     }
 
     public function update(Request $request, Category $category)
     {
         $data = $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
+            'name' => 'required|string|max:255|unique:categories,name,'.$category->id,
             'parent_id' => 'nullable|exists:categories,id',
-            'slug' => 'nullable|string|max:255|unique:categories,slug,' . $category->id,
+            'slug' => 'nullable|string|max:255|unique:categories,slug,'.$category->id,
             'description' => 'nullable|string|max:1000',
             'is_active' => 'boolean',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120'
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
         ]);
 
         $data['slug'] = $data['slug'] ?? Str::slug($data['name']);
@@ -119,14 +120,14 @@ class CategoryController extends Controller
                 File::delete(public_path($category->image_url));
             }
 
-            if (!File::exists(public_path('img/categories'))) {
+            if (! File::exists(public_path('img/categories'))) {
                 File::makeDirectory(public_path('img/categories'), 0755, true);
             }
 
             $file = $request->file('image');
-            $filename = time() . '_' . Str::slug($data['name']) . '.' . $file->getClientOriginalExtension();
+            $filename = time().'_'.Str::slug($data['name']).'.'.$file->getClientOriginalExtension();
             $file->move(public_path('img/categories'), $filename);
-            $data['image_url'] = 'img/categories/' . $filename;
+            $data['image_url'] = 'img/categories/'.$filename;
         }
 
         $data['is_active'] = $request->has('is_active') ? 1 : 0;
@@ -144,6 +145,7 @@ class CategoryController extends Controller
         }
 
         $category->delete();
+
         return redirect()->route('admin.categories.index')->with('success', 'Category deleted successfully.');
     }
 }

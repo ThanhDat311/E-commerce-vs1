@@ -2,19 +2,19 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use App\Models\Scopes\VendorOrderScope;
 use App\Traits\Auditable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
 {
-    use HasFactory, Auditable;
+    use Auditable, HasFactory;
 
     protected static function boot()
     {
         parent::boot();
-        static::addGlobalScope(new VendorOrderScope());
+        static::addGlobalScope(new VendorOrderScope);
     }
 
     protected $fillable = [
@@ -28,7 +28,10 @@ class Order extends Model
         'order_status',
         'payment_status',
         'payment_method',
-        'total'
+        'total',
+        'shipping_carrier',
+        'tracking_number',
+        'admin_note',
     ];
 
     public function orderItems()
@@ -64,5 +67,20 @@ class Order extends Model
     public function aiFeature()
     {
         return $this->hasOne(AiFeatureStore::class, 'order_id');
+    }
+
+    public function disputes()
+    {
+        return $this->hasMany(Dispute::class);
+    }
+
+    public function refunds()
+    {
+        return $this->hasMany(Refund::class);
+    }
+
+    public function activeDispute()
+    {
+        return $this->hasOne(Dispute::class)->whereIn('status', ['pending', 'under_review']);
     }
 }

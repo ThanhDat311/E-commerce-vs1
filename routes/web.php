@@ -17,7 +17,7 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\WishlistController;
 use Illuminate\Support\Facades\Route;
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';
 
 // ====================================================
 // PUBLIC ROUTES (Khách vãng lai có thể truy cập)
@@ -125,6 +125,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     // User Management - Additional Routes
     Route::patch('users/{user}/toggle-status', [\App\Http\Controllers\Admin\UserController::class, 'toggleStatus'])->name('users.toggle_status');
     Route::patch('users/{user}/update-role', [\App\Http\Controllers\Admin\UserController::class, 'updateRole'])->name('users.update_role');
+    Route::post('users/{user}/reset-password', [\App\Http\Controllers\Admin\UserController::class, 'resetPassword'])->name('users.reset_password');
+    Route::post('users/{user}/force-logout', [\App\Http\Controllers\Admin\UserController::class, 'forceLogout'])->name('users.force_logout');
 
     // ====================================================
     // [START] THÊM ĐOẠN NÀY VÀO ĐÂY
@@ -138,13 +140,17 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
             Route::get('/low-stock', 'lowStock')->name('low_stock');
         });
 
-    // Custom Order Routes cho Admin
-    Route::controller(AdminOrderController::class)->prefix('orders')->name('orders.')->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::get('/{id}', 'show')->name('show');
-        Route::put('/{id}', 'update')->name('update');
-        Route::match(['put', 'patch'], '/{id}/status', 'update')->name('updateStatus');
-    });
+    // Orders Management
+    Route::resource('orders', AdminOrderController::class);
+    Route::post('orders/{order}/cancel', [AdminOrderController::class, 'cancel'])->name('orders.cancel');
+    Route::post('orders/{order}/override-status', [AdminOrderController::class, 'overrideStatus'])->name('orders.override_status');
+    Route::get('orders-export', [AdminOrderController::class, 'export'])->name('orders.export');
+
+    // Disputes Management
+    Route::resource('disputes', \App\Http\Controllers\Admin\DisputeController::class)->only(['index', 'show']);
+    Route::post('disputes/{dispute}/review', [\App\Http\Controllers\Admin\DisputeController::class, 'review'])->name('disputes.review');
+    Route::post('disputes/{dispute}/resolve', [\App\Http\Controllers\Admin\DisputeController::class, 'resolve'])->name('disputes.resolve');
+    Route::post('disputes/{dispute}/reject', [\App\Http\Controllers\Admin\DisputeController::class, 'reject'])->name('disputes.reject');
 
     // Price Suggestions Management
     Route::controller(\App\Http\Controllers\Admin\PriceSuggestionController::class)

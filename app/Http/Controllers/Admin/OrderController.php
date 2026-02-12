@@ -58,7 +58,7 @@ class OrderController extends Controller
         // Sắp xếp đơn mới nhất lên đầu và phân trang
         $orders = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
 
-        return view('admin.orders.index', compact('orders'));
+        return view('pages.admin.orders.index', compact('orders'));
     }
 
     /**
@@ -69,7 +69,7 @@ class OrderController extends Controller
         // Eager load: Lấy kèm sản phẩm, user, và lịch sử đơn hàng
         $order = Order::with(['orderItems.product', 'user', 'histories.user'])->findOrFail($id);
 
-        return view('admin.orders.show', compact('order'));
+        return view('pages.admin.orders.show', compact('order'));
     }
 
     /**
@@ -125,7 +125,7 @@ class OrderController extends Controller
             $order->save();
 
             // --- GHI LỊCH SỬ (LOG) ---
-            if (!empty($actionDescription)) {
+            if (! empty($actionDescription)) {
                 // Kiểm tra xem Model OrderHistory có tồn tại không để tránh lỗi
                 if (class_exists(OrderHistory::class)) {
                     OrderHistory::create([
@@ -151,7 +151,7 @@ class OrderController extends Controller
         $order = Order::findOrFail($id);
 
         // Chỉ cho phép xóa các đơn hàng bị hủy hoặc chưa xử lý
-        if (!in_array($order->order_status, ['cancelled', 'pending'])) {
+        if (! in_array($order->order_status, ['cancelled', 'pending'])) {
             return back()->with('error', 'Cannot delete orders that are already processing or completed.');
         }
 
@@ -167,5 +167,118 @@ class OrderController extends Controller
         $order->delete();
 
         return redirect()->route('admin.orders.index')->with('success', 'Order deleted successfully.');
+    }
+
+    /**
+     * Cancel an order
+     */
+    public function cancel(Order $order)
+    {
+        if (! in_array($order->order_status, ['pending', 'processing'])) {
+            return back()->with('error', 'Cannot cancel order in current status.');
+        }
+
+        $order->update(['order_status' => 'cancelled']);
+
+        OrderHistory::create([
+            'order_id' => $order->id,
+            'user_id' => Auth::id(),
+            'action' => 'Cancel',
+            'description' => 'Order cancelled by admin',
+        ]);
+
+        return back()->with('success', 'Order cancelled successfully.');
+    }
+
+    /**
+     * Override order status (admin power)
+     */
+    public function overrideStatus(Request $request, Order $order)
+    {
+        $request->validate([
+            'status' => 'required|in:pending,processing,shipped,delivered,cancelled',
+            'reason' => 'required|string|max:500',
+        ]);
+
+        $oldStatus = $order->order_status;
+        $order->update(['order_status' => $request->status]);
+
+        OrderHistory::create([
+            'order_id' => $order->id,
+            'user_id' => Auth::id(),
+            'action' => 'Override Status',
+            'description' => "Status overridden from {$oldStatus} to {$request->status}. Reason: {$request->reason}",
+        ]);
+
+        return back()->with('success', 'Order status overridden.');
+    }
+
+    /**
+     * Export orders to CSV
+     */
+    public function export(Request $request)
+    {
+        $query = Order::with('user');
+
+        // Apply same filters as index
+        if ($request->filled('keyword')) {
+            $keyword = $request->keyword;
+            $query->where(function ($q) use ($keyword) {
+                $q->where('id', 'like', "%$keyword%")
+                    ->orWhere('first_name', 'like', "%$keyword%")
+                    ->orWhere('last_name', 'like', "%$keyword%")
+                    ->orWhere('email', 'like', "%$keyword%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('order_status', $request->status);
+        }
+
+        if ($request->filled('payment_status')) {
+            $query->where('payment_status', $request->payment_status);
+        }
+
+        if ($request->filled('payment_method')) {
+            $query->where('payment_method', $request->payment_method);
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        $orders = $query->orderBy('created_at', 'desc')->get();
+
+        // Generate CSV
+        $filename = 'orders_'.now()->format('Y-m-d_His').'.csv';
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ];
+
+        $callback = function () use ($orders) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['Order ID', 'Customer', 'Email', 'Total', 'Status', 'Payment Status', 'Date']);
+
+            foreach ($orders as $order) {
+                fputcsv($file, [
+                    $order->id,
+                    $order->first_name.' '.$order->last_name,
+                    $order->email,
+                    $order->total,
+                    $order->order_status,
+                    $order->payment_status,
+                    $order->created_at->format('Y-m-d H:i'),
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

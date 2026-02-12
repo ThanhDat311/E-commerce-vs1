@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class AuthLog extends Model
 {
+    public $timestamps = true;
+
     protected $fillable = [
         'user_id',
         'session_id',

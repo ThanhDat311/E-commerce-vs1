@@ -1,9 +1,9 @@
 @props(['product'])
 
 <div x-data="{ 
-    activeImage: '{{ $product->image_url ? Storage::url($product->image_url) : asset('img/no-image.png') }}',
+    activeImage: '{{ $product->image_url ? asset($product->image_url) : asset('img/no-image.png') }}',
     images: [
-        '{{ $product->image_url ? Storage::url($product->image_url) : asset('img/no-image.png') }}',
+        '{{ $product->image_url ? asset($product->image_url) : asset('img/no-image.png') }}',
         // Add more images here if available from specifictaions or gallery relation
         // For now, we simulate with placeholders if no gallery
     ] 
@@ -23,11 +23,11 @@
         <!-- Simulation for demo purposes since we might not have gallery yet -->
         @for($i = 1; $i <= 3; $i++)
         <button 
-            @click="activeImage = '{{ Storage::url('img/product-'.$i.'.png') }}'"
+            @click="activeImage = '{{ asset('img/product-'.$i.'.png') }}'"
             class="border-2 rounded-lg overflow-hidden w-20 h-20 flex-shrink-0"
-            :class="activeImage === '{{ Storage::url('img/product-'.$i.'.png') }}' ? 'border-indigo-600' : 'border-transparent hover:border-gray-300'"
+            :class="activeImage === '{{ asset('img/product-'.$i.'.png') }}' ? 'border-indigo-600' : 'border-transparent hover:border-gray-300'"
         >
-             <img src="{{ Storage::url('img/product-'.$i.'.png') }}" class="w-full h-full object-cover">
+             <img src="{{ asset('img/product-'.$i.'.png') }}" class="w-full h-full object-cover">
         </button>
         @endfor
     </div>

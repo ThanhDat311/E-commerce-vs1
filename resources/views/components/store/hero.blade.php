@@ -2,21 +2,21 @@
     activeSlide: 0,
     slides: [
         {
-            image: '/images/hero/slide1.jpg', // Replace with real images or use placeholder
+            image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1920&h=600&fit=crop', 
             title: 'Summer Collection Launch Event',
             subtitle: 'Discover the hottest trends of the season. Up to 50% off on all summer essentials.',
             cta: 'Shop Now',
             link: '#'
         },
         {
-            image: '/images/hero/slide2.jpg', 
+            image: 'https://images.unsplash.com/photo-1468495244123-6c6c332eeece?w=1920&h=600&fit=crop', 
             title: 'New Arrivals: Tech Gadgets',
             subtitle: 'Upgrade your life with the latest smartphones, laptops, and smart home devices.',
             cta: 'Explore Tech',
             link: '#'
         },
         {
-            image: '/images/hero/slide3.jpg', 
+            image: 'https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?w=1920&h=600&fit=crop', 
             title: 'Premium Home Decor',
             subtitle: 'Transform your living space with our exclusive range of furniture and accessories.',
             cta: 'View Collection',

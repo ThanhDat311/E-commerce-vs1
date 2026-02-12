@@ -15,13 +15,15 @@ class ProductController extends Controller
     public function index()
     {
         $products = Product::with('category')->orderBy('created_at', 'desc')->paginate(10);
-        return view('admin.products.index', compact('products'));
+
+        return view('pages.admin.products.index', compact('products'));
     }
 
     public function create()
     {
-        $categories = Category::all(); 
-        return view('admin.products.create', compact('categories'));
+        $categories = Category::all();
+
+        return view('pages.admin.products.create', compact('categories'));
     }
 
     // [FIX] Sử dụng StoreProductRequest
@@ -31,14 +33,14 @@ class ProductController extends Controller
 
         if ($request->hasFile('image')) {
             $file = $request->file('image');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            
-            if (!File::exists(public_path('img/products'))) {
+            $filename = time().'_'.$file->getClientOriginalName();
+
+            if (! File::exists(public_path('img/products'))) {
                 File::makeDirectory(public_path('img/products'), 0755, true);
             }
 
             $file->move(public_path('img/products'), $filename);
-            $data['image_url'] = 'img/products/' . $filename;
+            $data['image_url'] = 'img/products/'.$filename;
         }
 
         // Xử lý checkbox (Nếu không check thì request không gửi lên -> mặc định là 0)
@@ -53,7 +55,8 @@ class ProductController extends Controller
     public function edit(Product $product)
     {
         $categories = Category::all();
-        return view('admin.products.edit', compact('product', 'categories'));
+
+        return view('pages.admin.products.edit', compact('product', 'categories'));
     }
 
     // [FIX] Sử dụng UpdateProductRequest để tránh lỗi Unique
@@ -68,9 +71,9 @@ class ProductController extends Controller
             }
 
             $file = $request->file('image');
-            $filename = time() . '_' . $file->getClientOriginalName();
+            $filename = time().'_'.$file->getClientOriginalName();
             $file->move(public_path('img/products'), $filename);
-            $data['image_url'] = 'img/products/' . $filename;
+            $data['image_url'] = 'img/products/'.$filename;
         }
 
         $data['is_new'] = $request->has('is_new') ? 1 : 0;

@@ -4,7 +4,7 @@
     <!-- Image Aspect Ratio -->
     <div class="aspect-w-1 aspect-h-1 w-full overflow-hidden bg-gray-200 group-hover:opacity-75 lg:aspect-none lg:h-80 relative">
          @if($product->image_url)
-            <img src="{{ Storage::url($product->image_url) }}" alt="{{ $product->name }}" class="h-full w-full object-cover object-center lg:h-full lg:w-full">
+            <img src="{{ asset($product->image_url) }}" alt="{{ $product->name }}" class="h-full w-full object-cover object-center lg:h-full lg:w-full">
         @else
             <div class="h-full w-full flex items-center justify-center bg-gray-100 text-gray-400">
                 <svg class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
