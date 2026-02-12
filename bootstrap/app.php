@@ -1,19 +1,19 @@
 <?php
 
+use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\CheckPermission;
+use App\Http\Middleware\CheckRole;
+use App\Http\Middleware\Currency;
+use App\Http\Middleware\Localization;
+use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
-use Illuminate\Foundation\Configuration\Middleware;
-use App\Http\Middleware\AdminMiddleware;
-use App\Http\Middleware\CheckRole;
-use App\Http\Middleware\Localization;
-use App\Http\Middleware\Currency;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         channels: __DIR__.'/../routes/channels.php',
-        web: __DIR__ . '/../routes/web.php',
-        commands: __DIR__ . '/../routes/console.php',
+        web: __DIR__.'/../routes/web.php',
+        commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
     ->withSchedule(function ($schedule) {
@@ -24,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => CheckPermission::class,
             'admin' => AdminMiddleware::class,
             'role' => CheckRole::class,
+            'role.check' => RoleMiddleware::class,
             'localization' => Localization::class,
             'currency' => Currency::class,
         ]);

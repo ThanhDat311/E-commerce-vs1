@@ -2,28 +2,28 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Scopes\VendorScope;
 use App\Traits\Auditable;
 use App\Traits\HasFlashSalePrice;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Searchable;
-
 
 class Product extends Model
 {
-    use HasFactory, Auditable, HasFlashSalePrice, Searchable;
+    use Auditable, HasFactory, HasFlashSalePrice, Searchable;
 
     protected static function boot()
     {
         parent::boot();
-        static::addGlobalScope(new VendorScope());
+        static::addGlobalScope(new VendorScope);
     }
 
     protected $fillable = [
         'vendor_id',
         'category_id',
         'name',
+        'slug', // Add slug
         'sku',
         'price',
         'sale_price',
@@ -34,11 +34,25 @@ class Product extends Model
         'description',
     ];
 
-    // --- THÊM ĐOẠN NÀY ---
     protected $casts = [
         'is_new' => 'boolean',
         'is_featured' => 'boolean',
     ];
+
+    protected static function booted()
+    {
+        static::creating(function ($product) {
+            if (empty($product->slug)) {
+                $product->slug = \Illuminate\Support\Str::slug($product->name).'-'.\Illuminate\Support\Str::random(6);
+            }
+        });
+
+        static::updating(function ($product) {
+            if ($product->isDirty('name') && empty($product->slug)) {
+                $product->slug = \Illuminate\Support\Str::slug($product->name).'-'.$product->id;
+            }
+        });
+    }
 
     public function category()
     {
@@ -77,7 +91,7 @@ class Product extends Model
 
     /**
      * Get the indexable data array for the model.
-     * 
+     *
      * Defines which fields Scout should index for full-text search
      * (name, description, price, category_id)
      *

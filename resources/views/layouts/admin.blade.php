@@ -1,190 +1,81 @@
-<!DOCTYPE html>
-<html lang="vi">
+<x-base-layout>
+    <div class="min-h-screen bg-gray-100 flex" x-data="{ isSidebarOpen: false }">
+        <!-- Sidebar -->
+        <x-shared.sidebar>
+            @if(($sidebarType ?? 'admin') === 'staff')
+                <x-shared.sidebar-link :href="route('staff.dashboard')" :active="request()->routeIs('staff.dashboard')">
+                    <x-slot:icon>
+                        <svg class="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                        </svg>
+                    </x-slot:icon>
+                    Dashboard
+                </x-shared.sidebar-link>
+                
+                <x-shared.sidebar-link :href="route('staff.orders.index')" :active="request()->routeIs('staff.orders.*')">
+                    <x-slot:icon>
+                        <svg class="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                        </svg>
+                    </x-slot:icon>
+                    Orders
+                </x-shared.sidebar-link>
+            @else
+                <x-shared.sidebar-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
+                    <x-slot:icon>
+                        <svg class="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        </svg>
+                    </x-slot:icon>
+                    Dashboard
+                </x-shared.sidebar-link>
+                
+                <x-shared.sidebar-link :href="route('admin.products.index')" :active="request()->routeIs('admin.products.*')">
+                    <x-slot:icon>
+                        <svg class="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                    </x-slot:icon>
+                    Products
+                </x-shared.sidebar-link>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Admin Dashboard')</title>
+                <x-shared.sidebar-link :href="route('admin.categories.index')" :active="request()->routeIs('admin.categories.*')">
+                    <x-slot:icon>
+                        <svg class="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                        </svg>
+                    </x-slot:icon>
+                    Categories
+                </x-shared.sidebar-link>
 
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+                 <x-shared.sidebar-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">
+                    <x-slot:icon>
+                        <svg class="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </x-slot:icon>
+                    Users
+                </x-shared.sidebar-link>
+                
+                <x-shared.sidebar-link :href="route('admin.orders.index')" :active="request()->routeIs('admin.orders.*')">
+                    <x-slot:icon>
+                        <svg class="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        </svg>
+                    </x-slot:icon>
+                    Orders
+                </x-shared.sidebar-link>
+            @endif
+        </x-shared.sidebar>
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+            <x-shared.header :breadcrumbs="$breadcrumbs ?? []" />
 
-    <style>
-        * {
-            scrollbar-width: thin;
-            scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
-        }
-
-        *::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-
-        *::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        *::-webkit-scrollbar-thumb {
-            background-color: rgba(0, 0, 0, 0.2);
-            border-radius: 3px;
-        }
-
-        .scrollbar-hide {
-            scrollbar-width: none;
-        }
-
-        .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-        }
-
-        body {
-            font-family: 'Nunito', sans-serif;
-        }
-
-        #wrapper {
-            display: flex;
-            height: 100vh;
-        }
-
-        #content-wrapper {
-            flex: 1;
-            overflow: hidden;
-        }
-
-        #content {
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        /* Toast Notification Styles */
-        #notification-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 9999;
-            max-width: 400px;
-        }
-
-        .toast {
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            border: none;
-            margin-bottom: 10px;
-            animation: slideInRight 0.3s ease-out;
-        }
-
-        @keyframes slideInRight {
-            from {
-                transform: translateX(450px);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        .animate-slide-in-right {
-            animation: slideInRight 0.3s ease-out;
-        }
-
-        .alert {
-            border-radius: 0.75rem;
-            border: none;
-        }
-
-        .alert-success {
-            background-color: #ecfdf5;
-            color: #065f46;
-            border-left: 4px solid #10b981;
-        }
-
-        .alert-danger {
-            background-color: #fef2f2;
-            color: #991b1b;
-            border-left: 4px solid #ef4444;
-        }
-
-        .btn-close {
-            opacity: 0.7;
-        }
-
-        .btn-close:hover {
-            opacity: 1;
-        }
-
-        footer {
-            background-color: #f9fafb;
-            border-top: 1px solid #e5e7eb;
-        }
-    </style>
-</head>
-
-<body data-admin-notifications>
-    <div id="wrapper">
-        <!-- Real-time Notifications Container -->
-        <div id="notification-container"></div>
-
-        @include('admin.partials.sidebar')
-        <div id="content-wrapper" class="flex flex-col">
-
-            <div id="content">
-
-                @include('admin.partials.navbar')
-                <div class="p-8">
-                    @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show mb-6" role="alert">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                </svg>
-                                <span>{{ session('success') }}</span>
-                            </div>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    </div>
-                    @endif
-
-                    @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show mb-6" role="alert">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
-                                </svg>
-                                <span>{{ session('error') }}</span>
-                            </div>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    </div>
-                    @endif
-
-                    @yield('content')
-
-                </div>
-            </div>
-            <footer class="mt-auto">
-                <div class="py-4 px-8">
-                    <div class="text-center text-sm text-gray-500">
-                        <span>Copyright &copy; Electro E-commerce {{ date('Y') }}</span>
-                    </div>
-                </div>
-            </footer>
-
+            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
+                {{ $slot }}
+            </main>
         </div>
     </div>
-
-    <!-- Load Echo only on dashboard page for real-time notifications -->
-    @if(Route::currentRouteName() === 'admin.dashboard')
-    @vite('resources/js/echo.js')
-    @endif
-
-    @stack('scripts')
-</body>
-
-</html>
+</x-base-layout>

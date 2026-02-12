@@ -28,7 +28,27 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('home', absolute: false));
+        $user = $request->user();
+
+        // Check if account is active
+        if (! $user->is_active) {
+            Auth::logout();
+
+            return back()->withErrors([
+                'email' => 'Your account has been deactivated. Please contact support.',
+            ]);
+        }
+
+        // Role-based redirect
+        $redirectRoute = match ($user->role_name) {
+            'admin' => 'admin.dashboard',
+            'staff' => 'staff.dashboard',
+            'vendor' => 'vendor.dashboard',
+            'customer' => 'home',
+            default => 'home',
+        };
+
+        return redirect()->intended(route($redirectRoute));
     }
 
     /**

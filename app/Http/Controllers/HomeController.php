@@ -2,28 +2,37 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
 
 class HomeController extends Controller
 {
     protected $productRepository;
 
-    public function __construct(ProductRepositoryInterface $productRepository)
-    {
+    protected $categoryRepository;
+
+    public function __construct(
+        ProductRepositoryInterface $productRepository,
+        \App\Repositories\Interfaces\CategoryRepositoryInterface $categoryRepository
+    ) {
         $this->productRepository = $productRepository;
+        $this->categoryRepository = $categoryRepository;
     }
 
     public function index()
     {
-        // Get home page products from repository with Redis caching
-        // Cache key: 'home_products' | TTL: 60 minutes (3600 seconds)
-        // Cache is automatically invalidated when products are created, updated, or deleted
-        $products = $this->productRepository->getHomePageProducts(8);
+        // Featured Categories
+        $categories = $this->categoryRepository->getFeaturedCategories(6);
 
-        return view('home', [
-            'newProducts' => $products['newProducts'],
-            'arrivals' => $products['arrivals']
-        ]);
+        // Products (Cached)
+        $productsData = $this->productRepository->getHomePageProducts(8);
+        $newProducts = $productsData['newProducts'];
+        $arrivals = $productsData['arrivals'];
+
+        // Flash Sales (Mocked for now or fetched if logic exists)
+        // Ideally: Product::where('flash_sale', true)->get();
+        // For now, let's use 'newProducts' as a placeholder or fetch 4 random
+        $flashSales = \App\Models\Product::inRandomOrder()->take(4)->get();
+
+        return view('pages.store.home', compact('categories', 'newProducts', 'arrivals', 'flashSales'));
     }
 }

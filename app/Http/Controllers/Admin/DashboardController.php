@@ -3,33 +3,36 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Order;
 use App\Models\AiFeatureStore;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
+    protected $orderRepo;
+
+    protected $userRepo;
+
+    public function __construct(
+        \App\Repositories\Interfaces\OrderRepositoryInterface $orderRepo,
+        \App\Repositories\Interfaces\UserRepositoryInterface $userRepo
+    ) {
+        $this->orderRepo = $orderRepo;
+        $this->userRepo = $userRepo;
+    }
+
     public function index()
     {
         // 1. CÁC CON SỐ TỔNG QUAN
-        $totalRevenue = Order::where('order_status', '!=', 'cancelled')->sum('total');
-        $totalOrders = Order::count();
-        $pendingOrders = Order::where('order_status', 'pending')->count();
+        $totalRevenue = $this->orderRepo->getTotalRevenue();
+        $totalOrders = $this->orderRepo->count();
+        $pendingOrders = $this->orderRepo->getPendingCount();
+        $activeUsers = $this->userRepo->getActiveUsersCount(); // Using User Repo
+
+        // AI Risk Score
         $fraudBlocked = AiFeatureStore::where('risk_score', '>=', 0.7)->count();
+        $avgRiskScore = AiFeatureStore::avg('risk_score') ?? 0;
 
         // 2. BIỂU ĐỒ DOANH THU (Line Chart)
-        $revenueData = Order::select(
-                            DB::raw('DATE(created_at) as date'), 
-                            DB::raw('SUM(total) as total')
-                        )
-                        ->where('order_status', '!=', 'cancelled')
-                        ->where('created_at', '>=', Carbon::now()->subDays(7))
-                        ->groupBy('date')
-                        ->orderBy('date', 'ASC')
-                        ->get();
-
-        // Ép kiểu về mảng thuần cho JS
+        $revenueData = $this->orderRepo->getRevenueData(7);
         $chartLabels = $revenueData->pluck('date')->toArray();
         $chartValues = $revenueData->pluck('total')->toArray();
 
@@ -37,20 +40,22 @@ class DashboardController extends Controller
         $lowRisk = AiFeatureStore::where('risk_score', '<', 0.3)->count();
         $mediumRisk = AiFeatureStore::whereBetween('risk_score', [0.3, 0.7])->count();
         $highRisk = AiFeatureStore::where('risk_score', '>=', 0.7)->count();
+        $riskData = [(int) $lowRisk, (int) $mediumRisk, (int) $highRisk];
 
-        // --- QUAN TRỌNG: GOM DỮ LIỆU LẠI THÀNH MẢNG $riskData ---
-        $riskData = [
-            (int) $lowRisk,
-            (int) $mediumRisk,
-            (int) $highRisk
-        ];
+        // 4. LATEST ORDERS
+        $latestOrders = $this->orderRepo->getLatestOrders(5);
 
-        // --- TRUYỀN BIẾN SANG VIEW ---
-        // Phải có 'riskData' trong compact() thì bên View mới hiểu
-        return view('admin.dashboard', compact(
-            'totalRevenue', 'totalOrders', 'pendingOrders', 'fraudBlocked',
-            'chartLabels', 'chartValues', 
-            'riskData' 
+        return view('pages.admin.dashboard', compact(
+            'totalRevenue',
+            'totalOrders',
+            'pendingOrders',
+            'activeUsers',
+            'fraudBlocked',
+            'avgRiskScore',
+            'chartLabels',
+            'chartValues',
+            'riskData',
+            'latestOrders'
         ));
     }
 }

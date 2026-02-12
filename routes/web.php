@@ -1,23 +1,21 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\ShopController;
+use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\CartController;
-use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CheckoutController;
-use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\HelpController;
-use App\Http\Controllers\WishlistController;
-
-use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
-use App\Http\Controllers\Admin\ProductController as AdminProductController;
-use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
-use App\Http\Controllers\Admin\OrderController as AdminOrderController;
-use App\Http\Controllers\ProductController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SearchController;
+use App\Http\Controllers\WishlistController;
+use Illuminate\Support\Facades\Route;
 
 require __DIR__ . '/auth.php';
 
@@ -34,8 +32,8 @@ Route::controller(\App\Http\Controllers\Auth\GoogleController::class)->group(fun
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // [FIX QUAN TRỌNG] Đổi name thành 'shop.index' để khớp với Sidebar Filter
-Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
-Route::get('/product/{product}', [ShopController::class, 'show'])->name('product.detail');
+Route::get('/shop', [ProductController::class, 'index'])->name('shop.index');
+Route::get('/product/{slug}', [ProductController::class, 'show'])->name('shop.show');
 
 // Route nhận kết quả từ VNPay
 Route::get('/payment/vnpay/callback', [PaymentController::class, 'vnpayCallback'])->name('payment.vnpay.callback');
@@ -47,11 +45,13 @@ Route::get('/search', [SearchController::class, 'search'])->name('search');
 // Localization and Currency routes
 Route::get('/lang/{lang}', function ($lang) {
     session(['locale' => $lang]);
+
     return redirect()->back();
 })->name('lang.switch');
 
 Route::get('/currency/{currency}', function ($currency) {
     session(['currency' => $currency]);
+
     return redirect()->back();
 })->name('currency.switch');
 
@@ -143,6 +143,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
         Route::get('/', 'index')->name('index');
         Route::get('/{id}', 'show')->name('show');
         Route::put('/{id}', 'update')->name('update');
+        Route::match(['put', 'patch'], '/{id}/status', 'update')->name('updateStatus');
     });
 
     // Price Suggestions Management
@@ -197,9 +198,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
 // ====================================================
 // STAFF ROUTES (Quyền Staff - role_id = 2)
 // ====================================================
-Route::prefix('staff')->name('staff.')->middleware(['auth', 'role:staff'])->group(function () {
+Route::prefix('staff')->name('staff.')->middleware(['auth', 'role.check:staff'])->group(function () {
 
-    Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/', [\App\Http\Controllers\Staff\DashboardController::class, 'index'])->name('dashboard');
 
     // Limited product management
     Route::resource('products', AdminProductController::class)->except(['destroy']);
@@ -210,13 +211,14 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'role:staff'])->grou
         Route::get('/', 'index')->name('index');
         Route::get('/{id}', 'show')->name('show');
         Route::put('/{id}', 'update')->name('update');
+        Route::match(['put', 'patch'], '/{id}/status', 'update')->name('updateStatus');
     });
 });
 
 // ====================================================
 // VENDOR ROUTES (Quyền Vendor - role_id = 4)
 // ====================================================
-Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'role:vendor'])->group(function () {
+Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'role.check:vendor'])->group(function () {
 
     // Dashboard
     Route::get('/', [\App\Http\Controllers\Vendor\DashboardController::class, 'index'])->name('dashboard');
@@ -228,10 +230,9 @@ Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'role:vendor'])->g
     Route::controller(\App\Http\Controllers\Vendor\OrderController::class)->prefix('orders')->name('orders.')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/{id}', 'show')->name('show');
-        Route::put('/{id}/status', 'updateStatus')->name('update-status');
+        Route::match(['put', 'patch'], '/{id}/status', 'updateStatus')->name('updateStatus');
     });
 });
-
 
 // Address Management Routes
 Route::group(['prefix' => 'my-addresses', 'as' => 'addresses.'], function () {
@@ -283,7 +284,7 @@ Route::get('/test-csrf', function () {
 
 // Debug Session Route (for troubleshooting 419 errors)
 Route::get('/debug-session', function () {
-    if (!config('app.debug')) {
+    if (! config('app.debug')) {
         abort(404);
     }
 

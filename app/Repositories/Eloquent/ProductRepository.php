@@ -2,10 +2,9 @@
 
 namespace App\Repositories\Eloquent;
 
-use App\Models\Product;
 use App\Models\Category;
+use App\Models\Product;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
 class ProductRepository implements ProductRepositoryInterface
@@ -31,10 +30,12 @@ class ProductRepository implements ProductRepositoryInterface
     {
         return $this->model->find($id);
     }
+
     public function all()
     {
         return $this->model->all();
     }
+
     public function findByIds(array $ids)
     {
         return $this->model->whereIn('id', $ids)->get();
@@ -67,6 +68,7 @@ class ProductRepository implements ProductRepositoryInterface
 
             return $product;
         }
+
         return null;
     }
 
@@ -84,6 +86,7 @@ class ProductRepository implements ProductRepositoryInterface
 
             return $result;
         }
+
         return false;
     }
 
@@ -105,26 +108,26 @@ class ProductRepository implements ProductRepositoryInterface
         $query = $this->model->query();
 
         // 1. Filter by Keyword
-        if (!empty($filters['keyword'])) {
+        if (! empty($filters['keyword'])) {
             $query->where('name', 'LIKE', "%{$filters['keyword']}%");
         }
 
         // 2. Filter by Category
-        if (!empty($filters['category'])) {
+        if (! empty($filters['category'])) {
             // Giả sử URL là ?category=1
             $query->where('category_id', $filters['category']);
         }
 
         // 3. Filter by Price Range (nếu có)
-        if (!empty($filters['min_price'])) {
+        if (! empty($filters['min_price'])) {
             $query->where('price', '>=', $filters['min_price']);
         }
-        if (!empty($filters['max_price'])) {
+        if (! empty($filters['max_price'])) {
             $query->where('price', '<=', $filters['max_price']);
         }
 
         // 4. Sorting
-        if (!empty($filters['sort'])) {
+        if (! empty($filters['sort'])) {
             switch ($filters['sort']) {
                 case 'price_asc':
                     $query->orderBy('price', 'asc');
@@ -189,12 +192,12 @@ class ProductRepository implements ProductRepositoryInterface
 
     /**
      * Get home page products with Redis caching
-     * 
+     *
      * Fetches latest 8 products and new arrivals (is_new = true) or random fallback
      * Results are cached for 60 minutes to improve performance
      * Cache is automatically invalidated when products are created, updated, or deleted
-     * 
-     * @param int $limit Number of products to fetch per category (default: 8)
+     *
+     * @param  int  $limit  Number of products to fetch per category (default: 8)
      * @return array Array containing 'newProducts' and 'arrivals' keys
      */
     public function getHomePageProducts(int $limit = 8)
@@ -226,9 +229,83 @@ class ProductRepository implements ProductRepositoryInterface
 
                 return [
                     'newProducts' => $newProducts,
-                    'arrivals' => $arrivals
+                    'arrivals' => $arrivals,
                 ];
             }
         );
+    }
+
+    public function getLowStockCount(int $threshold = 10)
+    {
+        return $this->model->where('stock_quantity', '<', $threshold)->count();
+    }
+
+    /**
+     * Filter and sort products for Shop page
+     */
+    public function filterAndSort(array $filters, int $perPage = 12)
+    {
+        $query = $this->model->query();
+
+        // 1. Filter by Keyword
+        if (! empty($filters['search'])) {
+            $query->where('name', 'LIKE', "%{$filters['search']}%");
+        }
+
+        // 2. Filter by Category (Slug or ID)
+        if (! empty($filters['category'])) {
+            $category = $filters['category'];
+            $query->whereHas('category', function ($q) use ($category) {
+                $q->where('slug', $category)->orWhere('id', $category);
+            });
+        }
+
+        // 3. Filter by Price Range
+        if (! empty($filters['min_price'])) {
+            $query->where('price', '>=', $filters['min_price']);
+        }
+        if (! empty($filters['max_price'])) {
+            $query->where('price', '<=', $filters['max_price']);
+        }
+
+        // 4. Sorting
+        if (! empty($filters['sort'])) {
+            switch ($filters['sort']) {
+                case 'price_asc':
+                    $query->orderBy('price', 'asc');
+                    break;
+                case 'price_desc':
+                    $query->orderBy('price', 'desc');
+                    break;
+                case 'newest':
+                    $query->orderBy('created_at', 'desc');
+                    break;
+                case 'name_asc':
+                    $query->orderBy('name', 'asc');
+                    break;
+                default: // latest
+                    $query->orderBy('id', 'desc');
+            }
+        } else {
+            $query->orderBy('id', 'desc');
+        }
+
+        return $query->paginate($perPage)->withQueryString();
+    }
+
+    /**
+     * Find product by slug with eager loading
+     */
+    public function findBySlug(string $slug)
+    {
+        // Assuming 'slug' column exists. If not, we might need to use ID or logic.
+        // For now, let's assume we might need to fallback to ID if slug not found or standard lookup
+        // But the requirement says "SEO: Bắt buộc dùng slug".
+        // Let's implement search by slug column.
+
+        return $this->model->where('slug', $slug)
+            ->with(['category', 'reviews.user', 'vendor'])
+            ->withAvg('ratings', 'rating')
+            ->firstOrFail();
     }
 }
