@@ -1,5 +1,10 @@
-<x-admin-layout>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+<x-admin-layout :pageTitle="'Dashboard'" :breadcrumbs="['Admin' => route('admin.dashboard')]">
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <p class="text-sm text-gray-500 mt-1">Welcome back, {{ Auth::user()->name ?? 'Admin' }}</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
         <!-- Total Revenue -->
         <x-dashboard.stat-card title="Total Revenue" value="${{ number_format($totalRevenue, 2) }}">
             <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -29,57 +34,60 @@
         </x-dashboard.stat-card>
     </div>
 
-    <div class="bg-white shadow rounded-lg mb-8">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-medium leading-6 text-gray-900">Latest Orders</h3>
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm mb-8">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="text-base font-semibold text-gray-900">Latest Orders</h3>
+            <a href="{{ route('admin.orders.index') }}" class="text-sm text-blue-600 hover:text-blue-700 font-medium">View all →</a>
         </div>
-        <div class="p-6">
-            <x-ui.table>
-                <x-slot:thead>
-                    <th scope="col" class="px-6 py-3">Order ID</th>
-                    <th scope="col" class="px-6 py-3">Customer</th>
-                    <th scope="col" class="px-6 py-3">Total</th>
-                    <th scope="col" class="px-6 py-3">Status</th>
-                    <th scope="col" class="px-6 py-3">Date</th>
-                </x-slot:thead>
-                <x-slot:tbody>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+                <thead class="text-xs text-gray-500 uppercase bg-gray-50/80 border-b border-gray-200">
+                    <tr>
+                        <th scope="col" class="px-5 py-3 font-semibold">Order ID</th>
+                        <th scope="col" class="px-5 py-3 font-semibold">Customer</th>
+                        <th scope="col" class="px-5 py-3 font-semibold">Total</th>
+                        <th scope="col" class="px-5 py-3 font-semibold">Status</th>
+                        <th scope="col" class="px-5 py-3 font-semibold">Date</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
                      @forelse($latestOrders as $order)
-                        <tr class="bg-white border-b hover:bg-gray-50">
-                            <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                                #{{ $order->id }}
+                        <tr class="hover:bg-gray-50/50 transition-colors">
+                            <td class="px-5 py-4">
+                                <span class="font-semibold text-blue-600">#{{ $order->id }}</span>
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="px-5 py-4 font-medium text-gray-900">
                                 {{ $order->user->name ?? 'Guest' }}
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="px-5 py-4 font-semibold text-gray-900">
                                 ${{ number_format($order->total, 2) }}
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="px-5 py-4">
                                 @php
                                     $variant = match($order->order_status) {
                                         'completed', 'delivered' => 'success',
-                                        'pending', 'processing' => 'pending',
+                                        'pending', 'processing' => 'warning',
                                         'cancelled' => 'danger',
                                         default => 'neutral'
                                     };
                                 @endphp
-                                <x-ui.badge :variant="$variant">
+                                <x-ui.badge :variant="$variant" :dot="true">
                                     {{ ucfirst($order->order_status) }}
                                 </x-ui.badge>
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="px-5 py-4 text-gray-500">
                                 {{ $order->created_at->format('M d, Y') }}
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                            <td colspan="5" class="px-6 py-8 text-center text-gray-500">
                                 No orders found.
                             </td>
                         </tr>
                     @endforelse
-                </x-slot:tbody>
-            </x-ui.table>
+                </tbody>
+            </table>
         </div>
     </div>
 </x-admin-layout>

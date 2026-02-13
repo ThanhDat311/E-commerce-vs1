@@ -17,7 +17,7 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\WishlistController;
 use Illuminate\Support\Facades\Route;
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
 
 // ====================================================
 // PUBLIC ROUTES (Khách vãng lai có thể truy cập)
@@ -128,6 +128,30 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::post('users/{user}/reset-password', [\App\Http\Controllers\Admin\UserController::class, 'resetPassword'])->name('users.reset_password');
     Route::post('users/{user}/force-logout', [\App\Http\Controllers\Admin\UserController::class, 'forceLogout'])->name('users.force_logout');
 
+    // Vendor Management
+    Route::controller(\App\Http\Controllers\Admin\VendorController::class)
+        ->prefix('vendors')
+        ->name('vendors.')
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/{vendor}', 'show')->name('show');
+            Route::post('/{vendor}/toggle-status', 'toggleStatus')->name('toggle-status');
+            Route::post('/{vendor}/commission', 'updateCommission')->name('commission.update');
+        });
+
+    // System Settings
+    Route::get('/settings', [App\Http\Controllers\Admin\SettingController::class, 'index'])->name('settings.index');
+    Route::post('/settings', [App\Http\Controllers\Admin\SettingController::class, 'update'])->name('settings.update');
+
+    // Customer Support
+    Route::controller(\App\Http\Controllers\Admin\SupportController::class)
+        ->prefix('support')->name('support.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/{ticket}', 'show')->name('show');
+            Route::post('/{ticket}/reply', 'storeMessage')->name('reply');
+            Route::patch('/{ticket}', 'update')->name('update');
+        });
+
     // ====================================================
     // [START] THÊM ĐOẠN NÀY VÀO ĐÂY
     // ====================================================
@@ -135,9 +159,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
         ->prefix('reports')
         ->name('reports.')
         ->group(function () {
-            Route::get('/revenue', 'revenue')->name('revenue');           // -> route('admin.reports.revenue')
+            Route::get('/', 'index')->name('index');
+            Route::get('/revenue', 'revenue')->name('revenue');
             Route::get('/top-products', 'topProducts')->name('top_products');
             Route::get('/low-stock', 'lowStock')->name('low_stock');
+            Route::get('/export-csv', 'exportCsv')->name('export_csv');
+            Route::get('/export-pdf', 'exportPdf')->name('export_pdf');
         });
 
     // Orders Management
@@ -151,6 +178,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::post('disputes/{dispute}/review', [\App\Http\Controllers\Admin\DisputeController::class, 'review'])->name('disputes.review');
     Route::post('disputes/{dispute}/resolve', [\App\Http\Controllers\Admin\DisputeController::class, 'resolve'])->name('disputes.resolve');
     Route::post('disputes/{dispute}/reject', [\App\Http\Controllers\Admin\DisputeController::class, 'reject'])->name('disputes.reject');
+
+    // Finance Management
+    Route::controller(\App\Http\Controllers\Admin\FinanceController::class)
+        ->prefix('finance')
+        ->name('finance.')
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::post('/commission', 'updateCommissionRate')->name('commission.update');
+            Route::get('/export', 'exportReport')->name('export');
+        });
 
     // Price Suggestions Management
     Route::controller(\App\Http\Controllers\Admin\PriceSuggestionController::class)

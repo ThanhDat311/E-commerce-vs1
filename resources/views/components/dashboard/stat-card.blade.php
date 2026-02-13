@@ -2,44 +2,39 @@
     'title',
     'value',
     'trend' => null,
-    'trendUp' => true
+    'trendUp' => true,
+    'color' => 'blue',
 ])
 
-<div {{ $attributes->merge(['class' => 'bg-white overflow-hidden shadow rounded-lg p-5']) }}>
-    <div class="flex items-center">
-        <div class="flex-shrink-0 bg-blue-500 rounded-md p-3 icon-container">
-            <!-- Icon Slot -->
-            {{ $slot }}
-        </div>
-        <div class="ml-5 w-0 flex-1">
-            <dl>
-                <dt class="text-sm font-medium text-gray-500 truncate">
-                    {{ $title }}
-                </dt>
-                <dd>
-                    <div class="text-lg font-medium text-gray-900">
-                        {{ $value }}
-                    </div>
-                </dd>
-            </dl>
-        </div>
-    </div>
-    
-    @if($trend !== null)
-        <div class="mt-4">
-            <div class="{{ $trendUp ? 'text-green-600' : 'text-red-600' }} text-sm font-semibold inline-flex items-baseline">
+@php
+    $colorMap = [
+        'blue'   => ['bg' => 'bg-blue-600', 'light' => 'bg-blue-50 text-blue-700'],
+        'green'  => ['bg' => 'bg-emerald-600', 'light' => 'bg-emerald-50 text-emerald-700'],
+        'amber'  => ['bg' => 'bg-amber-500', 'light' => 'bg-amber-50 text-amber-700'],
+        'red'    => ['bg' => 'bg-red-600', 'light' => 'bg-red-50 text-red-700'],
+        'purple' => ['bg' => 'bg-purple-600', 'light' => 'bg-purple-50 text-purple-700'],
+        'cyan'   => ['bg' => 'bg-cyan-600', 'light' => 'bg-cyan-50 text-cyan-700'],
+    ];
+    $colors = $colorMap[$color] ?? $colorMap['blue'];
+@endphp
+
+<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex items-start justify-between gap-4">
+    <div class="min-w-0 flex-1">
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">{{ $title }}</p>
+        <p class="text-2xl font-bold text-gray-900 truncate">{{ $value }}</p>
+        @if($trend)
+            <div class="flex items-center gap-1 mt-2">
                 @if($trendUp)
-                    <svg class="self-center flex-shrink-0 h-4 w-4 text-green-500" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                        <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                    </svg>
+                    <svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L10 6.414l-3.293 3.293a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+                    <span class="text-xs font-semibold text-emerald-600">{{ $trend }}</span>
                 @else
-                    <svg class="self-center flex-shrink-0 h-4 w-4 text-red-500" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                        <path fill-rule="evenodd" d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012 0v7.586l1.293-1.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                    </svg>
+                    <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L10 13.586l3.293-3.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                    <span class="text-xs font-semibold text-red-600">{{ $trend }}</span>
                 @endif
-                <span class="ml-1">{{ $trend }}%</span>
-                <span class="ml-1 text-gray-400 font-normal">from last month</span>
             </div>
-        </div>
-    @endif
+        @endif
+    </div>
+    <div class="flex-shrink-0 h-11 w-11 {{ $colors['bg'] }} rounded-xl flex items-center justify-center shadow-sm">
+        {{ $slot }}
+    </div>
 </div>
