@@ -23,7 +23,7 @@ class CartController extends Controller
     public function index()
     {
         $data = $this->cartService->getCartDetails();
-        return view('cart', $data);
+        return view('pages.store.cart.index', $data);
     }
 
     // [UPDATED] Theo yêu cầu của bạn

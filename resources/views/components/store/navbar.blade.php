@@ -10,8 +10,11 @@
                 </div>
                 <!-- Mega Menu Trigger (Desktop) -->
                 <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-                    <a href="{{ route('home') }}" class="border-blue-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                    <a href="{{ route('home') }}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium {{ request()->routeIs('home') ? 'border-blue-500 text-gray-900' : '' }}">
                         Home
+                    </a>
+                    <a href="{{ route('shop.index') }}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium {{ request()->routeIs('shop.index') ? 'border-blue-500 text-gray-900' : '' }}">
+                        Shop
                     </a>
                     
                     <div class="relative group" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
@@ -35,7 +38,7 @@
                             <div class="rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 overflow-hidden">
                                 <div class="relative grid gap-6 bg-white px-5 py-6 sm:gap-8 sm:p-8 lg:grid-cols-4">
                                     @foreach($categories->take(4) as $category)
-                                        <a href="#" class="-m-3 p-3 flex items-start rounded-lg hover:bg-gray-50 transition ease-in-out duration-150">
+                                        <a href="{{ route('shop.index', ['category' => $category->slug]) }}" class="-m-3 p-3 flex items-start rounded-lg hover:bg-gray-50 transition ease-in-out duration-150">
                                             <div class="ml-4">
                                                 <p class="text-base font-medium text-gray-900">
                                                     {{ $category->name }}
@@ -46,7 +49,11 @@
                                                 @if($category->children && $category->children->count())
                                                     <ul class="mt-2 space-y-1">
                                                         @foreach($category->children->take(3) as $child)
-                                                            <li class="text-xs text-gray-500 hover:text-blue-600">{{ $child->name }}</li>
+                                                            <li class="text-xs text-gray-500 hover:text-blue-600">
+                                                                <a href="{{ route('shop.index', ['category' => $child->slug]) }}">
+                                                                    {{ $child->name }}
+                                                                </a>
+                                                            </li>
                                                         @endforeach
                                                     </ul>
                                                 @endif
@@ -56,7 +63,7 @@
                                 </div>
                                 <div class="px-5 py-5 bg-gray-50 space-y-6 sm:flex sm:space-y-0 sm:space-x-10 sm:px-8">
                                     <div class="flow-root">
-                                        <a href="#" class="-m-3 p-3 flex items-center rounded-md text-base font-medium text-gray-900 hover:bg-gray-100 transition ease-in-out duration-150">
+                                        <a href="{{ route('shop.index') }}" class="-m-3 p-3 flex items-center rounded-md text-base font-medium text-gray-900 hover:bg-gray-100 transition ease-in-out duration-150">
                                             <svg class="flex-shrink-0 h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z" />
                                             </svg>
@@ -92,7 +99,7 @@
             <!-- Right Nav Items -->
             <div class="flex items-center lg:ml-6">
                 <!-- Cart -->
-                <a href="#" class="p-2 text-gray-400 hover:text-gray-500 relative group">
+                <a href="{{ route('cart.index') }}" class="p-2 text-gray-400 hover:text-gray-500 relative group">
                     <span class="sr-only">View Cart</span>
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -159,6 +166,7 @@
     <div class="sm:hidden" id="mobile-menu" x-show="mobileMenuOpen" style="display: none;">
         <div class="pt-2 pb-3 space-y-1">
             <a href="{{ route('home') }}" class="bg-blue-50 border-blue-500 text-blue-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">Home</a>
+             <a href="{{ route('shop.index') }}" class="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">Shop</a>
             <a href="#" class="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">Categories</a>
             <a href="#" class="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">Deals</a>
         </div>

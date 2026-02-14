@@ -16,7 +16,7 @@ interface ProductRepositoryInterface
 
     public function findByIds(array $ids);
 
-    public function getFilteredProducts(array $filters, int $perPage = 9);
+    public function getFilteredProducts(array $filters, int $perPage = 6);
 
     public function getCategoriesWithProductCount();
 
@@ -35,4 +35,8 @@ interface ProductRepositoryInterface
     public function filterAndSort(array $filters, int $perPage = 12);
 
     public function findBySlug(string $slug);
+
+    public function getBrandsWithProductCount();
+
+    public function getPriceRange();
 }

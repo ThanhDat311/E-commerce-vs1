@@ -21,7 +21,14 @@ class User extends Authenticatable
         'address',      // [NEW] Thêm trường này
         'is_active',
         'email_verified_at',
+        'date_of_birth', // [NEW] Thêm trường này
         'google_id',
+    ];
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'date_of_birth' => 'date',
     ];
 
     protected $hidden = [

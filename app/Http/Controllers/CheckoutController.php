@@ -12,9 +12,8 @@ use Exception;
 class CheckoutController extends Controller
 {
     protected OrderService $orderService;
-    protected CartService $cartService; // [FIX 2] Khai báo property
+    protected CartService $cartService;
 
-    // [FIX 3] Inject CartService vào Constructor
     public function __construct(OrderService $orderService, CartService $cartService)
     {
         $this->orderService = $orderService;
@@ -23,10 +22,15 @@ class CheckoutController extends Controller
 
     public function show()
     {
-        // Bây giờ $this->cartService đã được khởi tạo và có thể sử dụng
         $cartData = $this->cartService->getCartDetails();
+        $addresses = Auth::check() ? Auth::user()->addresses : [];
 
-        return view('checkout', $cartData);
+        // Check if cart is empty
+        if (empty($cartData['cartItems'])) {
+            return redirect()->route('shop.index');
+        }
+
+        return view('checkout', array_merge($cartData, ['addresses' => $addresses]));
     }
 
     public function process(CheckoutRequest $request)

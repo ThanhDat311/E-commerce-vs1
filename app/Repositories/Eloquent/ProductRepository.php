@@ -243,6 +243,9 @@ class ProductRepository implements ProductRepositoryInterface
     /**
      * Filter and sort products for Shop page
      */
+    /**
+     * Filter and sort products for Shop page
+     */
     public function filterAndSort(array $filters, int $perPage = 12)
     {
         $query = $this->model->query();
@@ -252,11 +255,11 @@ class ProductRepository implements ProductRepositoryInterface
             $query->where('name', 'LIKE', "%{$filters['search']}%");
         }
 
-        // 2. Filter by Category (Slug or ID)
+        // 2. Filter by Category (Slug or ID) - Support Array
         if (! empty($filters['category'])) {
-            $category = $filters['category'];
-            $query->whereHas('category', function ($q) use ($category) {
-                $q->where('slug', $category)->orWhere('id', $category);
+            $categories = is_array($filters['category']) ? $filters['category'] : explode(',', $filters['category']);
+            $query->whereHas('category', function ($q) use ($categories) {
+                $q->whereIn('slug', $categories)->orWhereIn('id', $categories);
             });
         }
 
@@ -268,7 +271,30 @@ class ProductRepository implements ProductRepositoryInterface
             $query->where('price', '<=', $filters['max_price']);
         }
 
-        // 4. Sorting
+        // 4. Filter by Brand (Vendor) - Support Array
+        if (! empty($filters['brands'])) {
+             $brands = is_array($filters['brands']) ? $filters['brands'] : explode(',', $filters['brands']);
+             // Assuming 'brands' are vendor IDs for now since we don't have a brand column
+             // If $brands contains names, we need to join users table.
+             // Let's assume frontend sends Vendor IDs.
+             $query->whereIn('vendor_id', $brands);
+        }
+
+        // 5. Filter by Rating
+        if (! empty($filters['rating'])) {
+            $rating = (int) $filters['rating'];
+            // This requires a subquery or join to calculate average rating
+            // Using withAvg in model, but for filtering we need `having`.
+            // Since we are paginating, `having` can be tricky with standard paginate if not careful.
+            // A simpler approach for now is whereHas with a basic check if individual ratings exist >= val, 
+            // but usually we want AVERAGE >= val.
+            // Let's try to filter by products that have at least one rating >= val for MVP or implement avg check properly.
+            // Correct way for Average Rating filter:
+            $query->withAvg('ratings', 'rating')
+                  ->having('ratings_avg_rating', '>=', $rating);
+        }
+
+        // 6. Sorting
         if (! empty($filters['sort'])) {
             switch ($filters['sort']) {
                 case 'price_asc':
@@ -283,6 +309,9 @@ class ProductRepository implements ProductRepositoryInterface
                 case 'name_asc':
                     $query->orderBy('name', 'asc');
                     break;
+                case 'rating':
+                     $query->withAvg('ratings', 'rating')->orderBy('ratings_avg_rating', 'desc');
+                     break;
                 default: // latest
                     $query->orderBy('id', 'desc');
             }
@@ -291,6 +320,24 @@ class ProductRepository implements ProductRepositoryInterface
         }
 
         return $query->paginate($perPage)->withQueryString();
+    }
+
+    public function getBrandsWithProductCount()
+    {
+        // Return Vendors who have products
+        // Using 'shop_name' from Vendor profile if available, else User name.
+        // Assuming User model has 'name'.
+        return \App\Models\User::whereHas('products')
+            ->withCount('products')
+            ->get(['id', 'name']); // Adjust fields as needed
+    }
+
+    public function getPriceRange()
+    {
+        return [
+            'min' => $this->model->min('price') ?? 0,
+            'max' => $this->model->max('price') ?? 0,
+        ];
     }
 
     /**

@@ -30,7 +30,11 @@
             <div class="flex flex-col lg:flex-row lg:space-x-8">
                 <!-- Sidebar -->
                 <div class="w-full lg:w-64 flex-shrink-0 mb-8 lg:mb-0">
-                     <x-store.filter-sidebar :categories="$categories" />
+                     <x-store.filter-sidebar 
+                        :categories="$categories" 
+                        :brands="$brands"
+                        :price-range="$priceRange"
+                     />
                 </div>
 
                 <!-- Product Grid -->
@@ -43,8 +47,17 @@
                             <span class="text-sm text-gray-500">{{ $products->total() }} results</span>
                             
                             <form method="GET" action="{{ route('shop.index') }}" class="flex items-center">
-                                @foreach(request()->except('sort', 'page') as $key => $value)
-                                    <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                                @php
+                                    $queryParams = request()->except(['sort', 'page']);
+                                @endphp
+                                @foreach($queryParams as $key => $value)
+                                    @if(is_array($value))
+                                        @foreach($value as $v)
+                                            <input type="hidden" name="{{ $key }}[]" value="{{ $v }}">
+                                        @endforeach
+                                    @else
+                                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                                    @endif
                                 @endforeach
                                 <select name="sort" onchange="this.form.submit()" class="text-sm border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
                                     <option value="latest" {{ request('sort') == 'latest' ? 'selected' : '' }}>Latest</option>

@@ -19,10 +19,16 @@ class ProductController extends Controller
     {
         $products = $this->productRepository->filterAndSort($request->all(), 12);
 
-        // Fetch categories for sidebar filter (assuming we want all parent categories)
-        $categories = Category::whereNull('parent_id')->with('children')->get();
+        // Fetch categories for sidebar filter
+        $categories = Category::whereNull('parent_id')->with('children')->withCount('products')->get();
 
-        return view('pages.store.products.index', compact('products', 'categories'));
+        // Fetch brands (vendors) for sidebar
+        $brands = $this->productRepository->getBrandsWithProductCount();
+
+        // Fetch Min/Max price for slider
+        $priceRange = $this->productRepository->getPriceRange();
+
+        return view('pages.store.products.index', compact('products', 'categories', 'brands', 'priceRange'));
     }
 
     public function show($slug)
