@@ -54,7 +54,7 @@ class AuditLogController extends Controller
             'App\Models\User' => 'User',
         ];
 
-        return view('admin.audit-logs.index', compact('auditLogs', 'users', 'modelTypes'));
+        return view('pages.admin.audit-logs.index', compact('auditLogs', 'users', 'modelTypes'));
     }
 
     /**
@@ -70,7 +70,7 @@ class AuditLogController extends Controller
             $model = null;
         }
 
-        return view('admin.audit-logs.show', compact('auditLog', 'model'));
+        return view('pages.admin.audit-logs.show', compact('auditLog', 'model'));
     }
 
     /**
@@ -94,7 +94,7 @@ class AuditLogController extends Controller
             $model = null;
         }
 
-        return view('admin.audit-logs.model-history', compact('auditLogs', 'model', 'modelType', 'modelId'));
+        return view('pages.admin.audit-logs.model-history', compact('auditLogs', 'model', 'modelType', 'modelId'));
     }
 
     /**
@@ -153,28 +153,50 @@ class AuditLogController extends Controller
 
         $logs = $query->get();
 
-        // Create CSV
-        $csvData = "ID,User,Action,Model Type,Model ID,IP Address,User Agent,Created At,Old Values,New Values\n";
+        // Create CSV with proper escaping
+        $filename = 'audit-logs-' . date('Y-m-d-H-i-s') . '.csv';
 
-        foreach ($logs as $log) {
-            $csvData .= sprintf(
-                "%d,%s,%s,%s,%d,%s,%s,%s,%s,%s\n",
-                $log->id,
-                $log->user ? $log->user->name : 'Unknown',
-                $log->action,
-                class_basename($log->model_type),
-                $log->model_id,
-                $log->ip_address,
-                str_replace(',', ';', $log->user_agent ?? ''),
-                $log->created_at->format('Y-m-d H:i:s'),
-                str_replace(',', ';', $log->old_values ?? ''),
-                str_replace(',', ';', $log->new_values ?? '')
-            );
-        }
-
-        return response($csvData, 200, [
+        $headers = [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="audit-logs-' . date('Y-m-d-H-i-s') . '.csv"',
-        ]);
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function () use ($logs) {
+            $file = fopen('php://output', 'w');
+
+            // Header row
+            fputcsv($file, [
+                'ID',
+                'User',
+                'Action',
+                'Model Type',
+                'Model ID',
+                'IP Address',
+                'User Agent',
+                'Created At',
+                'Old Values',
+                'New Values'
+            ]);
+
+            // Data rows
+            foreach ($logs as $log) {
+                fputcsv($file, [
+                    $log->id,
+                    $log->user ? $log->user->name : 'System',
+                    $log->action,
+                    class_basename($log->model_type),
+                    $log->model_id ?? '',
+                    $log->ip_address ?? '',
+                    $log->user_agent ?? '',
+                    $log->created_at->format('Y-m-d H:i:s'),
+                    is_array($log->old_values) || is_object($log->old_values) ? json_encode($log->old_values) : ($log->old_values ?? ''),
+                    is_array($log->new_values) || is_object($log->new_values) ? json_encode($log->new_values) : ($log->new_values ?? '')
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

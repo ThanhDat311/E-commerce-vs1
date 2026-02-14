@@ -205,10 +205,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
         ->name('audit-logs.')
         ->group(function () {
             Route::get('/', 'index')->name('index');
-            Route::get('/{auditLog}', 'show')->name('show');
             Route::get('/model/history', 'modelHistory')->name('model-history');
             Route::get('/statistics', 'statistics')->name('statistics');
             Route::get('/export', 'export')->name('export');
+            Route::get('/{auditLog}', 'show')->name('show');
         });
 
     // Risk Rules Management

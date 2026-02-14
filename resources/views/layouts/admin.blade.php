@@ -1,5 +1,5 @@
 <x-base-layout>
-    <div class="min-h-screen bg-gray-50 flex" x-data="{ isSidebarOpen: false }">
+    <div class="h-screen bg-gray-50 flex overflow-hidden" x-data="{ isSidebarOpen: false }">
         <!-- Sidebar -->
         <x-shared.sidebar>
             @if(($sidebarType ?? 'admin') === 'staff')
@@ -31,14 +31,25 @@
                     Dashboard
                 </x-shared.sidebar-link>
 
-                {{-- Users --}}
-                <x-shared.sidebar-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">
+                {{-- Users (with sub-menu) --}}
+                <x-shared.sidebar-link :hasSubmenu="true" :active="request()->routeIs('admin.users.*') || request()->routeIs('admin.audit-logs.*')" :submenuOpen="request()->routeIs('admin.users.*') || request()->routeIs('admin.audit-logs.*')">
                     <x-slot:icon>
                         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
                         </svg>
                     </x-slot:icon>
-                    Users
+                    <x-slot:label>Users</x-slot:label>
+                    <x-slot:submenu>
+                        <x-shared.sidebar-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.index') || request()->routeIs('admin.users.show') || request()->routeIs('admin.users.edit')">
+                            All Users
+                        </x-shared.sidebar-link>
+                        <x-shared.sidebar-link :href="route('admin.users.create')" :active="request()->routeIs('admin.users.create')">
+                            Add New User
+                        </x-shared.sidebar-link>
+                        <x-shared.sidebar-link :href="route('admin.audit-logs.index')" :active="request()->routeIs('admin.audit-logs.*')">
+                            Activity Logs
+                        </x-shared.sidebar-link>
+                    </x-slot:submenu>
                 </x-shared.sidebar-link>
 
                 {{-- Vendors --}}
@@ -51,14 +62,22 @@
                     Vendors
                 </x-shared.sidebar-link>
 
-                {{-- Products --}}
-                <x-shared.sidebar-link :href="route('admin.products.index')" :active="request()->routeIs('admin.products.*')">
+                {{-- Products (with sub-menu) --}}
+                <x-shared.sidebar-link :hasSubmenu="true" :active="request()->routeIs('admin.products.*') || request()->routeIs('admin.categories.*')" :submenuOpen="request()->routeIs('admin.products.*') || request()->routeIs('admin.categories.*')">
                     <x-slot:icon>
                         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
                         </svg>
                     </x-slot:icon>
-                    Products
+                    <x-slot:label>Products</x-slot:label>
+                    <x-slot:submenu>
+                        <x-shared.sidebar-link :href="route('admin.products.index')" :active="request()->routeIs('admin.products.*')">
+                            All Products
+                        </x-shared.sidebar-link>
+                        <x-shared.sidebar-link :href="route('admin.categories.index')" :active="request()->routeIs('admin.categories.*')">
+                            Categories
+                        </x-shared.sidebar-link>
+                    </x-slot:submenu>
                 </x-shared.sidebar-link>
 
                 {{-- Orders (with sub-menu) --}}
