@@ -22,6 +22,39 @@
             </span>
         @endif
 
+        <!-- Wishlist Heart Icon -->
+        @auth
+            @php
+                $inWishlist = auth()->user()->hasInWishlist($product->id);
+            @endphp
+            <button 
+                onclick="toggleWishlist({{ $product->id }}, this)"
+                class="absolute {{ $product->discount_price ? 'top-12' : 'top-2' }} right-2 p-2 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 group/heart z-10"
+                title="{{ $inWishlist ? 'Remove from wishlist' : 'Add to wishlist' }}"
+                data-in-wishlist="{{ $inWishlist ? 'true' : 'false' }}"
+            >
+                <svg class="h-5 w-5 transition-all duration-200 {{ $inWishlist ? 'fill-red-500 text-red-500' : 'fill-none text-gray-400' }} group-hover/heart:scale-110" 
+                     viewBox="0 0 24 24" 
+                     stroke="currentColor" 
+                     stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+            </button>
+        @else
+            <a 
+                href="{{ route('login') }}"
+                class="absolute {{ $product->discount_price ? 'top-12' : 'top-2' }} right-2 p-2 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 group/heart z-10"
+                title="Login to add to wishlist"
+            >
+                <svg class="h-5 w-5 fill-none text-gray-400 group-hover/heart:scale-110 transition-transform duration-200" 
+                     viewBox="0 0 24 24" 
+                     stroke="currentColor" 
+                     stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+            </a>
+        @endauth
+
         <!-- Quick Add Button (Visible on Hover) -->
         <div class="absolute bottom-4 left-0 right-0 px-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden sm:block">
             <button class="w-full bg-black text-white py-2 rounded font-medium hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black">
@@ -79,3 +112,68 @@
         </div>
     </div>
 </div>
+
+@once
+@push('scripts')
+<script>
+function toggleWishlist(productId, button) {
+    // Prevent multiple clicks
+    if (button.disabled) return;
+    button.disabled = true;
+    
+    const svg = button.querySelector('svg');
+    const currentState = button.dataset.inWishlist === 'true';
+    
+    // Add loading animation
+    button.classList.add('animate-pulse');
+    
+    fetch('{{ route("wishlist.toggle") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+            product_id: productId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update button state
+            button.dataset.inWishlist = data.inWishlist ? 'true' : 'false';
+            button.title = data.inWishlist ? 'Remove from wishlist' : 'Add to wishlist';
+            
+            // Update heart icon
+            if (data.inWishlist) {
+                svg.classList.remove('fill-none', 'text-gray-400');
+                svg.classList.add('fill-red-500', 'text-red-500');
+            } else {
+                svg.classList.remove('fill-red-500', 'text-red-500');
+                svg.classList.add('fill-none', 'text-gray-400');
+            }
+            
+            // Add success animation
+            svg.classList.add('scale-125');
+            setTimeout(() => {
+                svg.classList.remove('scale-125');
+            }, 200);
+            
+            // Show toast notification (optional)
+            window.showToast(data.message, 'success');
+        }
+    })
+    .catch(error => {
+        console.error('Error toggling wishlist:', error);
+        // Show error notification
+        window.showToast('Failed to update wishlist. Please try again.', 'error');
+    })
+    .finally(() => {
+        button.disabled = false;
+        button.classList.remove('animate-pulse');
+    });
+}
+</script>
+@endpush
+@endonce

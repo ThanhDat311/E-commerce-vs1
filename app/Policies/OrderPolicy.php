@@ -12,7 +12,7 @@ class OrderPolicy
      */
     public function viewAny(User $user): bool
     {
-        return in_array($user->role_id, [1, 2, 4]); // Admin, Staff, Vendor
+        return in_array($user->role_id, [1, 2, 3, 4]); // Everyone can view their own lists
     }
 
     /**

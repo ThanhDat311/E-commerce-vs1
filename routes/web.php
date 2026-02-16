@@ -17,7 +17,7 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\WishlistController;
 use Illuminate\Support\Facades\Route;
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';
 
 // ====================================================
 // PUBLIC ROUTES (Khách vãng lai có thể truy cập)
@@ -278,12 +278,31 @@ Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'role.check:vendor
 });
 
 // Address Management Routes
-Route::group(['prefix' => 'my-addresses', 'as' => 'addresses.'], function () {
-    Route::get('/', [App\Http\Controllers\Customer\AddressController::class, 'index'])->name('index');
-    Route::post('/', [App\Http\Controllers\Customer\AddressController::class, 'store'])->name('store');
-    Route::put('/{address}', [App\Http\Controllers\Customer\AddressController::class, 'update'])->name('update');
-    Route::delete('/{address}', [App\Http\Controllers\Customer\AddressController::class, 'destroy'])->name('destroy');
-    Route::post('/{address}/default', [App\Http\Controllers\Customer\AddressController::class, 'setDefault'])->name('default');
+Route::middleware(['auth'])->group(function () {
+    Route::prefix('my-addresses')->name('addresses.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Customer\AddressController::class, 'index'])->name('index');
+        Route::post('/', [App\Http\Controllers\Customer\AddressController::class, 'store'])->name('store');
+        Route::put('/{address}', [App\Http\Controllers\Customer\AddressController::class, 'update'])->name('update');
+        Route::delete('/{address}', [App\Http\Controllers\Customer\AddressController::class, 'destroy'])->name('destroy');
+        Route::post('/{address}/default', [App\Http\Controllers\Customer\AddressController::class, 'setDefault'])->name('default');
+    });
+
+    // Payment Methods
+    Route::prefix('my-payment-methods')->name('payment-methods.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Customer\PaymentMethodController::class, 'index'])->name('index');
+        Route::post('/', [App\Http\Controllers\Customer\PaymentMethodController::class, 'store'])->name('store');
+        Route::put('/{paymentMethod}', [App\Http\Controllers\Customer\PaymentMethodController::class, 'update'])->name('update');
+        Route::delete('/{paymentMethod}', [App\Http\Controllers\Customer\PaymentMethodController::class, 'destroy'])->name('destroy');
+        Route::post('/{paymentMethod}/default', [App\Http\Controllers\Customer\PaymentMethodController::class, 'setDefault'])->name('default');
+    });
+
+    // Notification Settings
+    Route::get('/my-notifications', [App\Http\Controllers\Customer\NotificationController::class, 'settings'])->name('notifications.settings');
+    Route::post('/my-notifications', [App\Http\Controllers\Customer\NotificationController::class, 'updateSettings'])->name('notifications.update');
+
+    // Account Security
+    Route::get('/account-security', [App\Http\Controllers\Customer\AccountSecurityController::class, 'index'])->name('security.index');
+    Route::post('/account-security/password', [App\Http\Controllers\Customer\AccountSecurityController::class, 'updatePassword'])->name('security.password');
 });
 
 // ====================================================
@@ -303,12 +322,13 @@ Route::middleware(['auth'])->prefix('api')->name('api.')->group(function () {
 });
 
 // User Orders History
-Route::get('/my-orders', [App\Http\Controllers\OrderController::class, 'index'])->name('orders.index');
-Route::get('/my-orders/{order}', [App\Http\Controllers\OrderController::class, 'show'])->name('orders.show');
 
 // [NEW] Order Cancellation Route
 Route::post('/my-orders/{order}/cancel', \App\Http\Controllers\Customer\OrderCancellationController::class)
     ->name('orders.cancel');
+
+Route::post('/my-orders/{order}/repay', \App\Http\Controllers\Customer\OrderRepaymentController::class)
+    ->name('orders.repay');
 
 // Test route for CSRF token
 Route::get('/test-csrf', function () {

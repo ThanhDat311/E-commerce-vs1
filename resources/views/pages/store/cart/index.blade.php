@@ -61,7 +61,7 @@
                                     // Update item subtotal if needed
                                     // this.cartItems[itemIndex].subtotal = data.item_total; 
                                 } else {
-                                    alert(data.message);
+                                    window.showToast(data.message, 'error');
                                 }
                             })
                             .catch(error => console.error('Error:', error));

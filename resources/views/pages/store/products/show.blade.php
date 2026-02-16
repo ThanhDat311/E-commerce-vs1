@@ -147,12 +147,34 @@
                             </button>
                             @endif
 
-                            <button type="button" class="ml-4 py-3 px-4 rounded-lg flex items-center justify-center text-gray-400 hover:bg-red-50 hover:text-red-500 border border-gray-200 transition-colors duration-200">
-                                <svg class="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                </svg>
-                                <span class="sr-only">Add to favorites</span>
-                            </button>
+                            @auth
+                                @php
+                                    $inWishlist = auth()->user()->hasInWishlist($product->id);
+                                @endphp
+                                <button 
+                                    type="button" 
+                                    onclick="toggleWishlist({{ $product->id }}, this)"
+                                    class="ml-4 py-3 px-4 rounded-lg flex items-center justify-center hover:bg-red-50 border border-gray-200 transition-colors duration-200 {{ $inWishlist ? 'text-red-500' : 'text-gray-400 hover:text-red-500' }}"
+                                    title="{{ $inWishlist ? 'Remove from wishlist' : 'Add to wishlist' }}"
+                                    data-in-wishlist="{{ $inWishlist ? 'true' : 'false' }}"
+                                >
+                                    <svg class="h-6 w-6 flex-shrink-0 transition-all duration-200 {{ $inWishlist ? 'fill-red-500 text-red-500' : 'fill-none' }}" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                    </svg>
+                                    <span class="sr-only">{{ $inWishlist ? 'Remove from favorites' : 'Add to favorites' }}</span>
+                                </button>
+                            @else
+                                <a 
+                                    href="{{ route('login') }}"
+                                    class="ml-4 py-3 px-4 rounded-lg flex items-center justify-center text-gray-400 hover:bg-red-50 hover:text-red-500 border border-gray-200 transition-colors duration-200"
+                                    title="Login to add to wishlist"
+                                >
+                                    <svg class="h-6 w-6 flex-shrink-0 fill-none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                    </svg>
+                                    <span class="sr-only">Login to add to favorites</span>
+                                </a>
+                            @endauth
                         </div>
                     </div>
 
@@ -200,4 +222,71 @@
     </div>
     
     <x-store.footer />
+
+    @push('scripts')
+    <script>
+    function toggleWishlist(productId, button) {
+        // Prevent multiple clicks
+        if (button.disabled) return;
+        button.disabled = true;
+        
+        const svg = button.querySelector('svg');
+        const currentState = button.dataset.inWishlist === 'true';
+        
+        // Add loading animation
+        button.classList.add('animate-pulse');
+        
+        fetch('{{ route("wishlist.toggle") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                product_id: productId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update button state
+                button.dataset.inWishlist = data.inWishlist ? 'true' : 'false';
+                button.title = data.inWishlist ? 'Remove from wishlist' : 'Add to wishlist';
+                
+                // Update heart icon
+                if (data.inWishlist) {
+                    svg.classList.remove('fill-none', 'text-gray-400');
+                    svg.classList.add('fill-red-500', 'text-red-500');
+                    button.classList.remove('text-gray-400', 'hover:text-red-500');
+                    button.classList.add('text-red-500');
+                } else {
+                    svg.classList.remove('fill-red-500', 'text-red-500');
+                    svg.classList.add('fill-none', 'text-gray-400');
+                    button.classList.remove('text-red-500');
+                    button.classList.add('text-gray-400', 'hover:text-red-500');
+                }
+                
+                // Add success animation
+                svg.classList.add('scale-125');
+                setTimeout(() => {
+                    svg.classList.remove('scale-125');
+                }, 200);
+                
+                // Show toast notification
+                window.showToast(data.message, 'success');
+            }
+        })
+        .catch(error => {
+            console.error('Error toggling wishlist:', error);
+            // Show error notification
+            window.showToast('Failed to update wishlist. Please try again.', 'error');
+        })
+        .finally(() => {
+            button.disabled = false;
+            button.classList.remove('animate-pulse');
+        });
+    }
+    </script>
+    @endpush
 </x-base-layout>

@@ -3,14 +3,14 @@
         <h2 class="text-lg font-medium text-gray-900">
             {{ __('Saved Addresses') }}
         </h2>
-        <a href="{{ route('addresses.index') }}" class="text-sm font-medium text-blue-600 hover:text-blue-500">
+        <a href="{{ route('addresses.index') }}" class="text-sm font-medium text-orange-600 hover:text-orange-500">
             + {{ __('Add New Address') }}
         </a>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         @forelse ($addresses as $address)
-            <div class="border rounded-lg p-4 relative {{ $address->is_default ? 'border-blue-500 bg-blue-50' : 'border-gray-200' }}">
+            <div class="border rounded-lg p-4 relative {{ $address->is_default ? 'border-orange-500 bg-orange-50' : 'border-gray-200' }}">
                 <div class="flex items-start justify-between">
                     <div class="flex items-center gap-2">
                         <svg class="h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -18,13 +18,13 @@
                         </svg>
                         <span class="font-semibold text-gray-900">{{ $address->recipient_name ?? 'Home' }}</span>
                         @if ($address->is_default)
-                            <span class="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                            <span class="px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
                                 {{ __('Default') }}
                             </span>
                         @endif
                     </div>
                     <div class="flex items-center gap-2">
-                         <a href="{{ route('addresses.index') }}" class="p-1 text-gray-400 hover:text-blue-600">
+                         <a href="{{ route('addresses.index') }}" class="p-1 text-gray-400 hover:text-orange-600">
                             <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                             </svg>

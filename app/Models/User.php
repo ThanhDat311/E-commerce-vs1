@@ -2,33 +2,34 @@
 
 namespace App\Models;
 
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Notifications\Notifiable;
-use App\Models\Order;
 use App\Traits\Auditable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, Auditable;
+    use Auditable, HasFactory, Notifiable;
 
     protected $fillable = [
         'name',
         'email',
         'password',
-        'role_id',      // Dùng role_id để phân quyền
-        'phone_number', // Giữ cái này (đã có sẵn trong DB)
-        'address',      // [NEW] Thêm trường này
+        'role_id',
+        'phone_number',
+        'address',
         'is_active',
         'email_verified_at',
-        'date_of_birth', // [NEW] Thêm trường này
+        'date_of_birth',
         'google_id',
+        'notification_preferences',
     ];
 
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'date_of_birth' => 'date',
+        'notification_preferences' => 'array',
     ];
 
     protected $hidden = [
@@ -59,6 +60,11 @@ class User extends Authenticatable
     public function wishlists()
     {
         return $this->hasMany(Wishlist::class);
+    }
+
+    public function paymentMethods()
+    {
+        return $this->hasMany(PaymentMethod::class);
     }
 
     public function authLogs()
@@ -128,5 +134,10 @@ class User extends Authenticatable
         ];
 
         return $roles[$this->role_id] ?? 'unknown';
+    }
+
+    public function hasInWishlist($productId): bool
+    {
+        return $this->wishlists()->where('product_id', $productId)->exists();
     }
 }

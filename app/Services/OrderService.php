@@ -2,24 +2,27 @@
 
 namespace App\Services;
 
+use App\Events\OrderPlaced;
+use App\Models\AiFeatureStore;
+use App\Models\OrderHistory;
+use App\Models\Product;
 use App\Repositories\Interfaces\OrderRepositoryInterface;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
+use App\Services\Payment\PaymentFactory;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Models\AiFeatureStore;
-use App\Models\Product;
-use App\Services\Payment\PaymentFactory;
-use App\Models\OrderHistory;
-use App\Events\OrderPlaced;
-
-use Exception;
 
 class OrderService
 {
     protected $orderRepository;
+
     protected $productRepository;
+
     protected $cartService;
+
     protected $riskService;
+
     protected $paymentFactory;
 
     public function __construct(
@@ -43,20 +46,20 @@ class OrderService
         $cartItems = $cartData['cartItems'];
 
         if (empty($cartItems)) {
-            throw new Exception("Cart is empty");
+            throw new Exception('Cart is empty');
         }
 
         // --- CHECK RỦI RO (AI RISK MANAGEMENT) ---
         $dataToCheck = array_merge($customerData, [
             'total' => $cartData['total'],
-            'quantity' => array_sum(array_column($cartItems, 'quantity'))
+            'quantity' => array_sum(array_column($cartItems, 'quantity')),
         ]);
 
         // Gọi service check rủi ro
         $riskAnalysis = $this->riskService->assessOrderRisk($dataToCheck, $userId);
 
         // Nếu bị chặn thì throw Exception ngay
-        if (!$riskAnalysis['allowed']) {
+        if (! $riskAnalysis['allowed']) {
             throw new Exception("Security Alert: Transaction blocked. Reason: {$riskAnalysis['reason']}");
         }
         // -----------------------------------------
@@ -77,7 +80,7 @@ class OrderService
                 // Get product via Repository (Clean Architecture)
                 $product = $this->productRepository->find($productId);
 
-                if (!$product) {
+                if (! $product) {
                     throw new Exception("Product #{$productId} not found");
                 }
 
@@ -90,7 +93,7 @@ class OrderService
                 // Check stock availability
                 if ($product->stock_quantity < $requestedQuantity) {
                     throw new Exception(
-                        "Insufficient stock for product: {$product->name}. " .
+                        "Insufficient stock for product: {$product->name}. ".
                             "Available: {$product->stock_quantity}, Requested: {$requestedQuantity}"
                     );
                 }
@@ -103,18 +106,18 @@ class OrderService
 
             // Chuẩn bị data để tạo Order
             $orderData = [
-                'user_id'        => $userId,
-                'first_name'     => $customerData['first_name'],
-                'last_name'      => $customerData['last_name'] ?? '',
-                'email'          => $customerData['email'],
-                'phone'          => $customerData['phone'],
-                'address'        => $customerData['address'],
-                'note'           => $customerData['note'] ?? null,
-                'total'          => $cartData['total'],
+                'user_id' => $userId,
+                'first_name' => $customerData['first_name'],
+                'last_name' => $customerData['last_name'] ?? '',
+                'email' => $customerData['email'],
+                'phone' => $customerData['phone'],
+                'address' => $customerData['address'],
+                'note' => $customerData['note'] ?? null,
+                'total' => $cartData['total'],
 
-                'order_status'   => 'pending',
+                'order_status' => 'pending',
                 'payment_method' => $customerData['payment_method'],
-                'payment_status' => 'unpaid'
+                'payment_status' => 'unpaid',
             ];
 
             // Tạo Order Master
@@ -123,12 +126,12 @@ class OrderService
             // Tạo Order Items (Chi tiết đơn hàng)
             foreach ($cartItems as $item) {
                 $this->orderRepository->createOrderItem([
-                    'order_id'     => $order->id,
-                    'product_id'   => $item['id'],
+                    'order_id' => $order->id,
+                    'product_id' => $item['id'],
                     'product_name' => $item['name'],
-                    'quantity'     => $item['quantity'],
-                    'price'        => $item['price'],
-                    'total'        => $item['price'] * $item['quantity']
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
+                    'total' => $item['price'] * $item['quantity'],
                 ]);
             }
 
@@ -137,9 +140,9 @@ class OrderService
             $paymentResult = $paymentGateway->process($order);
 
             // --- CẬP NHẬT LOG AI (Gắn order_id vào log đã ghi trước đó) ---
-            if (!empty($riskAnalysis['log_id'])) {
+            if (! empty($riskAnalysis['log_id'])) {
                 AiFeatureStore::where('id', $riskAnalysis['log_id'])->update([
-                    'order_id' => $order->id
+                    'order_id' => $order->id,
                 ]);
             }
             // -------------------------------------------------------------
@@ -155,21 +158,21 @@ class OrderService
             // Trả về kết quả bao gồm cả Redirect URL nếu có
             return [
                 'order' => $order,
-                'payment_result' => $paymentResult
+                'payment_result' => $paymentResult,
             ];
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error("Checkout Failed: " . $e->getMessage());
+            Log::error('Checkout Failed: '.$e->getMessage());
             throw $e;
         }
     }
 
     public function handlePaymentCallback(string $gatewayName, \Illuminate\Http\Request $request, bool $isIpn = false): array
     {
-        Log::info("Payment callback received", [
+        Log::info('Payment callback received', [
             'gateway' => $gatewayName,
             'is_ipn' => $isIpn,
-            'params' => $request->all()
+            'params' => $request->all(),
         ]);
 
         // 1. Lấy Gateway từ Factory
@@ -178,11 +181,12 @@ class OrderService
         // 2. Xác thực dữ liệu
         $verificationResult = $gateway->verify($request);
 
-        if (!$verificationResult['success']) {
-            Log::warning("Payment verification failed", [
+        if (! $verificationResult['success']) {
+            Log::warning('Payment verification failed', [
                 'gateway' => $gatewayName,
-                'message' => $verificationResult['message']
+                'message' => $verificationResult['message'],
             ]);
+
             return $verificationResult;
         }
 
@@ -190,8 +194,9 @@ class OrderService
         $orderId = $verificationResult['order_id'];
         $order = \App\Models\Order::with('items')->lockForUpdate()->find($orderId);
 
-        if (!$order) {
-            Log::error("Order not found", ['order_id' => $orderId]);
+        if (! $order) {
+            Log::error('Order not found', ['order_id' => $orderId]);
+
             return ['success' => false, 'message' => 'Order not found'];
         }
 
@@ -200,27 +205,29 @@ class OrderService
         $receivedAmount = intval($verificationResult['amount'] * 100);
 
         if ($expectedAmount !== $receivedAmount) {
-            Log::error("Amount mismatch detected", [
+            Log::error('Amount mismatch detected', [
                 'order_id' => $orderId,
                 'expected' => $expectedAmount,
-                'received' => $receivedAmount
+                'received' => $receivedAmount,
             ]);
+
             return [
                 'success' => false,
-                'message' => 'Amount validation failed'
+                'message' => 'Amount validation failed',
             ];
         }
 
         // 5. Idempotency Check
         if (in_array($order->payment_status, ['paid', 'failed', 'cancelled'])) {
-            Log::info("Order already processed", [
+            Log::info('Order already processed', [
                 'order_id' => $orderId,
-                'status' => $order->payment_status
+                'status' => $order->payment_status,
             ]);
+
             return [
                 'success' => $order->payment_status === 'paid',
                 'order_id' => $orderId,
-                'message' => 'Order already processed'
+                'message' => 'Order already processed',
             ];
         }
 
@@ -241,13 +248,13 @@ class OrderService
                     'order_id' => $order->id,
                     'user_id' => $order->user_id,
                     'action' => 'Payment Received',
-                    'description' => "Payment successful via {$gatewayName}. TransNo: " . ($verificationResult['transaction_no'] ?? 'N/A')
+                    'description' => "Payment successful via {$gatewayName}. TransNo: ".($verificationResult['transaction_no'] ?? 'N/A'),
                 ]);
 
-                Log::info("Payment processed successfully", [
+                Log::info('Payment processed successfully', [
                     'order_id' => $orderId,
                     'gateway' => $gatewayName,
-                    'amount' => $verificationResult['amount']
+                    'amount' => $verificationResult['amount'],
                 ]);
             } else {
                 // Failure: Set to cancelled and restore inventory
@@ -268,13 +275,13 @@ class OrderService
                     'order_id' => $order->id,
                     'user_id' => $order->user_id,
                     'action' => 'Payment Failed',
-                    'description' => "Payment failed via {$gatewayName}. Code: " . ($verificationResult['response_code'] ?? 'Unknown')
+                    'description' => "Payment failed via {$gatewayName}. Code: ".($verificationResult['response_code'] ?? 'Unknown'),
                 ]);
 
-                Log::warning("Payment failed, inventory restored", [
+                Log::warning('Payment failed, inventory restored', [
                     'order_id' => $orderId,
                     'gateway' => $gatewayName,
-                    'response_code' => $verificationResult['response_code'] ?? 'Unknown'
+                    'response_code' => $verificationResult['response_code'] ?? 'Unknown',
                 ]);
             }
 
@@ -284,9 +291,9 @@ class OrderService
             return array_merge($verificationResult, ['order_id' => $orderId]);
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error("Payment callback DB error", [
+            Log::error('Payment callback DB error', [
                 'order_id' => $orderId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             throw $e;
         }
@@ -296,10 +303,9 @@ class OrderService
 
     /**
      * Xử lý hủy đơn hàng từ phía Customer
-     * * @param int $orderId
-     * @param int $userId
-     * @param string|null $reason
+     *
      * @return Order
+     *
      * @throws Exception
      */
     public function cancelOrder(int $orderId, int $userId, ?string $reason = '')
@@ -311,13 +317,13 @@ class OrderService
             // Ở đây dùng Eloquent để tiện load items và relationship
             $order = \App\Models\Order::with('items')->find($orderId);
 
-            if (!$order) {
-                throw new Exception("Order not found.");
+            if (! $order) {
+                throw new Exception('Order not found.');
             }
 
             // 2. Security Check: Đảm bảo chính chủ mới được hủy
             if ($order->user_id !== $userId) {
-                throw new Exception("Unauthorized access to this order.");
+                throw new Exception('Unauthorized access to this order.');
             }
 
             // 3. State Check: Chỉ cho phép hủy khi đang 'pending'
@@ -353,10 +359,10 @@ class OrderService
             // 6. Ghi lịch sử (Audit Log)
             if (class_exists(\App\Models\OrderHistory::class)) {
                 \App\Models\OrderHistory::create([
-                    'order_id'    => $order->id,
-                    'user_id'     => $userId,
-                    'action'      => 'Order Cancelled',
-                    'description' => "Customer cancelled order. Reason: " . ($reason ?? 'No reason provided')
+                    'order_id' => $order->id,
+                    'user_id' => $userId,
+                    'action' => 'Order Cancelled',
+                    'description' => 'Customer cancelled order. Reason: '.($reason ?? 'No reason provided'),
                 ]);
             }
 
@@ -368,8 +374,40 @@ class OrderService
             return $order;
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error("Order Cancellation Failed: " . $e->getMessage());
+            Log::error('Order Cancellation Failed: '.$e->getMessage());
             throw $e; // Ném lỗi ra để Controller bắt
         }
+    }
+
+    /**
+     * Xử lý thanh toán lại cho đơn hàng
+     */
+    public function repayOrder(int $orderId, int $userId)
+    {
+        // 1. Tìm đơn hàng
+        $order = $this->orderRepository->find($orderId);
+
+        if (! $order) {
+            throw new Exception('Order not found.');
+        }
+
+        // 2. Validate Ownership
+        if ($order->user_id !== $userId) {
+            throw new Exception('Unauthorized access.');
+        }
+
+        // 3. Validate Status
+        if ($order->payment_status === 'paid') {
+            throw new Exception('Order is already paid.');
+        }
+
+        if ($order->order_status === 'cancelled') {
+            throw new Exception('Cannot pay for cancelled order.');
+        }
+
+        // 4. Get Payment Gateway & Process
+        $paymentGateway = $this->paymentFactory->getGateway($order->payment_method);
+
+        return $paymentGateway->process($order);
     }
 }

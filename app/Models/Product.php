@@ -109,4 +109,17 @@ class Product extends Model
             'sku' => $this->sku,
         ];
     }
+
+    public function getImageUrlAttribute($value)
+    {
+        if (empty($value)) {
+            return null;
+        }
+
+        if (str_starts_with($value, 'http://') || str_starts_with($value, 'https://')) {
+            return $value;
+        }
+
+        return asset($value);
+    }
 }

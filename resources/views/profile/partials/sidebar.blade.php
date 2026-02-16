@@ -34,9 +34,11 @@
             Order History
         </a>
 
-        <a href="#saved-addresses"
-           class="flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900">
-            <svg class="mr-3 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <a href="{{ route('addresses.index') }}"
+           class="flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200
+           {{ request()->routeIs('addresses.*') ? 'bg-orange-50 text-orange-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+            <svg class="mr-3 h-5 w-5 {{ request()->routeIs('addresses.*') ? 'text-orange-500' : 'text-gray-400' }}"
+                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -45,20 +47,47 @@
             Saved Addresses
         </a>
 
-        <a href="#payment-methods"
-           class="flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900">
-            <svg class="mr-3 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <a href="{{ route('payment-methods.index') }}"
+           class="flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200
+           {{ request()->routeIs('payment-methods.*') ? 'bg-orange-50 text-orange-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+            <svg class="mr-3 h-5 w-5 {{ request()->routeIs('payment-methods.*') ? 'text-orange-500' : 'text-gray-400' }}"
+                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
             </svg>
             Payment Methods
         </a>
 
-        <a href="#" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900">
-             <svg class="mr-3 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <a href="{{ route('notifications.settings') }}"
+           class="flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200
+           {{ request()->routeIs('notifications.*') ? 'bg-orange-50 text-orange-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+             <svg class="mr-3 h-5 w-5 {{ request()->routeIs('notifications.*') ? 'text-orange-500' : 'text-gray-400' }}"
+                  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
             Notifications
+        </a>
+
+        <a href="{{ route('security.index') }}"
+           class="flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200
+           {{ request()->routeIs('security.*') ? 'bg-orange-50 text-orange-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+            <svg class="mr-3 h-5 w-5 {{ request()->routeIs('security.*') ? 'text-orange-500' : 'text-gray-400' }}"
+                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            Account Security
+        </a>
+
+        <a href="{{ route('wishlist.index') }}"
+           class="flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200
+           {{ request()->routeIs('wishlist.*') ? 'bg-orange-50 text-orange-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+            <svg class="mr-3 h-5 w-5 {{ request()->routeIs('wishlist.*') ? 'text-orange-500' : 'text-gray-400' }}"
+                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+            Wishlist
         </a>
 
         <!-- Logout -->

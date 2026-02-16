@@ -10,26 +10,26 @@
                 <span class="text-gray-900 font-medium">Account</span>
             </nav>
 
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div class="flex flex-col md:flex-row gap-8">
                 <!-- Sidebar -->
-                <div class="md:col-span-1">
+                <div class="w-full md:w-1/4 shrink-0 sticky top-4 self-start">
                     @include('profile.partials.sidebar')
                 </div>
 
                 <!-- Main Content -->
-                <div class="md:col-span-3 space-y-8">
+                <div class="flex-1 min-w-0 space-y-8">
                     <!-- Personal Information -->
                     <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 md:p-8">
                         @include('profile.partials.update-profile-information-form')
                     </div>
 
                     <!-- Saved Addresses -->
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 md:p-8">
+                    <div id="saved-addresses" class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 md:p-8">
                         @include('profile.partials.address-list')
                     </div>
 
                     <!-- Payment Methods -->
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 md:p-8">
+                    <div id="payment-methods" class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 md:p-8">
                          @include('profile.partials.payment-methods')
                     </div>
                 </div>

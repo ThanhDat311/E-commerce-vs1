@@ -16,6 +16,7 @@
         @stack('styles')
     </head>
     <body class="font-sans antialiased text-gray-900 bg-gray-100">
+        <x-shared.toast />
         {{ $slot }}
         @stack('scripts')
     </body>
