@@ -165,7 +165,7 @@
                     Showing <span class="font-medium">{{ $orders->firstItem() }}</span> to <span class="font-medium">{{ $orders->lastItem() }}</span> of <span class="font-bold text-gray-700">{{ $orders->total() }}</span> orders
                 </p>
                 <div>
-                    {{ $orders->links() }}
+                    {{ $orders->links('vendor.pagination.admin') }}
                 </div>
             </div>
         @endif

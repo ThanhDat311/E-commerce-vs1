@@ -109,7 +109,7 @@
                     Showing <span class="font-medium">{{ $products->firstItem() }}</span> to <span class="font-medium">{{ $products->lastItem() }}</span> of <span class="font-bold text-gray-700">{{ $products->total() }}</span> products
                 </p>
                 <div>
-                    {{ $products->links() }}
+                    {{ $products->links('vendor.pagination.admin') }}
                 </div>
             </div>
         @endif

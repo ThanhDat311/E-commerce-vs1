@@ -69,7 +69,7 @@
                                 <div>
                                     <h3 class="text-sm font-semibold text-gray-700 mb-3">Old Values</h3>
                                     <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                                        <pre class="text-xs text-gray-800 whitespace-pre-wrap">{{ $auditLog->old_values }}</pre>
+                                        <pre class="text-xs text-gray-800 whitespace-pre-wrap">{{ json_encode($auditLog->old_values, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
                                     </div>
                                 </div>
                             @endif
@@ -79,7 +79,7 @@
                                 <div>
                                     <h3 class="text-sm font-semibold text-gray-700 mb-3">New Values</h3>
                                     <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                                        <pre class="text-xs text-gray-800 whitespace-pre-wrap">{{ $auditLog->new_values }}</pre>
+                                        <pre class="text-xs text-gray-800 whitespace-pre-wrap">{{ json_encode($auditLog->new_values, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
                                     </div>
                                 </div>
                             @endif

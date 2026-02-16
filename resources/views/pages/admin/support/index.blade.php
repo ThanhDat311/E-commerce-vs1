@@ -167,7 +167,7 @@
                 <p class="text-sm text-gray-500">
                     Showing <span class="font-medium">{{ $tickets->firstItem() }}</span> to <span class="font-medium">{{ $tickets->lastItem() }}</span> of <span class="font-bold text-gray-700">{{ $tickets->total() }}</span> tickets
                 </p>
-                <div>{{ $tickets->links() }}</div>
+                <div>{{ $tickets->links('vendor.pagination.admin') }}</div>
             </div>
         @endif
     </div>

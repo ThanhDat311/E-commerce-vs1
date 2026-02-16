@@ -190,7 +190,7 @@
                     Showing <span class="font-medium">{{ $auditLogs->firstItem() }}</span> to <span class="font-medium">{{ $auditLogs->lastItem() }}</span> of <span class="font-bold text-gray-700">{{ $auditLogs->total() }}</span> logs
                 </p>
                 <div>
-                    {{ $auditLogs->links() }}
+                    {{ $auditLogs->links('vendor.pagination.admin') }}
                 </div>
             </div>
         @endif

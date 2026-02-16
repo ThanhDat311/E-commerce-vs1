@@ -171,7 +171,7 @@
                     Showing <span class="font-medium">{{ $users->firstItem() }}</span> to <span class="font-medium">{{ $users->lastItem() }}</span> of <span class="font-bold text-gray-700">{{ $users->total() }}</span> users
                 </p>
                 <div>
-                    {{ $users->links() }}
+                    {{ $users->links('vendor.pagination.admin') }}
                 </div>
             </div>
         @endif

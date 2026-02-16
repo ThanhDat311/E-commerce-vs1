@@ -22,9 +22,14 @@
             <div class="space-y-6">
                 <!-- Main Info Card -->
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-                        <h2 class="text-lg font-semibold text-gray-900">Category Information</h2>
-                        <p class="text-sm text-gray-500">Details about the category structure</p>
+                    <div class="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                        <h2 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                            </svg>
+                            Category Information
+                        </h2>
+                        <p class="text-sm text-gray-500 mt-1">Details about the category structure</p>
                     </div>
                     
                     <div class="p-6 space-y-6">
@@ -32,21 +37,21 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <!-- Category Name -->
                             <div>
-                                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
+                                <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
                                     Category Name <span class="text-red-500">*</span>
                                 </label>
                                 <input type="text" name="name" id="name" value="{{ old('name') }}" required
-                                       class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors"
+                                       class="w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-500 focus:ring-blue-500 focus:bg-white transition-all"
                                        placeholder="e.g. Electronics">
                             </div>
 
                             <!-- Parent Category -->
                             <div>
-                                <label for="parent_id" class="block text-sm font-medium text-gray-700 mb-1">
+                                <label for="parent_id" class="block text-sm font-medium text-gray-700 mb-2">
                                     Parent Category
                                 </label>
                                 <select name="parent_id" id="parent_id"
-                                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors">
+                                        class="w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-500 focus:ring-blue-500 focus:bg-white transition-all">
                                     <option value="">None (Top Level)</option>
                                     @foreach(\App\Models\Category::whereNull('parent_id')->orderBy('name')->get() as $cat)
                                         <option value="{{ $cat->id }}" {{ old('parent_id') == $cat->id ? 'selected' : '' }}>
@@ -54,23 +59,24 @@
                                         </option>
                                     @endforeach
                                 </select>
+                                <p class="mt-1.5 text-xs text-gray-500">Select a parent to create a subcategory</p>
                             </div>
                         </div>
 
                         <!-- Slug -->
                         <div>
-                            <label for="slug" class="block text-sm font-medium text-gray-700 mb-1">Slug</label>
+                            <label for="slug" class="block text-sm font-medium text-gray-700 mb-2">Slug</label>
                             <input type="text" name="slug" id="slug" value="{{ old('slug') }}"
-                                   class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors"
+                                   class="w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-500 focus:ring-blue-500 focus:bg-white transition-all"
                                    placeholder="e.g. electronics (auto-generated if empty)">
-                            <p class="mt-1 text-xs text-gray-500">URL-friendly version of the name. Leave empty to auto-generate.</p>
+                            <p class="mt-1.5 text-xs text-gray-500">URL-friendly version of the name. Leave empty to auto-generate.</p>
                         </div>
 
                         <!-- Description -->
                         <div>
-                            <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
                             <textarea name="description" id="description" rows="3"
-                                      class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors"
+                                      class="w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-500 focus:ring-blue-500 focus:bg-white transition-all"
                                       placeholder="Brief description of this category (optional)">{{ old('description') }}</textarea>
                         </div>
                     </div>
@@ -78,8 +84,14 @@
 
                 <!-- Media & Settings Card -->
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-                        <h2 class="text-lg font-semibold text-gray-900">Media & Visibility</h2>
+                    <div class="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                        <h2 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            Media & Visibility
+                        </h2>
+                        <p class="text-sm text-gray-500 mt-1">Upload category image and set visibility</p>
                     </div>
                     
                     <div class="p-6 space-y-6">
@@ -119,11 +131,17 @@
                 </div>
 
                 <!-- Action Buttons -->
-                <div class="flex items-center justify-end gap-4">
-                    <a href="{{ route('admin.categories.index') }}" class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 font-medium transition-colors">
+                <div class="flex items-center justify-end gap-3 pt-2">
+                    <a href="{{ route('admin.categories.index') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 font-medium transition-all shadow-sm">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
                         Cancel
                     </a>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 font-medium transition-colors shadow-sm">
+                    <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 font-medium transition-all shadow-sm shadow-blue-200">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
                         Create Category
                     </button>
                 </div>

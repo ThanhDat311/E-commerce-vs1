@@ -275,7 +275,7 @@
                 <p class="text-sm text-gray-500">
                     Showing <span class="font-medium">{{ $transactions->firstItem() }}</span> to <span class="font-medium">{{ $transactions->lastItem() }}</span> of <span class="font-bold text-gray-700">{{ $transactions->total() }}</span> transactions
                 </p>
-                <div>{{ $transactions->links() }}</div>
+                <div>{{ $transactions->links('vendor.pagination.admin') }}</div>
             </div>
         @endif
     </div>

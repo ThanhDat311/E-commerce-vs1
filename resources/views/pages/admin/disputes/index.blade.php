@@ -155,7 +155,7 @@
                     Showing <span class="font-medium">{{ $disputes->firstItem() }}</span> to <span class="font-medium">{{ $disputes->lastItem() }}</span> of <span class="font-bold text-gray-700">{{ $disputes->total() }}</span> disputes
                 </p>
                 <div>
-                    {{ $disputes->links() }}
+                    {{ $disputes->links('vendor.pagination.admin') }}
                 </div>
             </div>
         @endif
