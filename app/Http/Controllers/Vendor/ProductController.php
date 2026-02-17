@@ -24,7 +24,7 @@ class ProductController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        return view('vendor.products.index', compact('products'));
+        return view('pages.vendor.products.index', compact('products'));
     }
 
     /**
@@ -33,7 +33,7 @@ class ProductController extends Controller
     public function create()
     {
         $categories = Category::all();
-        return view('vendor.products.create', compact('categories'));
+        return view('pages.vendor.products.create', compact('categories'));
     }
 
     /**
@@ -82,7 +82,7 @@ class ProductController extends Controller
         $this->authorize('update', $product);
 
         $categories = Category::all();
-        return view('vendor.products.edit', compact('product', 'categories'));
+        return view('pages.vendor.products.edit', compact('product', 'categories'));
     }
 
     /**
@@ -143,6 +143,7 @@ class ProductController extends Controller
             File::delete(public_path($product->image_url));
         }
 
+        // Soft delete - products with orders can now be deleted safely
         $product->delete();
 
         return redirect()->route('vendor.products.index')->with('success', 'Product deleted successfully.');
@@ -156,6 +157,6 @@ class ProductController extends Controller
         // Ensure vendor can only view their own products
         $this->authorize('view', $product);
 
-        return view('vendor.products.show', compact('product'));
+        return view('pages.vendor.products.show', compact('product'));
     }
 }

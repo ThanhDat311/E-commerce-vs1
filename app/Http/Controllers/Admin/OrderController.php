@@ -193,24 +193,24 @@ class OrderController extends Controller
     /**
      * Override order status (admin power)
      */
-    public function overrideStatus(Request $request, Order $order)
+    public function updateStatus(Request $request, Order $order)
     {
-        $request->validate([
-            'status' => 'required|in:pending,processing,shipped,delivered,cancelled',
-            'reason' => 'required|string|max:500',
+        $validated = $request->validate([
+            'order_status' => 'required|in:pending,processing,completed,cancelled,shipped',
+            'notes' => 'nullable|string'
         ]);
 
-        $oldStatus = $order->order_status;
-        $order->update(['order_status' => $request->status]);
-
+        // Record the status change in history with correct field names
         OrderHistory::create([
             'order_id' => $order->id,
             'user_id' => Auth::id(),
-            'action' => 'Override Status',
-            'description' => "Status overridden from {$oldStatus} to {$request->status}. Reason: {$request->reason}",
+            'action' => 'Status changed from ' . $order->order_status . ' to ' . $validated['order_status'],
+            'description' => $validated['notes'] ?? 'Status updated by admin'
         ]);
 
-        return back()->with('success', 'Order status overridden.');
+        $order->update(['order_status' => $validated['order_status']]);
+
+        return redirect()->route('admin.orders.show', $order)->with('success', 'Order status updated successfully.');
     }
 
     /**
@@ -254,7 +254,7 @@ class OrderController extends Controller
         $orders = $query->orderBy('created_at', 'desc')->get();
 
         // Generate CSV
-        $filename = 'orders_'.now()->format('Y-m-d_His').'.csv';
+        $filename = 'orders_' . now()->format('Y-m-d_His') . '.csv';
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
@@ -267,7 +267,7 @@ class OrderController extends Controller
             foreach ($orders as $order) {
                 fputcsv($file, [
                     $order->id,
-                    $order->first_name.' '.$order->last_name,
+                    $order->first_name . ' ' . $order->last_name,
                     $order->email,
                     $order->total,
                     $order->order_status,

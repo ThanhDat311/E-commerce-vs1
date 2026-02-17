@@ -7,11 +7,12 @@ use App\Traits\Auditable;
 use App\Traits\HasFlashSalePrice;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Scout\Searchable;
 
 class Product extends Model
 {
-    use Auditable, HasFactory, HasFlashSalePrice, Searchable;
+    use Auditable, HasFactory, HasFlashSalePrice, Searchable, SoftDeletes;
 
     protected static function boot()
     {
@@ -43,13 +44,13 @@ class Product extends Model
     {
         static::creating(function ($product) {
             if (empty($product->slug)) {
-                $product->slug = \Illuminate\Support\Str::slug($product->name).'-'.\Illuminate\Support\Str::random(6);
+                $product->slug = \Illuminate\Support\Str::slug($product->name) . '-' . \Illuminate\Support\Str::random(6);
             }
         });
 
         static::updating(function ($product) {
             if ($product->isDirty('name') && empty($product->slug)) {
-                $product->slug = \Illuminate\Support\Str::slug($product->name).'-'.$product->id;
+                $product->slug = \Illuminate\Support\Str::slug($product->name) . '-' . $product->id;
             }
         });
     }

@@ -37,7 +37,7 @@ class OrderController extends Controller
 
         $orders = $query->orderBy('created_at', 'desc')->paginate(15);
 
-        return view('vendor.orders.index', compact('orders'));
+        return view('pages.vendor.orders.index', compact('orders'));
     }
 
     /**
@@ -61,7 +61,7 @@ class OrderController extends Controller
 
         $histories = $order->histories()->orderBy('created_at', 'desc')->get();
 
-        return view('vendor.orders.show', compact('order', 'histories'));
+        return view('pages.vendor.orders.show', compact('order', 'histories'));
     }
 
     /**
@@ -86,13 +86,12 @@ class OrderController extends Controller
             'order_status' => 'required|in:pending,processing,completed,cancelled,shipped'
         ]);
 
-        // Record the status change in history
+        // Record the status change in history with correct field names
         OrderHistory::create([
             'order_id' => $order->id,
-            'old_status' => $order->order_status,
-            'new_status' => $validated['order_status'],
-            'action_by' => $vendor->id,
-            'notes' => $request->input('notes', 'Status updated by vendor')
+            'user_id' => $vendor->id,
+            'action' => 'Status changed from ' . $order->order_status . ' to ' . $validated['order_status'],
+            'description' => $request->input('notes', 'Status updated by vendor')
         ]);
 
         $order->update(['order_status' => $validated['order_status']]);

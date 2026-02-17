@@ -1,3 +1,5 @@
+@props(['title' => 'Zentro Admin'])
+
 <div x-data="{ isSidebarOpen: false }"
      @sidebar-toggle.window="isSidebarOpen = !isSidebarOpen"
      class="flex h-screen overflow-hidden">
@@ -22,7 +24,7 @@
             <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-sm font-bold text-white shadow-sm shadow-blue-500/30">
                 Z
             </div>
-            <h1 class="text-base font-bold tracking-wide text-white">Zentro Admin</h1>
+            <h1 class="text-base font-bold tracking-wide text-white">{{ $title }}</h1>
         </div>
 
         <!-- Navigation -->

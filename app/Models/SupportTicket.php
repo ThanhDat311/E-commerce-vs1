@@ -16,7 +16,9 @@ class SupportTicket extends Model
         'priority',
         'category',
         'order_id',
+        'product_id',
         'assigned_to',
+        'satisfaction_rating',
     ];
 
     public function user()
@@ -37,5 +39,23 @@ class SupportTicket extends Model
     public function order()
     {
         return $this->belongsTo(Order::class);
+    }
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+    // Scopes
+    public function scopeForCustomer($query, $userId)
+    {
+        return $query->where('user_id', $userId);
+    }
+
+    public function scopeForVendor($query, $vendorId)
+    {
+        return $query->whereHas('product', function ($q) use ($vendorId) {
+            $q->where('vendor_id', $vendorId);
+        });
     }
 }

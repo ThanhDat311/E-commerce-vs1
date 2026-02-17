@@ -33,14 +33,14 @@ class ProductController extends Controller
 
         if ($request->hasFile('image')) {
             $file = $request->file('image');
-            $filename = time().'_'.$file->getClientOriginalName();
+            $filename = time() . '_' . $file->getClientOriginalName();
 
             if (! File::exists(public_path('img/products'))) {
                 File::makeDirectory(public_path('img/products'), 0755, true);
             }
 
             $file->move(public_path('img/products'), $filename);
-            $data['image_url'] = 'img/products/'.$filename;
+            $data['image_url'] = 'img/products/' . $filename;
         }
 
         // Xử lý checkbox (Nếu không check thì request không gửi lên -> mặc định là 0)
@@ -71,9 +71,9 @@ class ProductController extends Controller
             }
 
             $file = $request->file('image');
-            $filename = time().'_'.$file->getClientOriginalName();
+            $filename = time() . '_' . $file->getClientOriginalName();
             $file->move(public_path('img/products'), $filename);
-            $data['image_url'] = 'img/products/'.$filename;
+            $data['image_url'] = 'img/products/' . $filename;
         }
 
         $data['is_new'] = $request->has('is_new') ? 1 : 0;
@@ -90,6 +90,7 @@ class ProductController extends Controller
             File::delete(public_path($product->image_url));
         }
 
+        // Soft delete - products with orders can now be deleted safely
         $product->delete();
 
         return redirect()->route('admin.products.index')->with('success', 'Product deleted successfully.');
