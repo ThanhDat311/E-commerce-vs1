@@ -3,27 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CheckoutRequest;
+use App\Services\CartService;
 use App\Services\OrderService;
-use App\Services\CartService; // [FIX 1] Import CartService
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Exception;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class CheckoutController extends Controller
 {
-    protected OrderService $orderService;
-    protected CartService $cartService;
-
-    public function __construct(OrderService $orderService, CartService $cartService)
-    {
-        $this->orderService = $orderService;
-        $this->cartService = $cartService;
-    }
+    public function __construct(
+        protected OrderService $orderService,
+        protected CartService $cartService,
+    ) {}
 
     public function show()
     {
         $cartData = $this->cartService->getCartDetails();
-        $addresses = Auth::check() ? Auth::user()->addresses : [];
+        $addresses = Auth::check() ? Auth::user()->addresses : collect();
 
         // Check if cart is empty
         if (empty($cartData['cartItems'])) {
@@ -36,35 +32,37 @@ class CheckoutController extends Controller
     public function process(CheckoutRequest $request)
     {
         try {
-            // Prepare customer data from request
             $customerData = $request->validated();
-
-            // Get User ID if authenticated
             $userId = Auth::id();
 
-            // Call the Service
-            // Lưu ý: processCheckout bây giờ trả về mảng ['order' => ..., 'payment_result' => ...]
             $result = $this->orderService->processCheckout($customerData, $userId);
             $order = $result['order'];
             $paymentResult = $result['payment_result'];
 
-            // Nếu cổng thanh toán yêu cầu redirect (như VNPay)
-            if ($paymentResult['is_redirect'] && !empty($paymentResult['redirect_url'])) {
+            // If payment gateway requires redirect (e.g. VNPay)
+            if ($paymentResult['is_redirect'] && ! empty($paymentResult['redirect_url'])) {
                 return redirect()->to($paymentResult['redirect_url']);
             }
 
-            // Nếu là COD hoặc thanh toán tại chỗ
+            // COD or local payment
             return redirect()->route('checkout.success')->with('order_id', $order->id);
         } catch (Exception $e) {
+            Log::error('Checkout process failed', [
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id(),
+                'input' => $request->except(['_token']),
+            ]);
+
             return redirect()->back()->withErrors(['error' => $e->getMessage()])->withInput();
         }
     }
 
     public function success()
     {
-        if (!session('order_id')) {
+        if (! session('order_id')) {
             return redirect()->route('home');
         }
+
         return view('order-success');
     }
 }

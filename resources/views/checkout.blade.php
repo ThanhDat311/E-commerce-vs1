@@ -2,11 +2,12 @@
     <x-store.navbar />
     <div class="bg-gray-50 min-h-screen pb-12" 
          x-data="{ 
-            selectedAddress: {{ $addresses->where('is_default', true)->first()->id ?? ($addresses->first()->id ?? 'null') }},
+            addresses: {{ json_encode($addresses) }},
+            selectedAddressId: {{ $addresses->where('is_default', true)->first()?->id ?? $addresses->first()?->id ?? 'null' }},
             paymentMethod: 'card',
-            shippingMethod: 'standard', // standard | express
+            shippingMethod: 'standard',
             baseSubtotal: {{ $subTotal }},
-            baseShipping: {{ $shipping }}, // Initial base shipping from controller (standard)
+            baseShipping: {{ $shipping }},
             discount: {{ $discount }},
             
             get shippingCost() {
@@ -19,6 +20,36 @@
 
             formatMoney(amount) {
                 return '$' + parseFloat(amount).toFixed(2);
+            },
+
+            get selectedAddressData() {
+                return this.addresses.find(a => a.id == this.selectedAddressId) || {};
+            },
+
+            get firstName() {
+                const name = this.selectedAddressData.recipient_name || '';
+                const parts = name.trim().split(' ');
+                if (parts.length === 1) return name;
+                return parts.slice(0, -1).join(' ');
+            },
+
+            get lastName() {
+                const name = this.selectedAddressData.recipient_name || '';
+                const parts = name.trim().split(' ');
+                if (parts.length === 1) return name; 
+                return parts.slice(-1).join(' ');
+            },
+
+            get phone() {
+                return this.selectedAddressData.phone_contact || '';
+            },
+
+            get fullAddress() {
+                const a = this.selectedAddressData;
+                if (!a.address_line1) return '';
+                // Construct full address string
+                const parts = [a.address_line1, a.city, a.state, a.country];
+                return parts.filter(Boolean).join(', ');
             }
          }"
     >
@@ -37,8 +68,38 @@
 
             <h1 class="text-3xl font-bold text-gray-900 mb-8">Checkout</h1>
 
-            <form action="{{ route('checkout.process') }}" method="POST" class="lg:grid lg:grid-cols-12 lg:gap-x-12 lg:items-start">
+            <form action="{{ route('checkout.process') }}" method="POST" class="lg:grid lg:grid-cols-12 lg:gap-x-12 lg:items-start"
+                  x-on:submit="if (!firstName || !lastName || !phone || !fullAddress) { $event.preventDefault(); alert('Please select a shipping address before placing your order.'); }">
                 @csrf
+
+                {{-- Validation Error Display --}}
+                @if ($errors->any())
+                <div class="lg:col-span-12 mb-6">
+                    <div class="rounded-md bg-red-50 border border-red-200 p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-red-800">There were errors with your submission:</h3>
+                                <ul class="mt-2 list-disc list-inside text-sm text-red-700">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endif
+                <!-- Hidden Inputs for CheckoutRequest Validation -->
+                <input type="hidden" name="first_name" :value="firstName">
+                <input type="hidden" name="last_name" :value="lastName">
+                <input type="hidden" name="email" value="{{ auth()->user()->email }}">
+                <input type="hidden" name="phone" :value="phone">
+                <input type="hidden" name="address" :value="fullAddress">
                 
                 <!-- Left Column -->
                 <div class="lg:col-span-7 space-y-8">
@@ -47,20 +108,21 @@
                     <section aria-labelledby="shipping-heading" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                         <div class="flex items-center justify-between mb-6">
                             <h2 id="shipping-heading" class="text-lg font-medium text-gray-900">Shipping Address</h2>
-                            <a href="#" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">+ Add New Address</a>
+                            <!-- Fixed Link -->
+                            <a href="{{ route('addresses.index') }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">+ Add New Address</a>
                         </div>
 
                         @if($addresses->isEmpty())
                             <div class="text-center py-4 bg-gray-50 rounded-md border-2 border-dashed border-gray-300">
                                 <p class="text-sm text-gray-500">You have no saved addresses.</p>
-                                <button type="button" class="mt-2 text-sm font-medium text-indigo-600">Create one now</button>
+                                <a href="{{ route('addresses.index') }}" class="mt-2 text-sm font-medium text-indigo-600 inline-block">Create one now</a>
                             </div>
                         @else
                             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 @foreach($addresses as $address)
                                 <div class="relative rounded-lg border p-4 shadow-sm flex cursor-pointer focus:outline-none"
-                                     :class="selectedAddress == {{ $address->id }} ? 'border-indigo-500 ring-1 ring-indigo-500' : 'border-gray-300'"
-                                     @click="selectedAddress = {{ $address->id }}">
+                                     :class="selectedAddressId == {{ $address->id }} ? 'border-indigo-500 ring-1 ring-indigo-500' : 'border-gray-300'"
+                                     @click="selectedAddressId = {{ $address->id }}">
                                     <div class="flex-1 flex">
                                         <div class="flex flex-col">
                                             <span class="block text-sm font-medium text-gray-900 mb-1">{{ $address->recipient_name }} @if($address->is_default) <span class="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full ml-2">Default</span> @endif</span>
@@ -70,10 +132,12 @@
                                         </div>
                                     </div>
                                     
-                                    <div class="h-5 w-5 text-indigo-600" x-show="selectedAddress == {{ $address->id }}">
+                                    <div class="h-5 w-5 text-indigo-600" x-show="selectedAddressId == {{ $address->id }}">
                                         <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
                                     </div>
-                                    <input type="radio" name="address_id" value="{{ $address->id }}" class="sr-only" x-model="selectedAddress">
+                                    <!-- Changed name to address_id to match controller expectation IF controller uses it, but we are using hidden fields now. 
+                                         However, keeping it doesn't hurt. But changed x-model to selectedAddressId -->
+                                    <input type="radio" name="address_id" value="{{ $address->id }}" class="sr-only" x-model="selectedAddressId">
                                 </div>
                                 @endforeach
                             </div>
@@ -215,7 +279,8 @@
                             </li>
                             @endforeach
                         </ul>
-
+                        
+                        <!-- Totals Section -->
                         <dl class="space-y-4 border-t border-gray-200 pt-6">
                             <div class="flex items-center justify-between">
                                 <dt class="text-sm text-gray-600">Subtotal</dt>
@@ -224,10 +289,6 @@
                             <div class="flex items-center justify-between">
                                 <dt class="text-sm text-gray-600">Shipping</dt>
                                 <dd class="text-sm font-medium text-green-600" x-text="shippingCost > 0 ? formatMoney(shippingCost) : 'Free'"></dd>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <dt class="text-sm text-gray-600">Tax Estimate</dt>
-                                <dd class="text-sm font-medium text-gray-900">$14.00</dd> <!-- Hardcoded matching design for now -->
                             </div>
                              @if($discount > 0)
                             <div class="flex items-center justify-between text-green-600">
@@ -241,8 +302,9 @@
                                 <dd class="text-2xl font-bold text-blue-600" x-text="formatMoney(total)"></dd>
                             </div>
                         </dl>
-
-                        <div class="mt-6">
+                        
+                        <!-- Submit Button -->
+                         <div class="mt-6">
                             <button type="submit" class="w-full bg-blue-500 border border-transparent rounded-lg shadow-sm py-4 px-4 text-base font-medium text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex justify-center items-center h-14 transition-colors duration-200">
                                 Place Order <svg class="ml-2 -mr-1 w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
                             </button>

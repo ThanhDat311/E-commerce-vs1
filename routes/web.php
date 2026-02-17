@@ -366,3 +366,8 @@ Route::get('/debug-session', function () {
         ],
     ]);
 })->name('debug-session');
+
+// Fallback for Boost browser logs GET requests to prevent MethodNotAllowedHttpException
+Route::get('/_boost/browser-logs', function () {
+    return response()->noContent();
+});
