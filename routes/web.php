@@ -303,6 +303,15 @@ Route::middleware(['auth'])->group(function () {
     // Account Security
     Route::get('/account-security', [App\Http\Controllers\Customer\AccountSecurityController::class, 'index'])->name('security.index');
     Route::post('/account-security/password', [App\Http\Controllers\Customer\AccountSecurityController::class, 'updatePassword'])->name('security.password');
+
+    // Customer Support Tickets
+    Route::prefix('my-tickets')->name('tickets.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Customer\TicketController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\Customer\TicketController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\Customer\TicketController::class, 'store'])->name('store');
+        Route::get('/{ticket}', [App\Http\Controllers\Customer\TicketController::class, 'show'])->name('show');
+        Route::post('/{ticket}/messages', [App\Http\Controllers\Customer\TicketController::class, 'storeMessage'])->name('messages.store');
+    });
 });
 
 // ====================================================
