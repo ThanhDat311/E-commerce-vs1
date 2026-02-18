@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Staff;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
@@ -10,9 +10,10 @@ use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
+    protected string $routePrefix = 'staff';
+
     public function index()
     {
-        // Get all categories with parent info and product count
         $categories = Category::with('parent')
             ->withCount(['products', 'products as trashed_products_count' => function ($query) {
                 $query->onlyTrashed();
@@ -21,46 +22,14 @@ class CategoryController extends Controller
             ->orderBy('name')
             ->get();
 
-        // Build tree structure
-        $tree = $this->buildCategoryTree($categories);
-
-        return view('pages.admin.categories.index', [
+        return view('pages.staff.categories.index', [
             'categories' => $categories,
-            'tree' => $tree,
         ]);
-    }
-
-    /**
-     * Build hierarchical category tree
-     */
-    private function buildCategoryTree($categories)
-    {
-        $tree = [];
-
-        foreach ($categories as $category) {
-            if (is_null($category->parent_id)) {
-                $tree[$category->id] = [
-                    'category' => $category,
-                    'children' => [],
-                ];
-            }
-        }
-
-        foreach ($categories as $category) {
-            if (! is_null($category->parent_id) && isset($tree[$category->parent_id])) {
-                $tree[$category->parent_id]['children'][$category->id] = [
-                    'category' => $category,
-                    'children' => [],
-                ];
-            }
-        }
-
-        return $tree;
     }
 
     public function create()
     {
-        return view('pages.admin.categories.create');
+        return view('pages.staff.categories.create');
     }
 
     public function store(Request $request)
@@ -74,10 +43,8 @@ class CategoryController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
         ]);
 
-        // Auto-generate slug if not provided
         $data['slug'] = $data['slug'] ?? Str::slug($data['name']);
 
-        // Handle image upload
         if ($request->hasFile('image')) {
             if (! File::exists(public_path('img/categories'))) {
                 File::makeDirectory(public_path('img/categories'), 0755, true);
@@ -93,7 +60,7 @@ class CategoryController extends Controller
 
         Category::create($data);
 
-        return redirect()->route('admin.categories.index')->with('success', 'Category created successfully.');
+        return redirect()->route('staff.categories.index')->with('success', 'Category created successfully.');
     }
 
     public function edit(Category $category)
@@ -102,7 +69,7 @@ class CategoryController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('pages.admin.categories.edit', [
+        return view('pages.staff.categories.edit', [
             'category' => $category,
             'categories' => $categories,
         ]);
@@ -121,9 +88,7 @@ class CategoryController extends Controller
 
         $data['slug'] = $data['slug'] ?? Str::slug($data['name']);
 
-        // Handle image upload
         if ($request->hasFile('image')) {
-            // Delete old image
             if ($category->image_url && File::exists(public_path($category->image_url))) {
                 File::delete(public_path($category->image_url));
             }
@@ -142,19 +107,6 @@ class CategoryController extends Controller
 
         $category->update($data);
 
-        return redirect()->route('admin.categories.index')->with('success', 'Category updated successfully.');
-    }
-
-    public function destroy(Category $category)
-    {
-        // Kiểm tra nếu danh mục đang có sản phẩm thì không cho xóa
-        $productCount = $category->products()->withTrashed()->count();
-        if ($productCount > 0) {
-            return back()->with('error', "Cannot delete category containing {$productCount} products (including trash).");
-        }
-
-        $category->delete();
-
-        return redirect()->route('admin.categories.index')->with('success', 'Category deleted successfully.');
+        return redirect()->route('staff.categories.index')->with('success', 'Category updated successfully.');
     }
 }

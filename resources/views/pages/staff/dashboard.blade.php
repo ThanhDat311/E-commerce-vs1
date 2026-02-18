@@ -1,4 +1,4 @@
-<x-admin-layout :sidebarType="'staff'">
+<x-staff-layout>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Orders to Ship -->
         <x-dashboard.stat-card title="Orders to Ship" value="{{ number_format($ordersToShip) }}">
@@ -105,4 +105,4 @@
             </x-ui.table>
         </div>
     </div>
-</x-admin-layout>
+</x-staff-layout>

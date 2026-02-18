@@ -246,12 +246,13 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'role.check:staff'])
 
     Route::get('/', [\App\Http\Controllers\Staff\DashboardController::class, 'index'])->name('dashboard');
 
-    // Limited product management
-    Route::resource('products', AdminProductController::class)->except(['destroy']);
-    Route::resource('categories', AdminCategoryController::class)->except(['destroy']);
+    // Limited product management (no destroy)
+    Route::resource('products', \App\Http\Controllers\Staff\ProductController::class)->except(['destroy']);
+    Route::delete('products/images/{image}', [\App\Http\Controllers\Staff\ProductController::class, 'destroyImage'])->name('products.images.destroy');
+    Route::resource('categories', \App\Http\Controllers\Staff\CategoryController::class)->except(['destroy']);
 
     // Order management
-    Route::controller(AdminOrderController::class)->prefix('orders')->name('orders.')->group(function () {
+    Route::controller(\App\Http\Controllers\Staff\OrderController::class)->prefix('orders')->name('orders.')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/{id}', 'show')->name('show');
         Route::put('/{id}', 'update')->name('update');

@@ -58,7 +58,9 @@ class OrderController extends Controller
         // Sắp xếp đơn mới nhất lên đầu và phân trang
         $orders = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
 
-        return view('pages.admin.orders.index', compact('orders'));
+        return view('pages.admin.orders.index', [
+            'orders' => $orders,
+        ]);
     }
 
     /**
@@ -69,7 +71,9 @@ class OrderController extends Controller
         // Eager load: Lấy kèm sản phẩm, user, và lịch sử đơn hàng
         $order = Order::with(['orderItems.product', 'user', 'histories.user'])->findOrFail($id);
 
-        return view('pages.admin.orders.show', compact('order'));
+        return view('pages.admin.orders.show', [
+            'order' => $order,
+        ]);
     }
 
     /**
@@ -197,7 +201,7 @@ class OrderController extends Controller
     {
         $validated = $request->validate([
             'order_status' => 'required|in:pending,processing,completed,cancelled,shipped',
-            'notes' => 'nullable|string'
+            'notes' => 'nullable|string',
         ]);
 
         // Record the status change in history with correct field names
@@ -205,7 +209,7 @@ class OrderController extends Controller
             'order_id' => $order->id,
             'user_id' => Auth::id(),
             'action' => 'Status changed from ' . $order->order_status . ' to ' . $validated['order_status'],
-            'description' => $validated['notes'] ?? 'Status updated by admin'
+            'description' => $validated['notes'] ?? 'Status updated by admin',
         ]);
 
         $order->update(['order_status' => $validated['order_status']]);
