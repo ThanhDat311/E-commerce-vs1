@@ -2,7 +2,7 @@
 <div
     x-data="toastNotification()"
     x-on:show-toast.window="addToast($event.detail)"
-    class="fixed top-4 left-4 right-4 sm:left-auto sm:right-4 z-[9999] flex flex-col items-stretch sm:items-end gap-4 pointer-events-none w-auto sm:w-full sm:max-w-md"
+    class="fixed top-4 right-4 z-[100] flex flex-col items-end gap-4 pointer-events-none w-full max-w-md"
 >
     <template x-for="toast in toasts" :key="toast.id">
         <div

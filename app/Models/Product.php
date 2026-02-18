@@ -123,4 +123,9 @@ class Product extends Model
 
         return asset($value);
     }
+
+    public function images()
+    {
+        return $this->hasMany(ProductImage::class);
+    }
 }

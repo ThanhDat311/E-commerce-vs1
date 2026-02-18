@@ -68,7 +68,24 @@ class ProductController extends Controller
         $data['is_new'] = $request->has('is_new') ? 1 : 0;
         $data['is_featured'] = $request->has('is_featured') ? 1 : 0;
 
-        Product::create($data);
+        $product = Product::create($data);
+
+        // Handle Gallery Images
+        if ($request->hasFile('gallery')) {
+            foreach ($request->file('gallery') as $file) {
+                $filename = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
+                // Ensure directory exists
+                if (! File::exists(public_path('img/products/gallery'))) {
+                    File::makeDirectory(public_path('img/products/gallery'), 0755, true);
+                }
+
+                $file->move(public_path('img/products/gallery'), $filename);
+
+                $product->images()->create([
+                    'image_path' => 'img/products/gallery/' . $filename
+                ]);
+            }
+        }
 
         return redirect()->route('vendor.products.index')->with('success', 'Product created successfully.');
     }
@@ -126,6 +143,23 @@ class ProductController extends Controller
         $data['is_featured'] = $request->has('is_featured') ? 1 : 0;
 
         $product->update($data);
+
+        // Handle Gallery Images
+        if ($request->hasFile('gallery')) {
+            foreach ($request->file('gallery') as $file) {
+                $filename = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
+                // Ensure directory exists
+                if (! File::exists(public_path('img/products/gallery'))) {
+                    File::makeDirectory(public_path('img/products/gallery'), 0755, true);
+                }
+
+                $file->move(public_path('img/products/gallery'), $filename);
+
+                $product->images()->create([
+                    'image_path' => 'img/products/gallery/' . $filename
+                ]);
+            }
+        }
 
         return redirect()->route('vendor.products.index')->with('success', 'Product updated successfully.');
     }

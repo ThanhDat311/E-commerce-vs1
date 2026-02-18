@@ -78,7 +78,7 @@
 
                         <!-- Pagination -->
                         <div class="mt-8">
-                            {{ $products->links() }}
+                            {{ $products->links('vendor.pagination.tailwind') }}
                         </div>
                     @else
                         <div class="text-center py-16">

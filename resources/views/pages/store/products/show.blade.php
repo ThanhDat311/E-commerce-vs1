@@ -17,27 +17,40 @@
             <nav class="flex mb-8" aria-label="Breadcrumb">
                 <ol role="list" class="flex items-center space-x-4">
                     <li>
-                        <a href="{{ route('home') }}" class="text-gray-400 hover:text-gray-500">Home</a>
+                        <div>
+                            <a href="{{ route('home') }}" class="text-gray-400 hover:text-gray-500">
+                                <svg class="h-5 w-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                                </svg>
+                                <span class="sr-only">Home</span>
+                            </a>
+                        </div>
                     </li>
                     <li>
-                        <svg class="h-5 w-5 flex-shrink-0 text-gray-300" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                            <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
-                        </svg>
-                        <a href="{{ route('shop.index') }}" class="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700">Shop</a>
+                        <div class="flex items-center">
+                            <svg class="h-5 w-5 flex-shrink-0 text-gray-300" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
+                            </svg>
+                            <a href="{{ route('shop.index') }}" class="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700">Shop</a>
+                        </div>
                     </li>
                     @if($product->category)
                     <li>
-                        <svg class="h-5 w-5 flex-shrink-0 text-gray-300" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                            <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
-                        </svg>
-                        <a href="{{ route('shop.index', ['category' => $product->category->slug ?? $product->category->id]) }}" class="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700">{{ $product->category->name }}</a>
+                        <div class="flex items-center">
+                            <svg class="h-5 w-5 flex-shrink-0 text-gray-300" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
+                            </svg>
+                            <a href="{{ route('shop.index', ['category' => $product->category->slug ?? $product->category->id]) }}" class="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700">{{ $product->category->name }}</a>
+                        </div>
                     </li>
                     @endif
                     <li>
-                        <svg class="h-5 w-5 flex-shrink-0 text-gray-300" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                            <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
-                        </svg>
-                        <span class="ml-4 text-sm font-medium text-gray-900" aria-current="page">{{ $product->name }}</span>
+                        <div class="flex items-center">
+                            <svg class="h-5 w-5 flex-shrink-0 text-gray-300" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
+                            </svg>
+                            <span class="ml-4 text-sm font-medium text-gray-900" aria-current="page">{{ $product->name }}</span>
+                        </div>
                     </li>
                 </ol>
             </nav>
@@ -158,7 +171,7 @@
                                     title="{{ $inWishlist ? 'Remove from wishlist' : 'Add to wishlist' }}"
                                     data-in-wishlist="{{ $inWishlist ? 'true' : 'false' }}"
                                 >
-                                    <svg class="h-6 w-6 flex-shrink-0 transition-all duration-200 {{ $inWishlist ? 'fill-red-500 text-red-500' : 'fill-none' }}" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <svg class="h-6 w-6 flex-shrink-0 transition-all duration-200 {{ $inWishlist ? 'fill-red-500 text-red-500' : 'fill-white text-gray-400' }}" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                                     </svg>
                                     <span class="sr-only">{{ $inWishlist ? 'Remove from favorites' : 'Add to favorites' }}</span>
@@ -256,13 +269,13 @@
                 
                 // Update heart icon
                 if (data.inWishlist) {
-                    svg.classList.remove('fill-none', 'text-gray-400');
+                    svg.classList.remove('fill-white', 'text-gray-400');
                     svg.classList.add('fill-red-500', 'text-red-500');
                     button.classList.remove('text-gray-400', 'hover:text-red-500');
                     button.classList.add('text-red-500');
                 } else {
                     svg.classList.remove('fill-red-500', 'text-red-500');
-                    svg.classList.add('fill-none', 'text-gray-400');
+                    svg.classList.add('fill-white', 'text-gray-400');
                     button.classList.remove('text-red-500');
                     button.classList.add('text-gray-400', 'hover:text-red-500');
                 }

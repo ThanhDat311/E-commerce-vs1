@@ -82,7 +82,7 @@
                                 </div>
 
                                 <div>
-                                    <x-input-label for="image" :value="__('Product Image')" />
+                                    <x-input-label for="image" :value="__('Product Image (Main)')" />
                                     @if($product->image_url)
                                         <div class="mb-2">
                                             <img src="{{ asset($product->image_url) }}" alt="Current Image" class="h-20 w-20 object-cover rounded-md ring-1 ring-gray-200">
@@ -95,6 +95,24 @@
                                         file:bg-indigo-50 file:text-indigo-700
                                         hover:file:bg-indigo-100" />
                                     <x-input-error :messages="$errors->get('image')" class="mt-2" />
+                                </div>
+
+                                <div>
+                                    <x-input-label for="gallery" :value="__('Gallery Images')" />
+                                    @if($product->images->count() > 0)
+                                        <div class="mb-2 flex flex-wrap gap-2">
+                                            @foreach($product->images as $image)
+                                                <img src="{{ asset($image->image_path) }}" alt="Gallery Image" class="h-16 w-16 object-cover rounded-md ring-1 ring-gray-200">
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                    <input id="gallery" type="file" name="gallery[]" class="block mt-1 w-full text-sm text-gray-500
+                                        file:mr-4 file:py-2 file:px-4
+                                        file:rounded-full file:border-0
+                                        file:text-sm file:font-semibold
+                                        file:bg-indigo-50 file:text-indigo-700
+                                        hover:file:bg-indigo-100" multiple />
+                                    <x-input-error :messages="$errors->get('gallery')" class="mt-2" />
                                 </div>
 
                                 <div class="mt-6 space-y-3 bg-gray-50 p-4 rounded-lg">

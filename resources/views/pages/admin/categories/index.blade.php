@@ -51,6 +51,9 @@
                             <td class="px-5 py-4">
                                 <x-ui.badge variant="neutral">
                                     {{ $category->products_count ?? 0 }}
+                                    @if($category->trashed_products_count > 0)
+                                        <span class="text-xs text-red-500 ml-1">({{ $category->trashed_products_count }} Trash)</span>
+                                    @endif
                                 </x-ui.badge>
                             </td>
                             <td class="px-5 py-4">

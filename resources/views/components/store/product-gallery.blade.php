@@ -4,10 +4,9 @@
     activeImage: '{{ $product->image_url ? asset($product->image_url) : asset('img/no-image.png') }}',
     images: [
         '{{ $product->image_url ? asset($product->image_url) : asset('img/no-image.png') }}',
-        // In a real scenario, this would loop through a gallery relationship
-        '{{ asset('img/product-1.png') }}',
-        '{{ asset('img/product-2.png') }}',
-        '{{ asset('img/product-3.png') }}'
+        @foreach($product->images as $image)
+            '{{ asset($image->image_path) }}',
+        @endforeach
     ] 
 }" class="flex flex-col-reverse lg:flex-row gap-4">
     <!-- Thumbnails -->

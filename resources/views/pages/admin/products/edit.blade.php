@@ -88,19 +88,62 @@
 
             <!-- Current Image & Upload -->
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Product Image (Main)</label>
+
+                <div x-data="{
+                    preview: '{{ $product->image_url ? asset($product->image_url) : '' }}',
+                    handleFileChange(e) {
+                        const file = e.target.files[0];
+                        if (file) {
+                            this.preview = URL.createObjectURL(file);
+                        }
+                    }
+                }">
+                    <template x-if="preview">
+                        <div class="mb-3 relative group w-fit">
+                            <p class="text-sm text-gray-600 mb-2">Current Image:</p>
+                            <img :src="preview" alt="Product Image"
+                                class="w-32 h-32 object-cover rounded-lg border border-gray-200">
+                        </div>
+                    </template>
+
+                    <input type="file" name="image" id="image" accept="image/jpeg,image/png,image/jpg,image/gif"
+                        @change="handleFileChange"
+                        class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    <p class="mt-1 text-xs text-gray-500">JPG, PNG, or GIF. Max 2MB. Leave empty to keep current image.</p>
+                </div>
+            </div>
+
+            <!-- Gallery Images -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Gallery Images</label>
                 
-                @if($product->image_url)
+                @if($product->images->count() > 0)
                     <div class="mb-3">
-                        <p class="text-sm text-gray-600 mb-2">Current Image:</p>
-                        <img src="{{ asset($product->image_url) }}" alt="{{ $product->name }}" 
-                            class="w-32 h-32 object-cover rounded-lg border border-gray-200">
+                        <p class="text-sm text-gray-600 mb-2">Current Gallery:</p>
+                        <div class="flex flex-wrap gap-4">
+                            @foreach($product->images as $image)
+                                <div class="relative group">
+                                    <img src="{{ asset($image->image_path) }}" alt="Gallery Image"
+                                        class="w-24 h-24 object-cover rounded-lg border border-gray-200">
+
+                                    <button type="button"
+                                        onclick="if(confirm('Are you sure you want to delete this image?')) { document.getElementById('delete-image-{{ $image->id }}').submit(); }"
+                                        class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-600"
+                                        title="Delete Image">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
                 @endif
 
-                <input type="file" name="image" id="image" accept="image/jpeg,image/png,image/jpg,image/gif"
+                <input type="file" name="gallery[]" id="gallery" accept="image/jpeg,image/png,image/jpg,image/gif" multiple
                     class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                <p class="mt-1 text-xs text-gray-500">JPG, PNG, or GIF. Max 2MB. Leave empty to keep current image.</p>
+                <p class="mt-1 text-xs text-gray-500">JPG, PNG, or GIF. Max 2MB per file. Select multiple files to add to gallery.</p>
             </div>
 
             <!-- Checkboxes -->
@@ -133,4 +176,12 @@
             </div>
         </div>
     </form>
+
+    {{-- Delete Image Forms --}}
+    @foreach($product->images as $image)
+        <form id="delete-image-{{ $image->id }}" action="{{ route('admin.products.images.destroy', $image->id) }}" method="POST" style="display: none;">
+            @csrf
+            @method('DELETE')
+        </form>
+    @endforeach
 </x-admin-layout>

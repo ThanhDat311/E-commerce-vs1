@@ -164,7 +164,7 @@
                         <!-- Pagination -->
                         @if($orders->hasPages())
                             <div class="px-4 py-3 border-t border-gray-20 border-gray-200 bg-gray-50 sm:px-6">
-                                {{ $orders->onEachSide(1)->links() }}
+                                {{ $orders->onEachSide(1)->links('vendor.pagination.tailwind') }}
                             </div>
                         @endif
                      </div>

@@ -119,6 +119,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
 
     // ... Các route Resource khác (products, categories, users)
     Route::resource('products', AdminProductController::class);
+    Route::delete('products/images/{image}', [AdminProductController::class, 'destroyImage'])->name('products.images.destroy');
     Route::resource('categories', AdminCategoryController::class);
     Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
 

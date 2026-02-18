@@ -7,6 +7,7 @@ use App\Http\Requests\StoreProductRequest; // [FIX] Dùng đúng tên file
 use App\Http\Requests\UpdateProductRequest; // [FIX] Import file mới tạo
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 
@@ -47,7 +48,19 @@ class ProductController extends Controller
         $data['is_new'] = $request->has('is_new') ? 1 : 0;
         $data['is_featured'] = $request->has('is_featured') ? 1 : 0;
 
-        Product::create($data);
+        $product = Product::create($data);
+
+        // Handle Gallery Images
+        if ($request->hasFile('gallery')) {
+            foreach ($request->file('gallery') as $file) {
+                $filename = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
+                $file->move(public_path('img/products/gallery'), $filename);
+
+                $product->images()->create([
+                    'image_path' => 'img/products/gallery/' . $filename
+                ]);
+            }
+        }
 
         return redirect()->route('admin.products.index')->with('success', 'Product created successfully.');
     }
@@ -81,6 +94,23 @@ class ProductController extends Controller
 
         $product->update($data);
 
+        // Handle Gallery Images
+        if ($request->hasFile('gallery')) {
+            foreach ($request->file('gallery') as $file) {
+                $filename = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
+                // Ensure directory exists
+                if (! File::exists(public_path('img/products/gallery'))) {
+                    File::makeDirectory(public_path('img/products/gallery'), 0755, true);
+                }
+
+                $file->move(public_path('img/products/gallery'), $filename);
+
+                $product->images()->create([
+                    'image_path' => 'img/products/gallery/' . $filename
+                ]);
+            }
+        }
+
         return redirect()->route('admin.products.index')->with('success', 'Product updated successfully.');
     }
 
@@ -94,5 +124,15 @@ class ProductController extends Controller
         $product->delete();
 
         return redirect()->route('admin.products.index')->with('success', 'Product deleted successfully.');
+    }
+    public function destroyImage(ProductImage $image)
+    {
+        if (File::exists(public_path($image->image_path))) {
+            File::delete(public_path($image->image_path));
+        }
+
+        $image->delete();
+
+        return back()->with('success', 'Image deleted successfully.');
     }
 }
