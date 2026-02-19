@@ -32,18 +32,13 @@ class CategoryController extends Controller
         return view('pages.staff.categories.create');
     }
 
-    public function store(Request $request)
+    public function store(\App\Http\Requests\Staff\StoreCategoryRequest $request)
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name',
-            'parent_id' => 'nullable|exists:categories,id',
-            'slug' => 'nullable|string|max:255|unique:categories,slug',
-            'description' => 'nullable|string|max:1000',
-            'is_active' => 'boolean',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
-        ]);
+        $data = $request->validated();
 
-        $data['slug'] = $data['slug'] ?? Str::slug($data['name']);
+        if ($request->has('name') && ! isset($data['slug'])) {
+            $data['slug'] = Str::slug($request->name);
+        }
 
         if ($request->hasFile('image')) {
             if (! File::exists(public_path('img/categories'))) {
@@ -75,18 +70,13 @@ class CategoryController extends Controller
         ]);
     }
 
-    public function update(Request $request, Category $category)
+    public function update(\App\Http\Requests\Staff\UpdateCategoryRequest $request, Category $category)
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
-            'parent_id' => 'nullable|exists:categories,id',
-            'slug' => 'nullable|string|max:255|unique:categories,slug,' . $category->id,
-            'description' => 'nullable|string|max:1000',
-            'is_active' => 'boolean',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
-        ]);
+        $data = $request->validated();
 
-        $data['slug'] = $data['slug'] ?? Str::slug($data['name']);
+        if ($request->has('name') && ! isset($data['slug'])) {
+            $data['slug'] = Str::slug($request->name);
+        }
 
         if ($request->hasFile('image')) {
             if ($category->image_url && File::exists(public_path($category->image_url))) {

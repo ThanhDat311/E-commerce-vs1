@@ -57,7 +57,7 @@
                                 #{{ $order->id }}
                             </td>
                             <td class="px-6 py-4">
-                                {{ $order->user->name ?? 'Guest' }}
+                                {{ $order->first_name }} {{ $order->last_name }}
                             </td>
                             <td class="px-6 py-4">
                                 ${{ number_format($order->total, 2) }}
