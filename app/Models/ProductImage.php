@@ -15,4 +15,19 @@ class ProductImage extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    public function getImagePathAttribute($value)
+    {
+        if (empty($value)) {
+            return null;
+        }
+
+        // Old format: img/products/gallery/... → serve from public/img/
+        if (str_starts_with($value, 'img/')) {
+            return asset($value);
+        }
+
+        // New format: products/gallery/... → serve from storage link
+        return asset('storage/'.$value);
+    }
 }

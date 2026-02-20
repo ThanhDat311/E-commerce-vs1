@@ -2,7 +2,7 @@
     @push('meta')
     <meta property="og:title" content="{{ $product->name }}" />
     <meta property="og:description" content="{{ Str::limit(strip_tags($product->description), 150) }}" />
-    <meta property="og:image" content="{{ $product->image_url ? asset($product->image_url) : asset('img/no-image.png') }}" />
+    <meta property="og:image" content="{{ $product->image_url ?? asset('img/no-image.png') }}" />
     <meta property="og:url" content="{{ route('shop.show', $product->slug) }}" />
     <meta property="og:type" content="product" />
     <meta property="product:price:amount" content="{{ $product->discount_price ?? $product->price }}" />

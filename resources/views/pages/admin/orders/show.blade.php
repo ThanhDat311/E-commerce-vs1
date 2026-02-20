@@ -31,7 +31,7 @@
                     @foreach($order->orderItems as $item)
                         <div class="flex items-center gap-4 pb-4 border-b last:border-0">
                             @if($item->product->image_url)
-                                <img src="{{ asset($item->product->image_url) }}" alt="{{ $item->product->name }}" class="w-16 h-16 object-cover rounded">
+                                <img src="{{ $item->product->image_url }}" alt="{{ $item->product->name }}" class="w-16 h-16 object-cover rounded">
                             @else
                                 <div class="w-16 h-16 bg-gray-200 rounded flex items-center justify-center">
                                     <span class="text-gray-400 text-xs">No image</span>

@@ -70,7 +70,7 @@
                 @if($category->image_url)
                     <div class="mb-3">
                         <p class="text-sm text-gray-600 mb-2">Current Image:</p>
-                        <img src="{{ asset($category->image_url) }}" alt="{{ $category->name }}" 
+                        <img src="{{ $category->image_url }}" alt="{{ $category->name }}" 
                             class="w-32 h-32 object-cover rounded-lg border border-gray-200">
                     </div>
                 @endif

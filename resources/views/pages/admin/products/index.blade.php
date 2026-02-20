@@ -31,7 +31,7 @@
                         <tr class="hover:bg-gray-50/50 transition-colors">
                             <td class="px-5 py-4">
                                 @if($product->image_url)
-                                    <img src="{{ asset($product->image_url) }}" alt="{{ $product->name }}" class="w-11 h-11 object-cover rounded-lg border border-gray-100">
+                                    <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="w-11 h-11 object-cover rounded-lg border border-gray-100">
                                 @else
                                     <div class="w-11 h-11 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-100">
                                         <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">

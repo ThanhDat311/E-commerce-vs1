@@ -8,8 +8,7 @@ use App\Http\Requests\UpdateProductRequest; // [FIX] Import file mới tạo
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -38,14 +37,9 @@ class ProductController extends Controller
 
         if ($request->hasFile('image')) {
             $file = $request->file('image');
-            $filename = time() . '_' . $file->getClientOriginalName();
-
-            if (! File::exists(public_path('img/products'))) {
-                File::makeDirectory(public_path('img/products'), 0755, true);
-            }
-
-            $file->move(public_path('img/products'), $filename);
-            $data['image_url'] = 'img/products/' . $filename;
+            $filename = time().'_'.$file->getClientOriginalName();
+            $path = $file->storeAs('products', $filename, 'public');
+            $data['image_url'] = $path;
         }
 
         // Xử lý checkbox (Nếu không check thì request không gửi lên -> mặc định là 0)
@@ -57,11 +51,11 @@ class ProductController extends Controller
         // Handle Gallery Images
         if ($request->hasFile('gallery')) {
             foreach ($request->file('gallery') as $file) {
-                $filename = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
-                $file->move(public_path('img/products/gallery'), $filename);
+                $filename = time().'_'.uniqid().'_'.$file->getClientOriginalName();
+                $path = $file->storeAs('products/gallery', $filename, 'public');
 
                 $product->images()->create([
-                    'image_path' => 'img/products/gallery/' . $filename,
+                    'image_path' => $path,
                 ]);
             }
         }
@@ -86,14 +80,15 @@ class ProductController extends Controller
 
         if ($request->hasFile('image')) {
             // Xóa ảnh cũ nếu có
-            if ($product->image_url && File::exists(public_path($product->image_url))) {
-                File::delete(public_path($product->image_url));
+            $oldImage = $product->getRawOriginal('image_url');
+            if ($oldImage) {
+                Storage::disk('public')->delete($oldImage);
             }
 
             $file = $request->file('image');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('img/products'), $filename);
-            $data['image_url'] = 'img/products/' . $filename;
+            $filename = time().'_'.$file->getClientOriginalName();
+            $path = $file->storeAs('products', $filename, 'public');
+            $data['image_url'] = $path;
         }
 
         $data['is_new'] = $request->has('is_new') ? 1 : 0;
@@ -104,16 +99,11 @@ class ProductController extends Controller
         // Handle Gallery Images
         if ($request->hasFile('gallery')) {
             foreach ($request->file('gallery') as $file) {
-                $filename = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
-                // Ensure directory exists
-                if (! File::exists(public_path('img/products/gallery'))) {
-                    File::makeDirectory(public_path('img/products/gallery'), 0755, true);
-                }
-
-                $file->move(public_path('img/products/gallery'), $filename);
+                $filename = time().'_'.uniqid().'_'.$file->getClientOriginalName();
+                $path = $file->storeAs('products/gallery', $filename, 'public');
 
                 $product->images()->create([
-                    'image_path' => 'img/products/gallery/' . $filename,
+                    'image_path' => $path,
                 ]);
             }
         }
@@ -123,8 +113,9 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        if ($product->image_url && File::exists(public_path($product->image_url))) {
-            File::delete(public_path($product->image_url));
+        $oldImage = $product->getRawOriginal('image_url');
+        if ($oldImage) {
+            Storage::disk('public')->delete($oldImage);
         }
 
         // Soft delete - products with orders can now be deleted safely
@@ -135,8 +126,9 @@ class ProductController extends Controller
 
     public function destroyImage(ProductImage $image)
     {
-        if (File::exists(public_path($image->image_path))) {
-            File::delete(public_path($image->image_path));
+        $rawPath = $image->getRawOriginal('image_path');
+        if ($rawPath) {
+            Storage::disk('public')->delete($rawPath);
         }
 
         $image->delete();

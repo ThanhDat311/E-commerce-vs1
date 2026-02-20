@@ -1,11 +1,11 @@
 @props(['product'])
 
 <div x-data="{ 
-    activeImage: '{{ $product->image_url ? asset($product->image_url) : asset('img/no-image.png') }}',
+    activeImage: '{{ $product->image_url ?? asset('img/no-image.png') }}',
     images: [
-        '{{ $product->image_url ? asset($product->image_url) : asset('img/no-image.png') }}',
+        '{{ $product->image_url ?? asset('img/no-image.png') }}',
         @foreach($product->images as $image)
-            '{{ asset($image->image_path) }}',
+            '{{ $image->image_path }}',
         @endforeach
     ] 
 }" class="flex flex-col-reverse lg:flex-row gap-4">

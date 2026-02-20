@@ -44,13 +44,13 @@ class Product extends Model
     {
         static::creating(function ($product) {
             if (empty($product->slug)) {
-                $product->slug = \Illuminate\Support\Str::slug($product->name) . '-' . \Illuminate\Support\Str::random(6);
+                $product->slug = \Illuminate\Support\Str::slug($product->name).'-'.\Illuminate\Support\Str::random(6);
             }
         });
 
         static::updating(function ($product) {
             if ($product->isDirty('name') && empty($product->slug)) {
-                $product->slug = \Illuminate\Support\Str::slug($product->name) . '-' . $product->id;
+                $product->slug = \Illuminate\Support\Str::slug($product->name).'-'.$product->id;
             }
         });
     }
@@ -121,7 +121,13 @@ class Product extends Model
             return $value;
         }
 
-        return asset($value);
+        // Old format: img/products/... → serve from public/img/
+        if (str_starts_with($value, 'img/')) {
+            return asset($value);
+        }
+
+        // New format: products/... → serve from storage link
+        return asset('storage/'.$value);
     }
 
     public function images()

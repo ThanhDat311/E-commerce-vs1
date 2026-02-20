@@ -29,4 +29,23 @@ class Category extends Model
     {
         return $this->hasMany(Product::class);
     }
+
+    public function getImageUrlAttribute($value)
+    {
+        if (empty($value)) {
+            return null;
+        }
+
+        if (str_starts_with($value, 'http://') || str_starts_with($value, 'https://')) {
+            return $value;
+        }
+
+        // Old format: img/categories/... → serve from public/img/
+        if (str_starts_with($value, 'img/')) {
+            return asset($value);
+        }
+
+        // New format: categories/... → serve from storage link
+        return asset('storage/'.$value);
+    }
 }

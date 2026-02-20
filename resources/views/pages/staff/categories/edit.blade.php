@@ -66,7 +66,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Category Image</label>
                 
                 <div x-data="{
-                    preview: '{{ $category->image_url ? asset($category->image_url) : '' }}',
+                    preview: '{{ $category->image_url ?? '' }}',
                     handleFileChange(e) {
                         const file = e.target.files[0];
                         if (file) {

@@ -14,19 +14,11 @@ class ProductImageUploadTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_admin_can_upload_multiple_product_images()
+    public function test_admin_can_upload_multiple_product_images(): void
     {
-        Storage::fake('public_uploads'); // Use the disk defined in filesystems.php if custom, or just 'public' if using default link
+        Storage::fake('public');
 
-        // Assuming standard 'public' disk usage in controller: public_path('img/products')
-        // We'll mock the filesystem structure or just rely on the controller logic which uses File::move
-        // Since the controller uses `public_path` and `File::move`, testing with Storage::fake might be tricky 
-        // because `public_path` points to real directory.
-        // However, for testing purposes, we can try to verify the DB records mostly.
-
-        // Let's create a partial mock or just verify DB records for now to avoid permission issues in test env
-
-        $admin = User::factory()->create(['role_id' => 1]); // Admin
+        $admin = User::factory()->create(['role_id' => 1]);
         $category = Category::create(['name' => 'Test Category', 'slug' => 'test-category']);
 
         $mainImage = UploadedFile::fake()->image('main.jpg');
@@ -49,17 +41,24 @@ class ProductImageUploadTest extends TestCase
 
         $product = Product::first();
         $this->assertNotNull($product);
-        $this->assertNotNull($product->image_url);
+        $this->assertNotNull($product->getRawOriginal('image_url'));
+
+        // Verify file was stored in the public disk
+        Storage::disk('public')->assertExists($product->getRawOriginal('image_url'));
 
         // Check gallery images
         $this->assertCount(2, $product->images);
 
-        // Clean up real files if any created (optional, but good practice if using real fs)
+        foreach ($product->images as $image) {
+            Storage::disk('public')->assertExists($image->getRawOriginal('image_path'));
+        }
     }
 
-    public function test_vendor_can_upload_multiple_product_images()
+    public function test_vendor_can_upload_multiple_product_images(): void
     {
-        $vendor = User::factory()->create(['role_id' => 4]); // Vendor
+        Storage::fake('public');
+
+        $vendor = User::factory()->create(['role_id' => 4]);
         $category = Category::create(['name' => 'Test Category', 'slug' => 'test-category']);
 
         $mainImage = UploadedFile::fake()->image('main.jpg');
@@ -82,5 +81,8 @@ class ProductImageUploadTest extends TestCase
         $this->assertNotNull($product);
         $this->assertCount(1, $product->images);
         $this->assertEquals($vendor->id, $product->vendor_id);
+
+        // Verify storage
+        Storage::disk('public')->assertExists($product->getRawOriginal('image_url'));
     }
 }

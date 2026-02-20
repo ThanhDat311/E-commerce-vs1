@@ -85,7 +85,7 @@
                                     <x-input-label for="image" :value="__('Product Image (Main)')" />
                                     @if($product->image_url)
                                         <div class="mb-2">
-                                            <img src="{{ asset($product->image_url) }}" alt="Current Image" class="h-20 w-20 object-cover rounded-md ring-1 ring-gray-200">
+                                            <img src="{{ $product->image_url }}" alt="Current Image" class="h-20 w-20 object-cover rounded-md ring-1 ring-gray-200">
                                         </div>
                                     @endif
                                     <input id="image" type="file" name="image" class="block mt-1 w-full text-sm text-gray-500
@@ -102,7 +102,7 @@
                                     @if($product->images->count() > 0)
                                         <div class="mb-2 flex flex-wrap gap-2">
                                             @foreach($product->images as $image)
-                                                <img src="{{ asset($image->image_path) }}" alt="Gallery Image" class="h-16 w-16 object-cover rounded-md ring-1 ring-gray-200">
+                                                <img src="{{ $image->image_path }}" alt="Gallery Image" class="h-16 w-16 object-cover rounded-md ring-1 ring-gray-200">
                                             @endforeach
                                         </div>
                                     @endif

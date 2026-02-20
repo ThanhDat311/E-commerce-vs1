@@ -26,7 +26,7 @@
                         <div class="p-6 flex items-start gap-4">
                             <div class="h-20 w-20 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
                                 @if($item->product && $item->product->image_url)
-                                    <img src="{{ asset($item->product->image_url) }}" alt="{{ $item->product_name }}" class="h-full w-full object-cover object-center">
+                                    <img src="{{ $item->product->image_url }}" alt="{{ $item->product_name }}" class="h-full w-full object-cover object-center">
                                 @else
                                     <div class="flex h-full w-full items-center justify-center bg-gray-50">
                                         <svg class="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -91,7 +91,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Product Image (Main)</label>
 
                 <div x-data="{
-                    preview: '{{ $product->image_url ? asset($product->image_url) : '' }}',
+                    preview: '{{ $product->image_url ?? '' }}',
                     handleFileChange(e) {
                         const file = e.target.files[0];
                         if (file) {
@@ -124,7 +124,7 @@
                         <div class="flex flex-wrap gap-4">
                             @foreach($product->images as $image)
                                 <div class="relative group">
-                                    <img src="{{ asset($image->image_path) }}" alt="Gallery Image"
+                                    <img src="{{ $image->image_path }}" alt="Gallery Image"
                                         class="w-24 h-24 object-cover rounded-lg border border-gray-200">
 
                                     <button type="button"
