@@ -1,15 +1,14 @@
 <x-staff-layout :pageTitle="'Categories Management'" :breadcrumbs="['Staff' => route('staff.dashboard'), 'Categories' => route('staff.categories.index')]">
-    <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 class="text-2xl font-bold text-gray-900">Categories Management</h1>
-        <a href="{{ route('staff.categories.create') }}">
-            <x-ui.button variant="primary">
+    <div x-data="{ isCreateModalOpen: false }" class="space-y-6">
+        <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <h1 class="text-2xl font-bold text-gray-900">Categories Management</h1>
+            <x-ui.button @click="isCreateModalOpen = true" type="button" variant="primary">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
                 Add New Category
             </x-ui.button>
-        </a>
-    </div>
+        </div>
 
     <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
@@ -87,5 +86,60 @@
                 </tbody>
             </table>
         </div>
+    </div>
+
+    <!-- Create Category Modal -->
+    <div x-show="isCreateModalOpen" class="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true" x-cloak>
+        <div x-show="isCreateModalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div x-show="isCreateModalOpen" @click.away="isCreateModalOpen = false" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-xl">
+                    <form action="{{ route('staff.categories.store') }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                            <h3 class="text-xl font-semibold leading-6 text-gray-900" id="modal-title">Create New Category</h3>
+                            <div class="mt-4 space-y-4">
+                                <div>
+                                    <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+                                    <input type="text" name="name" id="name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="slug" class="block text-sm font-medium text-gray-700">Slug (Optional)</label>
+                                    <input type="text" name="slug" id="slug" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="auto-generated-if-empty">
+                                </div>
+                                <div>
+                                    <label for="parent_id" class="block text-sm font-medium text-gray-700">Parent Category</label>
+                                    <select name="parent_id" id="parent_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                                        <option value="">-- None --</option>
+                                        @foreach($categories as $cat)
+                                            @if(is_null($cat->parent_id))
+                                                <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                            @endif
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                                    <textarea name="description" id="description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"></textarea>
+                                </div>
+                                <div>
+                                    <label for="image" class="block text-sm font-medium text-gray-700">Category Image</label>
+                                    <input type="file" name="image" id="image" accept="image/*" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                </div>
+                                <div class="flex items-center">
+                                    <input id="is_active" name="is_active" type="checkbox" value="1" checked class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                    <label for="is_active" class="ml-2 block text-sm text-gray-900">Active</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                            <button type="submit" class="inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto">Create Category</button>
+                            <button @click="isCreateModalOpen = false" type="button" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
     </div>
 </x-staff-layout>
