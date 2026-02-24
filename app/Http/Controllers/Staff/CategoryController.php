@@ -4,7 +4,8 @@ namespace App\Http\Controllers\Staff;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
 class CategoryController extends Controller
@@ -40,10 +41,14 @@ class CategoryController extends Controller
         }
 
         if ($request->hasFile('image')) {
+            if (! File::exists(public_path('img/categories'))) {
+                File::makeDirectory(public_path('img/categories'), 0755, true);
+            }
+
             $file = $request->file('image');
-            $filename = time().'_'.Str::slug($data['name']).'.'.$file->getClientOriginalExtension();
-            $path = $file->storeAs('categories', $filename, 'public');
-            $data['image_url'] = $path;
+            $filename = time() . '_' . Str::slug($data['name']) . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('img/categories'), $filename);
+            $data['image_url'] = 'img/categories/' . $filename;
         }
 
         $data['is_active'] = $request->has('is_active') ? 1 : 0;
@@ -74,15 +79,18 @@ class CategoryController extends Controller
         }
 
         if ($request->hasFile('image')) {
-            $oldImage = $category->getRawOriginal('image_url');
-            if ($oldImage) {
-                Storage::disk('public')->delete($oldImage);
+            if ($category->image_url && File::exists(public_path($category->image_url))) {
+                File::delete(public_path($category->image_url));
+            }
+
+            if (! File::exists(public_path('img/categories'))) {
+                File::makeDirectory(public_path('img/categories'), 0755, true);
             }
 
             $file = $request->file('image');
-            $filename = time().'_'.Str::slug($data['name']).'.'.$file->getClientOriginalExtension();
-            $path = $file->storeAs('categories', $filename, 'public');
-            $data['image_url'] = $path;
+            $filename = time() . '_' . Str::slug($data['name']) . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('img/categories'), $filename);
+            $data['image_url'] = 'img/categories/' . $filename;
         }
 
         $data['is_active'] = $request->has('is_active') ? 1 : 0;
