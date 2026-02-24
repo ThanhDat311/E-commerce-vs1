@@ -38,7 +38,7 @@ class CheckoutRequest extends FormRequest
             'note' => ['nullable', 'string', 'max:1000'],
 
             // Validate phương thức thanh toán (chỉ chấp nhận các giá trị định trước)
-            'payment_method' => ['required', 'string', 'in:cod,vnpay,momo,card,transfer'],
+            'payment_method' => ['required', 'string', 'in:cod,vnpay,card,transfer'],
         ];
     }
 

@@ -250,9 +250,10 @@ class ProductRepository implements ProductRepositoryInterface
     {
         $query = $this->model->query();
 
-        // 1. Filter by Keyword
-        if (! empty($filters['search'])) {
-            $query->where('name', 'LIKE', "%{$filters['search']}%");
+        // 1. Filter by Keyword (Support both 'search' and 'keyword')
+        $searchTerm = $filters['search'] ?? $filters['keyword'] ?? null;
+        if (! empty($searchTerm)) {
+            $query->where('name', 'LIKE', "%{$searchTerm}%");
         }
 
         // 2. Filter by Category (Slug or ID) - Support Array
@@ -273,11 +274,11 @@ class ProductRepository implements ProductRepositoryInterface
 
         // 4. Filter by Brand (Vendor) - Support Array
         if (! empty($filters['brands'])) {
-             $brands = is_array($filters['brands']) ? $filters['brands'] : explode(',', $filters['brands']);
-             // Assuming 'brands' are vendor IDs for now since we don't have a brand column
-             // If $brands contains names, we need to join users table.
-             // Let's assume frontend sends Vendor IDs.
-             $query->whereIn('vendor_id', $brands);
+            $brands = is_array($filters['brands']) ? $filters['brands'] : explode(',', $filters['brands']);
+            // Assuming 'brands' are vendor IDs for now since we don't have a brand column
+            // If $brands contains names, we need to join users table.
+            // Let's assume frontend sends Vendor IDs.
+            $query->whereIn('vendor_id', $brands);
         }
 
         // 5. Filter by Rating
@@ -286,12 +287,12 @@ class ProductRepository implements ProductRepositoryInterface
             // This requires a subquery or join to calculate average rating
             // Using withAvg in model, but for filtering we need `having`.
             // Since we are paginating, `having` can be tricky with standard paginate if not careful.
-            // A simpler approach for now is whereHas with a basic check if individual ratings exist >= val, 
+            // A simpler approach for now is whereHas with a basic check if individual ratings exist >= val,
             // but usually we want AVERAGE >= val.
             // Let's try to filter by products that have at least one rating >= val for MVP or implement avg check properly.
             // Correct way for Average Rating filter:
             $query->withAvg('ratings', 'rating')
-                  ->having('ratings_avg_rating', '>=', $rating);
+                ->having('ratings_avg_rating', '>=', $rating);
         }
 
         // 6. Sorting
@@ -310,8 +311,8 @@ class ProductRepository implements ProductRepositoryInterface
                     $query->orderBy('name', 'asc');
                     break;
                 case 'rating':
-                     $query->withAvg('ratings', 'rating')->orderBy('ratings_avg_rating', 'desc');
-                     break;
+                    $query->withAvg('ratings', 'rating')->orderBy('ratings_avg_rating', 'desc');
+                    break;
                 default: // latest
                     $query->orderBy('id', 'desc');
             }

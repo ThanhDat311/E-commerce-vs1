@@ -12,5 +12,4 @@
         <x-store.footer />
     </div>
     
-    @livewireScripts
 </x-base-layout>
