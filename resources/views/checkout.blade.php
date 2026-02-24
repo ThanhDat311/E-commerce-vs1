@@ -273,7 +273,21 @@
                                             <h3><a href="{{ route('shop.show', \App\Models\Product::find($item['id'])->slug) }}">{{ $item['name'] }}</a></h3>
                                             <p class="ml-4">${{ number_format($item['price'] * $item['quantity'], 2) }}</p>
                                         </div>
-                                        <p class="mt-1 text-sm text-gray-500">Qty {{ $item['quantity'] }}</p>
+                                        <div class="mt-1 flex text-sm flex-wrap items-center">
+                                            <p class="text-gray-500">Qty {{ $item['quantity'] }}</p>
+                                            
+                                            <!-- Deal / Flash Sale Badge -->
+                                            @if($item['is_on_sale'] && $item['discount_percentage'])
+                                                <span class="ml-3 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                                    Save {{ $item['discount_percentage'] }}%
+                                                </span>
+                                            @endif
+                                        </div>
+                                        @if($item['discount_amount'] > 0)
+                                            <p class="mt-1 text-xs text-green-600 font-medium">
+                                                Discount applied: -${{ number_format($item['discount_amount'] * $item['quantity'], 2) }}
+                                            </p>
+                                        @endif
                                     </div>
                                 </div>
                             </li>

@@ -8,17 +8,27 @@ use Illuminate\Support\Facades\Session;
 class CartService
 {
     protected $productRepository;
+
     protected $flashSaleService;
+
     protected $couponService;
+
+    protected $dealService;
+
+    protected $priceCalculatorService;
 
     public function __construct(
         ProductRepositoryInterface $productRepository,
         FlashSaleService $flashSaleService,
-        CouponService $couponService
+        CouponService $couponService,
+        DealService $dealService,
+        PriceCalculatorService $priceCalculatorService
     ) {
         $this->productRepository = $productRepository;
         $this->flashSaleService = $flashSaleService;
         $this->couponService = $couponService;
+        $this->dealService = $dealService;
+        $this->priceCalculatorService = $priceCalculatorService;
     }
 
     public function getCart(): array
@@ -28,14 +38,12 @@ class CartService
 
     /**
      * Get cart details with flash sale prices and optional coupon discount
-     * 
+     *
      * Flash sales are applied FIRST (changes product price)
      * Then coupons are applied to the final total
-     * 
-     * @param string|null $couponCode Optional coupon code to apply
-     * @param int|null $userId User ID for coupon per-user limit checking
-     * 
-     * @return array
+     *
+     * @param  string|null  $couponCode  Optional coupon code to apply
+     * @param  int|null  $userId  User ID for coupon per-user limit checking
      */
     public function getCartDetails(?string $couponCode = null, ?int $userId = null): array
     {
@@ -46,11 +54,11 @@ class CartService
         if (empty($productIds)) {
             return [
                 'cartItems' => [],
-                'subTotal'  => 0,
-                'shipping'  => 3.00,
-                'discount'  => 0,
-                'total'     => 3.00,
-                'coupon'    => null,
+                'subTotal' => 0,
+                'shipping' => 3.00,
+                'discount' => 0,
+                'total' => 3.00,
+                'coupon' => null,
             ];
         }
 
@@ -65,26 +73,42 @@ class CartService
 
             // Lấy quantity từ session, fallback = 1
             $quantity = $sessionCart[$id]['quantity'] ?? 1;
+            $originalPrice = (float) $product->price;
 
-            // STEP 1: Check for active flash sale (applies FIRST)
-            $effectivePrice = $this->flashSaleService->getEffectivePrice($product);
-            $originalPrice = $product->price;
-            $isOnSale = (float)$originalPrice !== (float)$effectivePrice;
+            // STEP 1: Apply best active Deal (highest priority / highest discount)
+            $activeDeals = $this->dealService->getActiveDealsForProduct($product);
+            $dealResult = $this->priceCalculatorService->applyBestDeal($product, $activeDeals);
+            $appliedDeal = $dealResult['deal'];
+            $discountAmount = $dealResult['discount_amount'];
+            $effectivePrice = $dealResult['discounted_price'];
 
-            $subtotal = (float)$effectivePrice * $quantity;
+            // STEP 2: Fallback to FlashSale if no Deal applied
+            if (! $appliedDeal) {
+                $flashPrice = $this->flashSaleService->getSalePrice($product);
+                if ($flashPrice !== null) {
+                    $effectivePrice = (float) $flashPrice;
+                    $discountAmount = max(0, round($originalPrice - $effectivePrice, 2));
+                }
+            }
+
+            $isOnSale = $originalPrice !== $effectivePrice;
+            $subtotal = $effectivePrice * $quantity;
             $subTotal += $subtotal;
 
-            // Tạo mảng item theo cấu trúc yêu cầu
             $cartItems[] = [
-                'id'        => $product->id,
-                'name'      => $product->name,
-                'price'     => $effectivePrice, // Use effective price (sale if active)
+                'id' => $product->id,
+                'name' => $product->name,
+                'price' => $effectivePrice,
                 'original_price' => $originalPrice,
                 'image_url' => $product->image_url ?? 'img/product-1.png',
-                'quantity'  => $quantity,
-                'subtotal'  => $subtotal,
+                'quantity' => $quantity,
+                'subtotal' => $subtotal,
                 'is_on_sale' => $isOnSale,
-                'discount_percentage' => $isOnSale ? $this->flashSaleService->getDiscountPercentage($product) : null,
+                'discount_amount' => $discountAmount,
+                'deal_id' => $appliedDeal?->id,
+                'discount_percentage' => $isOnSale
+                    ? round((($originalPrice - $effectivePrice) / $originalPrice) * 100, 1)
+                    : null,
             ];
         }
 
@@ -109,18 +133,18 @@ class CartService
 
         return [
             'cartItems' => $cartItems,
-            'subTotal'  => $subTotal,
-            'shipping'  => $shipping,
-            'discount'  => $discount,
-            'total'     => $total,
-            'coupon'    => $couponApplied,
+            'subTotal' => $subTotal,
+            'shipping' => $shipping,
+            'discount' => $discount,
+            'total' => $total,
+            'coupon' => $couponApplied,
         ];
     }
 
     public function addToCart(int $productId, int $quantity = 1): array
     {
         $product = $this->productRepository->find($productId);
-        if (!$product) {
+        if (! $product) {
             return ['status' => false, 'message' => 'Product not found!'];
         }
 
@@ -131,7 +155,7 @@ class CartService
         } else {
             $cart[$productId] = [
                 'id' => $productId,
-                'quantity' => $quantity
+                'quantity' => $quantity,
             ];
         }
 
@@ -148,12 +172,12 @@ class CartService
     {
         $cart = $this->getCart();
 
-        if (!isset($cart[$id])) {
-            throw new \Exception("Product not found in cart");
+        if (! isset($cart[$id])) {
+            throw new \Exception('Product not found in cart');
         }
 
         if ($quantity < 1) {
-            throw new \Exception("Quantity must be at least 1");
+            throw new \Exception('Quantity must be at least 1');
         }
 
         // Kiểm tra tồn kho thực tế (Optional - Recommended)
@@ -179,22 +203,20 @@ class CartService
         }
 
         return [
-            'success'    => true,
+            'success' => true,
             'item_total' => $itemTotal,
-            'subtotal'   => $newData['subTotal'],
-            'shipping'   => $newData['shipping'],
-            'discount'   => $newData['discount'],
+            'subtotal' => $newData['subTotal'],
+            'shipping' => $newData['shipping'],
+            'discount' => $newData['discount'],
             'cart_total' => $newData['total'],
-            'message'    => 'Cart updated successfully'
+            'message' => 'Cart updated successfully',
         ];
     }
 
     /**
      * Apply coupon and return updated cart details
-     * 
-     * @param string $couponCode
-     * @param int|null $userId
-     * 
+     *
+     *
      * @return array [success => bool, message => string, data => array|null]
      */
     public function applyCoupon(string $couponCode, ?int $userId = null): array
@@ -212,7 +234,7 @@ class CartService
         // Validate coupon
         $validation = $this->couponService->validateCoupon($couponCode, $cartDetails['subTotal'], $userId);
 
-        if (!$validation['valid']) {
+        if (! $validation['valid']) {
             return [
                 'success' => false,
                 'message' => $validation['error'],

@@ -128,4 +128,59 @@ class Product extends Model
     {
         return $this->hasMany(ProductImage::class);
     }
+
+    public function getDiscountPriceAttribute()
+    {
+        try {
+            if (class_exists(\App\Services\DealService::class) && class_exists(\App\Services\PriceCalculatorService::class)) {
+                $dealService = app(\App\Services\DealService::class);
+                $priceCalc = app(\App\Services\PriceCalculatorService::class);
+
+                $activeDeals = $dealService->getActiveDealsForProduct($this);
+                if ($activeDeals->isNotEmpty()) {
+                    $dealResult = $priceCalc->applyBestDeal($this, $activeDeals);
+                    if ($dealResult['deal'] && $dealResult['discount_amount'] > 0) {
+                        return (float) $this->price - $dealResult['discount_amount'];
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // Silently ignore if services are not available
+        }
+
+        // Fallback to Flash Sale Price
+        if (in_array(\App\Traits\HasFlashSalePrice::class, class_uses_recursive(static::class))) {
+            $flashSaleService = app(\App\Services\FlashSaleService::class);
+            $flashPrice = $flashSaleService->getSalePrice($this);
+            if ($flashPrice !== null) {
+                return $flashPrice;
+            }
+        }
+
+        // Fallback to regular 'sale_price' column
+        if (!empty($this->attributes['sale_price']) && $this->attributes['sale_price'] < $this->price) {
+            return $this->attributes['sale_price'];
+        }
+
+        return null;
+    }
+
+    public function getAppliedDealAttribute()
+    {
+        try {
+            if (class_exists(\App\Services\DealService::class) && class_exists(\App\Services\PriceCalculatorService::class)) {
+                $dealService = app(\App\Services\DealService::class);
+                $priceCalc = app(\App\Services\PriceCalculatorService::class);
+
+                $activeDeals = $dealService->getActiveDealsForProduct($this);
+                if ($activeDeals->isNotEmpty()) {
+                    $dealResult = $priceCalc->applyBestDeal($this, $activeDeals);
+                    return $dealResult['deal'] ?? null;
+                }
+            }
+        } catch (\Exception $e) {
+        }
+
+        return null;
+    }
 }

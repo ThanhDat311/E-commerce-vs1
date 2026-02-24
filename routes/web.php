@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\DealController as AdminDealController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\CartController;
@@ -14,10 +15,12 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\Staff\DealController as StaffDealController;
+use App\Http\Controllers\Vendor\DealController as VendorDealController;
 use App\Http\Controllers\WishlistController;
 use Illuminate\Support\Facades\Route;
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
 
 // ====================================================
 // PUBLIC ROUTES (Khách vãng lai có thể truy cập)
@@ -120,7 +123,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     // ... Các route Resource khác (products, categories, users)
     Route::resource('products', AdminProductController::class);
     Route::delete('products/images/{image}', [AdminProductController::class, 'destroyImage'])->name('products.images.destroy');
-    Route::resource('categories', AdminCategoryController::class);
+    Route::resource('categories', AdminCategoryController::class)->except(['create']);
     Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
 
     // User Management - Additional Routes
@@ -237,6 +240,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
 
     // Analytics Management
     Route::get('/analytics', [\App\Http\Controllers\RevenueAnalyticsController::class, 'index'])->name('analytics.index');
+
+    // Deals Management
+    Route::resource('deals', AdminDealController::class);
+    Route::post('deals/{deal}/approve', [AdminDealController::class, 'approve'])->name('deals.approve');
+    Route::patch('deals/{deal}/toggle-status', [AdminDealController::class, 'toggleStatus'])->name('deals.toggle_status');
 });
 
 // ====================================================
@@ -249,7 +257,7 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'role.check:staff'])
     // Limited product management (no destroy)
     Route::resource('products', \App\Http\Controllers\Staff\ProductController::class)->except(['destroy']);
     Route::delete('products/images/{image}', [\App\Http\Controllers\Staff\ProductController::class, 'destroyImage'])->name('products.images.destroy');
-    Route::resource('categories', \App\Http\Controllers\Staff\CategoryController::class)->except(['destroy']);
+    Route::resource('categories', \App\Http\Controllers\Staff\CategoryController::class)->except(['create', 'destroy']);
 
     // Order management
     Route::controller(\App\Http\Controllers\Staff\OrderController::class)->prefix('orders')->name('orders.')->group(function () {
@@ -258,6 +266,12 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'role.check:staff'])
         Route::put('/{id}', 'update')->name('update');
         Route::match(['put', 'patch'], '/{id}/status', 'update')->name('updateStatus');
     });
+
+    // Deals (limited – no delete, no approve)
+    Route::get('deals', [StaffDealController::class, 'index'])->name('deals.index');
+    Route::get('deals/{deal}/edit', [StaffDealController::class, 'edit'])->name('deals.edit');
+    Route::put('deals/{deal}', [StaffDealController::class, 'update'])->name('deals.update');
+    Route::patch('deals/{deal}/toggle-status', [StaffDealController::class, 'toggleStatus'])->name('deals.toggle_status');
 });
 
 // ====================================================
@@ -277,6 +291,9 @@ Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'role.check:vendor
         Route::get('/{id}', 'show')->name('show');
         Route::match(['put', 'patch'], '/{id}/status', 'updateStatus')->name('updateStatus');
     });
+
+    // Vendor Deals (own deals only, status=pending on create)
+    Route::resource('deals', VendorDealController::class);
 });
 
 // Address Management Routes

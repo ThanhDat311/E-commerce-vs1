@@ -105,10 +105,22 @@
                                                         <p class="text-gray-500">Color: Midnight Black</p> <!-- Placeholder -->
                                                         <p class="ml-4 pl-4 border-l border-gray-200 text-gray-500">Size: Standard</p> <!-- Placeholder -->
                                                     </div>
-                                                    <div class="mt-2 flex items-baseline">
+                                                    <div class="mt-2 flex items-baseline flex-wrap">
                                                         <p class="text-lg font-bold text-indigo-600" x-text="formatMoney(item.price)"></p>
                                                         <p x-show="item.original_price > item.price" class="ml-2 text-sm text-gray-500 line-through" x-text="formatMoney(item.original_price)"></p>
+                                                        
+                                                        <!-- Deal / Flash Sale Badge -->
+                                                        <template x-if="item.is_on_sale && item.discount_percentage">
+                                                            <span class="ml-3 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                                                Save <span x-text="item.discount_percentage + '%'"></span>
+                                                            </span>
+                                                        </template>
                                                     </div>
+                                                    <template x-if="item.discount_amount > 0">
+                                                        <p class="mt-1 text-xs text-green-600 font-medium">
+                                                            Discount applied: -<span x-text="formatMoney(item.discount_amount)"></span>
+                                                        </p>
+                                                    </template>
                                                 </div>
 
                                                 <div class="mt-4 sm:mt-0 sm:pr-9">

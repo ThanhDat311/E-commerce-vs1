@@ -123,7 +123,7 @@ class OrderService
             // Tạo Order Master
             $order = $this->orderRepository->createOrder($orderData);
 
-            // Tạo Order Items (Chi tiết đơn hàng)
+            // Tạo Order Items (Chi tiết đơn hàng – giá và deal bị lock tại thời điểm này)
             foreach ($cartItems as $item) {
                 $this->orderRepository->createOrderItem([
                     'order_id' => $order->id,
@@ -132,6 +132,8 @@ class OrderService
                     'quantity' => $item['quantity'],
                     'price' => $item['price'],
                     'total' => $item['price'] * $item['quantity'],
+                    'deal_id' => $item['deal_id'] ?? null,
+                    'discount_amount' => $item['discount_amount'] ?? 0,
                 ]);
             }
 
