@@ -36,6 +36,12 @@ class ProductController extends Controller
     {
         $data = $request->validated();
 
+        // Map 'quantity' from form to 'stock_quantity' in database
+        if (isset($data['quantity'])) {
+            $data['stock_quantity'] = $data['quantity'];
+            unset($data['quantity']);
+        }
+
         if ($request->hasFile('image')) {
             $file = $request->file('image');
             $filename = time() . '_' . ($file->getClientOriginalName() ?: $file->hashName());
@@ -83,6 +89,12 @@ class ProductController extends Controller
     public function update(UpdateProductRequest $request, Product $product)
     {
         $data = $request->validated();
+
+        // Map 'quantity' from form to 'stock_quantity' in database
+        if (isset($data['quantity'])) {
+            $data['stock_quantity'] = $data['quantity'];
+            unset($data['quantity']);
+        }
 
         if ($request->hasFile('image')) {
             // Xóa ảnh cũ nếu có

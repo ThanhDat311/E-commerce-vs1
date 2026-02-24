@@ -12,7 +12,7 @@
                 
                 <h2 class="mt-2 text-3xl font-extrabold text-gray-900">Order Placed!</h2>
                 <p class="mt-2 text-sm text-gray-600">
-                    Thank you for your purchase. Your order has been successfully placed.
+                    Thank you for your purchase. We are processing your request.
                 </p>
                 
                 @if(session('order_id'))
