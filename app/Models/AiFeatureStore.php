@@ -19,6 +19,7 @@ class AiFeatureStore extends Model
         'risk_score',
         'reasons',
         'label',
+        'ai_insight',
     ];
 
     // Tự động chuyển JSON trong DB thành Mảng trong PHP

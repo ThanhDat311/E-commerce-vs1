@@ -232,8 +232,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
 
     // AI Management
     Route::controller(\App\Http\Controllers\Admin\AiController::class)
-        ->prefix('ai')
-        ->name('ai.')
+        ->prefix('ai-dashboard')
+        ->name('ai-dashboard.')
         ->group(function () {
             Route::get('/', 'index')->name('index');
         });

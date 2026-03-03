@@ -93,7 +93,7 @@ class OrderService
                 // Check stock availability
                 if ($product->stock_quantity < $requestedQuantity) {
                     throw new Exception(
-                        "Insufficient stock for product: {$product->name}. ".
+                        "Insufficient stock for product: {$product->name}. " .
                             "Available: {$product->stock_quantity}, Requested: {$requestedQuantity}"
                     );
                 }
@@ -146,6 +146,9 @@ class OrderService
                 AiFeatureStore::where('id', $riskAnalysis['log_id'])->update([
                     'order_id' => $order->id,
                 ]);
+
+                // Kích hoạt AI phân tích đơn hàng chạy ngầm (Queue Job)
+                \App\Jobs\AnalyzeOrderRiskWithAI::dispatch($riskAnalysis['log_id']);
             }
             // -------------------------------------------------------------
 
@@ -164,7 +167,7 @@ class OrderService
             ];
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error('Checkout Failed: '.$e->getMessage());
+            Log::error('Checkout Failed: ' . $e->getMessage());
             throw $e;
         }
     }
@@ -250,7 +253,7 @@ class OrderService
                     'order_id' => $order->id,
                     'user_id' => $order->user_id,
                     'action' => 'Payment Received',
-                    'description' => "Payment successful via {$gatewayName}. TransNo: ".($verificationResult['transaction_no'] ?? 'N/A'),
+                    'description' => "Payment successful via {$gatewayName}. TransNo: " . ($verificationResult['transaction_no'] ?? 'N/A'),
                 ]);
 
                 Log::info('Payment processed successfully', [
@@ -277,7 +280,7 @@ class OrderService
                     'order_id' => $order->id,
                     'user_id' => $order->user_id,
                     'action' => 'Payment Failed',
-                    'description' => "Payment failed via {$gatewayName}. Code: ".($verificationResult['response_code'] ?? 'Unknown'),
+                    'description' => "Payment failed via {$gatewayName}. Code: " . ($verificationResult['response_code'] ?? 'Unknown'),
                 ]);
 
                 Log::warning('Payment failed, inventory restored', [
@@ -364,7 +367,7 @@ class OrderService
                     'order_id' => $order->id,
                     'user_id' => $userId,
                     'action' => 'Order Cancelled',
-                    'description' => 'Customer cancelled order. Reason: '.($reason ?? 'No reason provided'),
+                    'description' => 'Customer cancelled order. Reason: ' . ($reason ?? 'No reason provided'),
                 ]);
             }
 
@@ -376,7 +379,7 @@ class OrderService
             return $order;
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error('Order Cancellation Failed: '.$e->getMessage());
+            Log::error('Order Cancellation Failed: ' . $e->getMessage());
             throw $e; // Ném lỗi ra để Controller bắt
         }
     }

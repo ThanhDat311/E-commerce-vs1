@@ -175,9 +175,6 @@ class AIDecisionEngine
 
     /**
      * 3. Dynamic Pricing Suggestions
-     * 
-     * Đề xuất điều chỉnh giá dựa trên điều kiện thị trường
-     * 
      * @param array $productData ['price' => float, 'cost_price' => float, 'stock_quantity' => int]
      * @param array $marketData ['high_demand' => bool, 'competitor_lower_price' => bool, 'competitor_price' => float]
      * @return array ['decision' => float, 'score' => int, 'reasons' => array]

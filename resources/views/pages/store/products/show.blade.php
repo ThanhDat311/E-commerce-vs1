@@ -65,6 +65,46 @@
                 <div class="mt-10 px-4 sm:px-0 sm:mt-16 lg:mt-0 lg:ml-10">
                     <h1 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ $product->name }}</h1>
                     
+                    @inject('flashSaleService', 'App\Services\FlashSaleService')
+                    @php
+                        $isOnSale = $flashSaleService->isOnSale($product->id);
+                        $timeRemaining = $isOnSale ? $flashSaleService->getTimeRemaining($product) : null;
+                    @endphp
+
+                    @if($isOnSale && $timeRemaining > 0)
+                    <!-- Flash Sale Banner -->
+                    <div class="mt-4 bg-gradient-to-r from-red-600 to-red-500 rounded-lg p-4 text-white shadow-md flex flex-col sm:flex-row items-center justify-between" 
+                         x-data="{ 
+                            timeRemaining: {{ $timeRemaining }},
+                            formatTime(seconds) {
+                                if (seconds <= 0) return 'EXPIRED';
+                                const h = Math.floor(seconds / 3600);
+                                const m = Math.floor((seconds % 3600) / 60);
+                                const s = seconds % 60;
+                                return `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
+                            },
+                            init() {
+                                setInterval(() => {
+                                    if (this.timeRemaining > 0) {
+                                        this.timeRemaining--;
+                                    } else {
+                                        window.location.reload(); // Reload to refresh price when sale ends
+                                    }
+                                }, 1000);
+                            }
+                         }">
+                        <div class="flex items-center space-x-2 mb-2 sm:mb-0">
+                            <svg class="h-6 w-6 animate-pulse text-yellow-300" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd" />
+                            </svg>
+                            <span class="font-bold text-lg tracking-wider uppercase">Flash Sale Ends In:</span>
+                        </div>
+                        <div class="font-mono text-xl font-bold bg-white/20 px-4 py-1.5 rounded" x-text="formatTime(timeRemaining)">
+                            Loading...
+                        </div>
+                    </div>
+                    @endif
+
                     <div class="mt-4 flex items-end">
                         <h2 class="sr-only">Product information</h2>
                         @if($product->discount_price)

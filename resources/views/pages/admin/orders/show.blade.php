@@ -94,6 +94,24 @@
                 </div>
             </div>
 
+            <!-- AI Risk Insight -->
+            @if($order->aiFeature && $order->aiFeature->ai_insight)
+            <div class="bg-gradient-to-br from-indigo-50 to-purple-50 shadow rounded-lg p-6 border border-indigo-100">
+                <div class="flex items-center gap-2 mb-3">
+                    <svg class="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    <h2 class="text-lg font-semibold text-indigo-900">Electro AI Analysis</h2>
+                </div>
+                <div class="text-sm text-indigo-800 italic leading-relaxed">
+                    "{{ $order->aiFeature->ai_insight }}"
+                </div>
+                <div class="mt-3 text-xs font-semibold uppercase tracking-wider text-indigo-500">
+                    System Algorithmic Score: {{ $order->aiFeature->risk_score * 100 }} / 100
+                </div>
+            </div>
+            @endif
+
             <!-- Order Status -->
             <div class="bg-white shadow rounded-lg p-6">
                 <h2 class="text-lg font-semibold text-gray-900 mb-4">Update Status</h2>
