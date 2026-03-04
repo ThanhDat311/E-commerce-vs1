@@ -159,7 +159,7 @@ class ProductRepository implements ProductRepositoryInterface
     {
         // Eager load category, reviews và tính average rating ngay lập tức để tránh N+1
         return $this->model->with(['category', 'reviews.user'])
-            ->withAvg('ratings', 'rating')
+            ->withAvg('reviews', 'rating')
             ->findOrFail($id);
     }
 
@@ -291,8 +291,8 @@ class ProductRepository implements ProductRepositoryInterface
             // but usually we want AVERAGE >= val.
             // Let's try to filter by products that have at least one rating >= val for MVP or implement avg check properly.
             // Correct way for Average Rating filter:
-            $query->withAvg('ratings', 'rating')
-                ->having('ratings_avg_rating', '>=', $rating);
+            $query->withAvg('reviews', 'rating')
+                ->having('reviews_avg_rating', '>=', $rating);
         }
 
         // 6. Sorting
@@ -311,7 +311,7 @@ class ProductRepository implements ProductRepositoryInterface
                     $query->orderBy('name', 'asc');
                     break;
                 case 'rating':
-                    $query->withAvg('ratings', 'rating')->orderBy('ratings_avg_rating', 'desc');
+                    $query->withAvg('reviews', 'rating')->orderBy('reviews_avg_rating', 'desc');
                     break;
                 default: // latest
                     $query->orderBy('id', 'desc');
@@ -353,7 +353,8 @@ class ProductRepository implements ProductRepositoryInterface
 
         return $this->model->where('slug', $slug)
             ->with(['category', 'reviews.user', 'vendor'])
-            ->withAvg('ratings', 'rating')
+            ->withCount('reviews')
+            ->withAvg('reviews', 'rating')
             ->firstOrFail();
     }
 }

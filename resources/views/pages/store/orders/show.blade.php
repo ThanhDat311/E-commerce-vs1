@@ -139,8 +139,24 @@
                                             <span>{{ number_format($item->price, 2) }}</span>
                                         </div>
                                     </div>
-                                    <div class="text-right font-medium text-gray-900">
-                                        {{ number_format($item->total, 2) }}
+                                    <div class="text-right flex flex-col items-end gap-2">
+                                        <span class="font-medium text-gray-900">{{ number_format($item->total, 2) }}</span>
+                                        @if($order->order_status === 'delivered')
+                                             @php
+                                                 $itemReviewed = \App\Models\Review::where('product_id', $item->product_id)->where('user_id', auth()->id())->exists();
+                                             @endphp
+                                             @if(!$itemReviewed)
+                                                 <button x-data @click="$dispatch('open-review-modal', { product_id: {{ $item->product_id }}, product_name: '{{ addslashes($item->product->name) }}' })"
+                                                         class="text-xs px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 transition-colors font-medium border border-indigo-200">
+                                                     Write a Review
+                                                 </button>
+                                             @else
+                                                 <span class="text-xs px-3 py-1.5 bg-green-50 text-green-600 rounded-md font-medium border border-green-200 flex items-center gap-1">
+                                                     <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                     Reviewed
+                                                 </span>
+                                             @endif
+                                        @endif
                                     </div>
                                 </li>
                             @endforeach
@@ -217,4 +233,5 @@
     </div>
 
     <x-store.footer />
+    <x-store.review-modal />
 </x-base-layout>

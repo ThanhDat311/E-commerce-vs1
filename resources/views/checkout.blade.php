@@ -2,6 +2,12 @@
     <x-store.navbar />
     <div class="bg-gray-50 min-h-screen pb-12" 
          x-data="{ 
+            isGuest: {{ auth()->check() ? 'false' : 'true' }},
+            guestFirstName: '{{ old('first_name') }}',
+            guestLastName: '{{ old('last_name') }}',
+            guestEmail: '{{ old('email') }}',
+            guestPhone: '{{ old('phone') }}',
+            guestAddress: '{{ old('address') }}',
             addresses: {{ json_encode($addresses) }},
             selectedAddressId: {{ $addresses->where('is_default', true)->first()?->id ?? $addresses->first()?->id ?? 'null' }},
             paymentMethod: 'card',
@@ -27,6 +33,7 @@
             },
 
             get firstName() {
+                if (this.isGuest) return this.guestFirstName;
                 const name = this.selectedAddressData.recipient_name || '';
                 const parts = name.trim().split(' ');
                 if (parts.length === 1) return name;
@@ -34,6 +41,7 @@
             },
 
             get lastName() {
+                if (this.isGuest) return this.guestLastName;
                 const name = this.selectedAddressData.recipient_name || '';
                 const parts = name.trim().split(' ');
                 if (parts.length === 1) return name; 
@@ -41,10 +49,12 @@
             },
 
             get phone() {
+                if (this.isGuest) return this.guestPhone;
                 return this.selectedAddressData.phone_contact || '';
             },
 
             get fullAddress() {
+                if (this.isGuest) return this.guestAddress;
                 const a = this.selectedAddressData;
                 if (!a.address_line1) return '';
                 // Construct full address string
@@ -95,16 +105,61 @@
                 </div>
                 @endif
                 <!-- Hidden Inputs for CheckoutRequest Validation -->
+                @auth
                 <input type="hidden" name="first_name" :value="firstName">
                 <input type="hidden" name="last_name" :value="lastName">
                 <input type="hidden" name="email" value="{{ auth()->user()->email }}">
                 <input type="hidden" name="phone" :value="phone">
                 <input type="hidden" name="address" :value="fullAddress">
+                @endauth
                 
                 <!-- Left Column -->
                 <div class="lg:col-span-7 space-y-8">
                     
+                    <!-- Contact Information (Guest Only) -->
+                    @guest
+                    <section aria-labelledby="contact-heading" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h2 id="contact-heading" class="text-lg font-medium text-gray-900">Contact Information</h2>
+                            <span class="text-sm text-gray-500">Already have an account? <a href="{{ route('login') }}" class="font-medium text-indigo-600 hover:text-indigo-500">Log in</a></span>
+                        </div>
+                        <div class="grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-4">
+                            <div>
+                                <label for="guest_first_name" class="block text-sm font-medium text-gray-700">First name</label>
+                                <div class="mt-1">
+                                    <input type="text" id="guest_first_name" name="first_name" x-model="guestFirstName" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="guest_last_name" class="block text-sm font-medium text-gray-700">Last name</label>
+                                <div class="mt-1">
+                                    <input type="text" id="guest_last_name" name="last_name" x-model="guestLastName" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                                </div>
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label for="guest_email" class="block text-sm font-medium text-gray-700">Email address</label>
+                                <div class="mt-1">
+                                    <input type="email" id="guest_email" name="email" x-model="guestEmail" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                                </div>
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label for="guest_phone" class="block text-sm font-medium text-gray-700">Phone number</label>
+                                <div class="mt-1">
+                                    <input type="text" id="guest_phone" name="phone" x-model="guestPhone" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                                </div>
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label for="guest_address" class="block text-sm font-medium text-gray-700">Address</label>
+                                <div class="mt-1">
+                                    <input type="text" id="guest_address" name="address" x-model="guestAddress" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    @endguest
+
                     <!-- Shipping Address -->
+                    @auth
                     <section aria-labelledby="shipping-heading" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                         <div class="flex items-center justify-between mb-6">
                             <h2 id="shipping-heading" class="text-lg font-medium text-gray-900">Shipping Address</h2>
@@ -143,6 +198,7 @@
                             </div>
                         @endif
                     </section>
+                    @endauth
 
                     <!-- Shipping Method -->
                     <section aria-labelledby="delivery-heading" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">

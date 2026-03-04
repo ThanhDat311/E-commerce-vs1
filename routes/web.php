@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\Customer\ReviewController;
 use App\Http\Controllers\HelpController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\Staff\DealController as StaffDealController;
 use App\Http\Controllers\Vendor\DealController as VendorDealController;
+use App\Http\Controllers\Vendor\FinanceController as VendorFinanceController;
 use App\Http\Controllers\WishlistController;
 use Illuminate\Support\Facades\Route;
 
@@ -37,6 +39,11 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 // [FIX QUAN TRỌNG] Đổi name thành 'shop.index' để khớp với Sidebar Filter
 Route::get('/shop', [ProductController::class, 'index'])->name('shop.index');
 Route::get('/product/{slug}', [ProductController::class, 'show'])->name('shop.show');
+
+// Public Support Pages
+Route::get('/contact', [ContactController::class, 'index'])->name('contact.index');
+Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
+Route::get('/help', [HelpController::class, 'index'])->name('help.index');
 
 // Route nhận kết quả từ VNPay
 Route::get('/payment/vnpay/callback', [PaymentController::class, 'vnpayCallback'])->name('payment.vnpay.callback');
@@ -88,6 +95,15 @@ Route::group(['prefix' => 'cart', 'as' => 'cart.'], function () {
 }); // <--- [QUAN TRỌNG] Đã thêm đóng ngoặc kết thúc nhóm Cart tại đây
 
 // ====================================================
+// GUEST CHECKOUT ROUTES
+// ====================================================
+Route::group(['prefix' => 'checkout', 'as' => 'checkout.'], function () {
+    Route::get('/', [CheckoutController::class, 'show'])->name('index');
+    Route::post('/process', [CheckoutController::class, 'process'])->name('process');
+    Route::get('/success', [CheckoutController::class, 'success'])->name('success');
+});
+
+// ====================================================
 // AUTHENTICATED ROUTES (Phải đăng nhập mới vào được)
 // ====================================================
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -105,12 +121,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/my-orders', [App\Http\Controllers\OrderController::class, 'index'])->name('orders.index');
     Route::get('/my-orders/{order}', [App\Http\Controllers\OrderController::class, 'show'])->name('orders.show');
 
-    // Checkout Flow
-    Route::group(['prefix' => 'checkout', 'as' => 'checkout.'], function () {
-        Route::get('/', [CheckoutController::class, 'show'])->name('index');
-        Route::post('/process', [CheckoutController::class, 'process'])->name('process');
-        Route::get('/success', [CheckoutController::class, 'success'])->name('success');
-    });
+    // Product Reviews
+    Route::post('/products/{product}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
 });
 
 // ====================================================
@@ -241,6 +253,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     // Analytics Management
     Route::get('/analytics', [\App\Http\Controllers\RevenueAnalyticsController::class, 'index'])->name('analytics.index');
 
+    // Low Stock Alerts
+    Route::controller(\App\Http\Controllers\LowStockAlertsController::class)
+        ->prefix('low-stock-alerts')
+        ->name('low-stock-alerts.')
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/export', 'export')->name('export');
+        });
+
     // Deals Management
     Route::resource('deals', AdminDealController::class);
     Route::post('deals/{deal}/approve', [AdminDealController::class, 'approve'])->name('deals.approve');
@@ -266,6 +287,10 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'role.check:staff'])
         Route::put('/{id}', 'update')->name('update');
         Route::match(['put', 'patch'], '/{id}/status', 'update')->name('updateStatus');
     });
+
+    // Support Ticket management
+    Route::resource('support', \App\Http\Controllers\Staff\SupportController::class)->except(['create', 'edit', 'destroy']);
+    Route::post('support/{support}/reply', [\App\Http\Controllers\Staff\SupportController::class, 'storeMessage'])->name('support.reply');
 
     // Deals (limited – no delete, no approve)
     Route::get('deals', [StaffDealController::class, 'index'])->name('deals.index');
@@ -294,6 +319,9 @@ Route::prefix('vendor')->name('vendor.')->middleware(['auth', 'role.check:vendor
 
     // Vendor Deals (own deals only, status=pending on create)
     Route::resource('deals', VendorDealController::class);
+
+    // Vendor Finance & Payouts
+    Route::get('/finance', [VendorFinanceController::class, 'index'])->name('finance.index');
 });
 
 // Address Management Routes

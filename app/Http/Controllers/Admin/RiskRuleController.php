@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\RiskRule;
 use App\Http\Controllers\Controller;
+use App\Models\RiskRule;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 
 class RiskRuleController extends Controller
 {
@@ -25,7 +25,7 @@ class RiskRuleController extends Controller
             'average_weight' => RiskRule::where('is_active', true)->avg('weight'),
         ];
 
-        return view('admin.risk-rules.index', compact('rules', 'stats'));
+        return view('pages.admin.risk-rules.index', compact('rules', 'stats'));
     }
 
     /**
@@ -33,7 +33,7 @@ class RiskRuleController extends Controller
      */
     public function edit(RiskRule $riskRule): View
     {
-        return view('admin.risk-rules.edit', compact('riskRule'));
+        return view('pages.admin.risk-rules.edit', compact('riskRule'));
     }
 
     /**
@@ -58,7 +58,7 @@ class RiskRuleController extends Controller
      */
     public function toggle(RiskRule $riskRule): RedirectResponse
     {
-        $riskRule->update(['is_active' => !$riskRule->is_active]);
+        $riskRule->update(['is_active' => ! $riskRule->is_active]);
         $status = $riskRule->is_active ? 'activated' : 'deactivated';
 
         return back()->with('success', "Risk rule '{$riskRule->rule_key}' {$status}!");
@@ -131,7 +131,7 @@ class RiskRuleController extends Controller
             ->toArray();
 
         return response()->json($rules)
-            ->header('Content-Disposition', 'attachment; filename="risk-rules-' . date('Y-m-d-H-i-s') . '.json"');
+            ->header('Content-Disposition', 'attachment; filename="risk-rules-'.date('Y-m-d-H-i-s').'.json"');
     }
 
     /**
@@ -146,7 +146,7 @@ class RiskRuleController extends Controller
         $file = $request->file('file');
         $data = json_decode(file_get_contents($file->path()), true);
 
-        if (!is_array($data)) {
+        if (! is_array($data)) {
             return back()->with('error', 'Invalid JSON format');
         }
 

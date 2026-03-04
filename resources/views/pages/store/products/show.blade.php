@@ -131,7 +131,11 @@
                                 @endfor
                             </div>
                             <p class="sr-only">{{ $rating }} out of 5 stars</p>
-                            <a href="#" class="ml-3 text-sm font-medium text-indigo-600 hover:text-indigo-500">{{ $product->reviews_count ?? 0 }} reviews</a>
+                            <a href="javascript:void(0)" 
+                               @click="window.dispatchEvent(new CustomEvent('switch-tab', { detail: { tab: 'reviews', scroll: true } }))"
+                               class="ml-3 text-sm font-medium text-indigo-600 hover:text-indigo-500">
+                                {{ $product->reviews_count ?? 0 }} reviews
+                            </a>
                             
                             @if($product->sold_count > 0)
                             <span class="mx-2 text-gray-300">|</span>

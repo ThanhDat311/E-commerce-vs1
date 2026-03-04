@@ -33,8 +33,8 @@
                 <ul class="mt-4 space-y-4">
                     <li><a href="#" class="text-base text-gray-400 hover:text-white">Shipping Info</a></li>
                     <li><a href="#" class="text-base text-gray-400 hover:text-white">Returns & Exchanges</a></li>
-                    <li><a href="#" class="text-base text-gray-400 hover:text-white">Help Center</a></li>
-                    <li><a href="#" class="text-base text-gray-400 hover:text-white">Contact Us</a></li>
+                    <li><a href="{{ route('help.index') }}" class="text-base text-gray-400 hover:text-white">Help Center</a></li>
+                    <li><a href="{{ route('contact.index') }}" class="text-base text-gray-400 hover:text-white">Contact Us</a></li>
                 </ul>
             </div>
 

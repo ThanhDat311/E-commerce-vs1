@@ -11,16 +11,20 @@ uses(RefreshDatabase::class);
 
 test('database rolls back order if creating order items fails', function () {
     /** @var \Tests\TestCase $this */ // FIX: Báo IDE biết ngữ cảnh là TestCase
-    
+
     // 1. Arrange
-    $this->mock(CartService::class, function ($mock) {
+    $p1 = \App\Models\Product::factory()->create(['stock_quantity' => 10, 'price' => 100]);
+    $p2 = \App\Models\Product::factory()->create(['stock_quantity' => 10, 'price' => 200]);
+
+    $this->mock(CartService::class, function ($mock) use ($p1, $p2) {
         $mock->shouldReceive('getCartDetails')->andReturn([
             'cartItems' => [
-                ['id' => 1, 'name' => 'Item A', 'quantity' => 1, 'price' => 100, 'total' => 100],
-                ['id' => 2, 'name' => 'Item B', 'quantity' => 1, 'price' => 200, 'total' => 200],
+                ['id' => $p1->id, 'name' => $p1->name, 'quantity' => 1, 'price' => 100, 'total' => 100],
+                ['id' => $p2->id, 'name' => $p2->name, 'quantity' => 1, 'price' => 200, 'total' => 200],
             ],
             'total' => 300
         ]);
+        $mock->shouldReceive('clearCart')->byDefault();
     });
 
     $this->mock(RiskManagementService::class, function ($mock) {
@@ -32,7 +36,7 @@ test('database rolls back order if creating order items fails', function () {
         // createOrder thành công
         $mock->shouldReceive('createOrder')
             ->once()
-            ->andReturn(new Order(['id' => 123])); 
+            ->andReturn(new Order(['id' => 123]));
 
         // createOrderItem sẽ ném lỗi
         $mock->shouldReceive('createOrderItem')
@@ -40,18 +44,14 @@ test('database rolls back order if creating order items fails', function () {
     });
 
     // 2. Act
-    try {
-        $this->post(route('cart.placeOrder'), [
-            'first_name' => 'Rollback',
-            'last_name' => 'Tester',
-            'email' => 'fail@test.com',
-            'phone' => '111',
-            'address' => 'Nowhere',
-            'payment_method' => 'cod'
-        ]);
-    } catch (Exception $e) {
-        // Bắt lỗi để test không dừng
-    }
+    $response = $this->post(route('cart.placeOrder'), [
+        'first_name' => 'Rollback',
+        'last_name' => 'Tester',
+        'email' => 'fail@test.com',
+        'phone' => '0901234567', // 10 characters
+        'address' => 'Nowhere',
+        'payment_method' => 'cod'
+    ]);
 
     // 3. Assert
     // Transaction Rollback thành công thì count phải bằng 0

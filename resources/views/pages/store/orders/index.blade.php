@@ -135,7 +135,7 @@
                                         
                                         <a href="{{ route('orders.show', $order) }}" 
                                            class="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
-                                            View Details
+                                            {{ $order->order_status === 'delivered' ? 'View & Review' : 'View Details' }}
                                         </a>
 
                                         @if(in_array($order->order_status, ['delivered', 'cancelled']))

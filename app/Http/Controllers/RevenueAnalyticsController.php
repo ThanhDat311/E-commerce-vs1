@@ -31,7 +31,7 @@ class RevenueAnalyticsController extends Controller
         // Get analytics data
         $analytics = $this->getAnalyticsData($startDate, $endDate, $comparisonStart, $comparisonEnd);
 
-        return view('admin.revenue-analytics.index', [
+        return view('pages.admin.analytics.index', [
             'analytics' => $analytics,
             'startDate' => $startDate,
             'endDate' => $endDate,
@@ -125,11 +125,11 @@ class RevenueAnalyticsController extends Controller
         $filename = "revenue-report-{$startDate->format('Y-m-d')}-to-{$endDate->format('Y-m-d')}.csv";
 
         $headers = [
-            "Content-type" => "text/csv; charset=UTF-8",
-            "Content-Disposition" => "attachment; filename=$filename",
-            "Pragma" => "no-cache",
-            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
-            "Expires" => "0",
+            'Content-type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=$filename",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
         ];
 
         // Generate CSV content
@@ -142,11 +142,11 @@ class RevenueAnalyticsController extends Controller
             $avgOrderValue = $orders > 0 ? ($revenue / 100) / $orders : 0;
             $conversionRate = number_format(rand(250, 400) / 100, 2);
 
-            $csvData .= $currentDate->format('Y-m-d') . ","
-                . number_format($revenue / 100, 2) . ","
-                . $orders . ","
-                . number_format($avgOrderValue, 2) . ","
-                . $conversionRate . "%\n";
+            $csvData .= $currentDate->format('Y-m-d').','
+                .number_format($revenue / 100, 2).','
+                .$orders.','
+                .number_format($avgOrderValue, 2).','
+                .$conversionRate."%\n";
 
             $currentDate->addDay();
         }
@@ -170,6 +170,7 @@ class RevenueAnalyticsController extends Controller
             case 'previous':
             default:
                 $daysDifference = $startDate->diffInDays(now());
+
                 return $start->subDays($daysDifference);
         }
     }

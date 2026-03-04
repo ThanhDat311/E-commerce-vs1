@@ -42,7 +42,7 @@ test('product view loads successfully', function () {
         'description' => 'Test Description'
     ]);
 
-    $response = $this->get('/product/' . $product->id);
+    $response = $this->get(route('shop.show', $product->slug));
 
     $response->assertStatus(200);
     $response->assertSee($product->name);

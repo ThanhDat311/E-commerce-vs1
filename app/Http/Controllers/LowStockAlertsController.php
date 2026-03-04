@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class LowStockAlertsController extends Controller
@@ -22,12 +21,12 @@ class LowStockAlertsController extends Controller
         $products = $this->getLowStockProducts($statusFilter, $categoryFilter, $sortFilter, $searchFilter);
 
         // Calculate summary counts
-        $critical = count(array_filter($products, fn($p) => $p['status'] === 'critical'));
-        $warning = count(array_filter($products, fn($p) => $p['status'] === 'warning'));
-        $low = count(array_filter($products, fn($p) => $p['status'] === 'low'));
+        $critical = count(array_filter($products, fn ($p) => $p['status'] === 'critical'));
+        $warning = count(array_filter($products, fn ($p) => $p['status'] === 'warning'));
+        $low = count(array_filter($products, fn ($p) => $p['status'] === 'low'));
         $total = count($products);
 
-        return view('admin.low-stock-alerts.index', [
+        return view('pages.admin.low-stock-alerts.index', [
             'products' => $products,
             'critical' => $critical,
             'warning' => $warning,
@@ -55,9 +54,9 @@ class LowStockAlertsController extends Controller
         return response()->json([
             'data' => $products,
             'total' => count($products),
-            'critical' => count(array_filter($products, fn($p) => $p['status'] === 'critical')),
-            'warning' => count(array_filter($products, fn($p) => $p['status'] === 'warning')),
-            'low' => count(array_filter($products, fn($p) => $p['status'] === 'low')),
+            'critical' => count(array_filter($products, fn ($p) => $p['status'] === 'critical')),
+            'warning' => count(array_filter($products, fn ($p) => $p['status'] === 'warning')),
+            'low' => count(array_filter($products, fn ($p) => $p['status'] === 'low')),
         ]);
     }
 
@@ -152,19 +151,19 @@ class LowStockAlertsController extends Controller
 
         $products = $this->getLowStockProducts($statusFilter, $categoryFilter, $sortFilter, $searchFilter);
 
-        $filename = 'low-stock-alerts-' . now()->format('Y-m-d-H-i-s') . '.csv';
+        $filename = 'low-stock-alerts-'.now()->format('Y-m-d-H-i-s').'.csv';
         $headers = [
             'Content-Encoding' => 'UTF-8',
             'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ];
 
-        $callback = function() use ($products) {
+        $callback = function () use ($products) {
             $file = fopen('php://output', 'w');
-            
+
             // BOM for Excel UTF-8
-            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
-            
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+
             // Headers
             fputcsv($file, [
                 'Status',
@@ -185,7 +184,7 @@ class LowStockAlertsController extends Controller
                     $product['category'] ?? '',
                     $product['current_stock'] ?? 0,
                     $product['min_threshold'] ?? 0,
-                    round(($product['current_stock'] / $product['min_threshold']) * 100, 1) . '%',
+                    round(($product['current_stock'] / $product['min_threshold']) * 100, 1).'%',
                     $product['restock_qty'] ?? 0,
                     $product['status'] ?? '',
                 ]);
@@ -287,24 +286,25 @@ class LowStockAlertsController extends Controller
 
         // Apply status filter
         if ($status) {
-            $products = array_filter($products, fn($p) => $p['status'] === $status);
+            $products = array_filter($products, fn ($p) => $p['status'] === $status);
         }
 
         // Apply category filter
         if ($category) {
-            $products = array_filter($products, fn($p) => $p['category'] === $category);
+            $products = array_filter($products, fn ($p) => $p['category'] === $category);
         }
 
         // Apply search filter
         if ($search) {
             $search = strtolower($search);
-            $products = array_filter($products, fn($p) => 
-                stripos($p['name'], $search) !== false
+            $products = array_filter(
+                $products,
+                fn ($p) => stripos($p['name'], $search) !== false
             );
         }
 
         // Apply sorting
-        usort($products, function($a, $b) use ($sort) {
+        usort($products, function ($a, $b) use ($sort) {
             if ($sort === 'stock') {
                 return $a['current_stock'] <=> $b['current_stock'];
             } elseif ($sort === 'name') {
@@ -318,6 +318,7 @@ class LowStockAlertsController extends Controller
             if ($statusDiff !== 0) {
                 return $statusDiff;
             }
+
             return $a['level_percentage'] <=> $b['level_percentage'];
         });
 
