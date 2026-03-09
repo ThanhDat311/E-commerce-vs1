@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\UserRole;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,18 +17,17 @@ class CheckRole
      */
     public function handle(Request $request, Closure $next, string $role): Response
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login');
         }
 
-        $roleIds = [
-            'admin' => 1,
-            'staff' => 2,
-            'customer' => 3,
-            'vendor' => 4,
-        ];
+        try {
+            $expectedRole = UserRole::fromSlug($role);
+        } catch (\ValueError) {
+            abort(403, 'Unknown role');
+        }
 
-        if (!isset($roleIds[$role]) || Auth::user()->role_id !== $roleIds[$role]) {
+        if (Auth::user()->role_id !== $expectedRole->value) {
             abort(403, 'Access denied');
         }
 

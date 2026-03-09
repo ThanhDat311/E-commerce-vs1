@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Events\OrderStatusUpdated;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderHistory; // Đảm bảo bạn đã tạo Model này
+use App\Notifications\OrderStatusNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -96,6 +98,12 @@ class OrderController extends Controller
             $actionDescription[] = "Status changed from '{$oldStatus}' to '{$newStatus}'";
             $order->order_status = $newStatus;
             $hasChanges = true;
+
+            // Trigger real-time event and database/broadcast notification
+            event(new OrderStatusUpdated($order, $oldStatus, $newStatus));
+            if ($order->user) {
+                $order->user->notify(new OrderStatusNotification($order, $oldStatus, $newStatus));
+            }
         }
 
         // 2. Cập nhật Trạng thái thanh toán (payment_status)
@@ -204,15 +212,23 @@ class OrderController extends Controller
             'notes' => 'nullable|string',
         ]);
 
+        $oldStatus = $order->order_status;
+        $newStatus = $validated['order_status'];
+
         // Record the status change in history with correct field names
         OrderHistory::create([
             'order_id' => $order->id,
             'user_id' => Auth::id(),
-            'action' => 'Status changed from ' . $order->order_status . ' to ' . $validated['order_status'],
+            'action' => 'Status changed from '.$oldStatus.' to '.$newStatus,
             'description' => $validated['notes'] ?? 'Status updated by admin',
         ]);
 
-        $order->update(['order_status' => $validated['order_status']]);
+        $order->update(['order_status' => $newStatus]);
+
+        event(new OrderStatusUpdated($order, $oldStatus, $newStatus));
+        if ($order->user) {
+            $order->user->notify(new OrderStatusNotification($order, $oldStatus, $newStatus));
+        }
 
         return redirect()->route('admin.orders.show', $order)->with('success', 'Order status updated successfully.');
     }
@@ -258,7 +274,7 @@ class OrderController extends Controller
         $orders = $query->orderBy('created_at', 'desc')->get();
 
         // Generate CSV
-        $filename = 'orders_' . now()->format('Y-m-d_His') . '.csv';
+        $filename = 'orders_'.now()->format('Y-m-d_His').'.csv';
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
@@ -271,7 +287,7 @@ class OrderController extends Controller
             foreach ($orders as $order) {
                 fputcsv($file, [
                     $order->id,
-                    $order->first_name . ' ' . $order->last_name,
+                    $order->first_name.' '.$order->last_name,
                     $order->email,
                     $order->total,
                     $order->order_status,

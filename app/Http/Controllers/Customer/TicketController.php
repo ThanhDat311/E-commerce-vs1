@@ -22,10 +22,12 @@ class TicketController extends Controller
             ->withCount('messages')
             ->forCustomer(Auth::id());
 
-        // Search
+        // Search — wrapped in a closure to preserve the forCustomer() user scope
         if ($search = $request->input('search')) {
-            $query->where('subject', 'like', "%{$search}%")
-                ->orWhere('id', 'like', "%{$search}%");
+            $query->where(function ($q) use ($search) {
+                $q->where('subject', 'like', "%{$search}%")
+                    ->orWhere('id', 'like', "%{$search}%");
+            });
         }
 
         // Filter by status

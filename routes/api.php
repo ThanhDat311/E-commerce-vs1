@@ -4,9 +4,10 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\RecommendationController;
 use App\Http\Controllers\Api\SearchController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -36,11 +37,22 @@ Route::prefix('v1')->group(function () {
         });
     });
 
+    // ==================== Products ====================
+    Route::get('products', [ProductController::class, 'index'])->name('api.products.index');
+    Route::get('products/{slug}', [ProductController::class, 'show'])->name('api.products.show');
+
+    // ==================== Recommendations ====================
+    Route::get('recommendations/{product}', [RecommendationController::class, 'show'])->name('api.recommendations.show');
+
     // ==================== Search Routes ====================
     Route::prefix('search')->group(function () {
         Route::get('/', [SearchController::class, 'search'])->name('api.search.products');
         Route::get('suggestions', [SearchController::class, 'suggestions'])->name('api.search.suggestions');
-        Route::post('reindex', [SearchController::class, 'reindex'])->name('api.search.reindex');
+
+        // Admin-only: requires Sanctum auth + admin role
+        Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+            Route::post('reindex', [SearchController::class, 'reindex'])->name('api.search.reindex');
+        });
     });
 
     // ==================== Profile Routes ====================

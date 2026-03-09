@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreProductRequest; // [FIX] Dùng đúng tên file
-use App\Http\Requests\UpdateProductRequest; // [FIX] Import file mới tạo
+use App\Http\Requests\StoreProductRequest;
+use App\Http\Requests\UpdateProductRequest;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Services\ImageOptimizationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 
@@ -43,15 +44,9 @@ class ProductController extends Controller
         }
 
         if ($request->hasFile('image')) {
-            $file = $request->file('image');
-            $filename = time() . '_' . ($file->getClientOriginalName() ?: $file->hashName());
-
-            if (! File::exists(public_path('img/products'))) {
-                File::makeDirectory(public_path('img/products'), 0755, true);
-            }
-
-            $file->move(public_path('img/products'), $filename);
-            $data['image_url'] = 'img/products/' . $filename;
+            $optimizer = app(ImageOptimizationService::class);
+            $path = $optimizer->optimize($request->file('image'), 'img/products');
+            $data['image_url'] = 'storage/'.$path;
         }
 
         // Xử lý checkbox (Nếu không check thì request không gửi lên -> mặc định là 0)
@@ -62,12 +57,12 @@ class ProductController extends Controller
 
         // Handle Gallery Images
         if ($request->hasFile('gallery')) {
+            $optimizer = app(ImageOptimizationService::class);
             foreach ($request->file('gallery') as $file) {
-                $filename = time() . '_' . uniqid() . '_' . ($file->getClientOriginalName() ?: $file->hashName());
-                $file->move(public_path('img/products/gallery'), $filename);
+                $path = $optimizer->optimize($file, 'img/products/gallery');
 
                 $product->images()->create([
-                    'image_path' => 'img/products/gallery/' . $filename,
+                    'image_path' => 'storage/'.$path,
                 ]);
             }
         }
@@ -97,15 +92,14 @@ class ProductController extends Controller
         }
 
         if ($request->hasFile('image')) {
-            // Xóa ảnh cũ nếu có
+            // Delete old image if exists
             if ($product->image_url && File::exists(public_path($product->image_url))) {
                 File::delete(public_path($product->image_url));
             }
 
-            $file = $request->file('image');
-            $filename = time() . '_' . ($file->getClientOriginalName() ?: $file->hashName());
-            $file->move(public_path('img/products'), $filename);
-            $data['image_url'] = 'img/products/' . $filename;
+            $optimizer = app(ImageOptimizationService::class);
+            $path = $optimizer->optimize($request->file('image'), 'img/products');
+            $data['image_url'] = 'storage/'.$path;
         }
 
         $data['is_new'] = $request->has('is_new') ? 1 : 0;
@@ -115,17 +109,12 @@ class ProductController extends Controller
 
         // Handle Gallery Images
         if ($request->hasFile('gallery')) {
+            $optimizer = app(ImageOptimizationService::class);
             foreach ($request->file('gallery') as $file) {
-                $filename = time() . '_' . uniqid() . '_' . ($file->getClientOriginalName() ?: $file->hashName());
-                // Ensure directory exists
-                if (! File::exists(public_path('img/products/gallery'))) {
-                    File::makeDirectory(public_path('img/products/gallery'), 0755, true);
-                }
-
-                $file->move(public_path('img/products/gallery'), $filename);
+                $path = $optimizer->optimize($file, 'img/products/gallery');
 
                 $product->images()->create([
-                    'image_path' => 'img/products/gallery/' . $filename,
+                    'image_path' => 'storage/'.$path,
                 ]);
             }
         }

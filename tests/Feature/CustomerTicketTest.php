@@ -6,8 +6,11 @@ use App\Models\Order;
 use App\Models\SupportTicket;
 use App\Models\TicketMessage;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+
+uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->customer = User::factory()->create(['role_id' => 3, 'is_active' => true]);
@@ -196,11 +199,11 @@ it('reopens resolved ticket when customer replies', function () {
 it('can filter tickets by status', function () {
     $openTicket = SupportTicket::factory()->open()->create([
         'user_id' => $this->customer->id,
-        'subject' => 'Unique Open Ticket Subject'
+        'subject' => 'Unique Open Ticket Subject',
     ]);
     $resolvedTicket = SupportTicket::factory()->resolved()->create([
         'user_id' => $this->customer->id,
-        'subject' => 'Unique Resolved Ticket Subject'
+        'subject' => 'Unique Resolved Ticket Subject',
     ]);
 
     $this->actingAs($this->customer)

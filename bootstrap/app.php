@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         channels: __DIR__ . '/../routes/channels.php',
         web: __DIR__ . '/../routes/web.php',
+        api: __DIR__ . '/../routes/api.php',
         commands: __DIR__ . '/../routes/console.php',
         health: '/up',
         then: function () {
@@ -31,8 +32,14 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withSchedule(function ($schedule) {
         $schedule->command('pricing:generate-suggestions')->dailyAt('02:00');
+        $schedule->command('app:process-vendor-payouts')->monthlyOn(1, '00:00');
     })
     ->withMiddleware(function ($middleware) {
+        $middleware->web(append: [
+            \App\Http\Middleware\Localization::class,
+            \App\Http\Middleware\Currency::class,
+        ]);
+
         $middleware->alias([
             'permission' => CheckPermission::class,
             'admin' => AdminMiddleware::class,

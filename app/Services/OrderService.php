@@ -3,15 +3,19 @@
 namespace App\Services;
 
 use App\Events\OrderPlaced;
+use App\Mail\Order\OrderCancelledMail;
+use App\Mail\Order\OrderPlacedMail;
 use App\Models\AiFeatureStore;
 use App\Models\OrderHistory;
 use App\Models\Product;
+use App\Models\Refund;
 use App\Repositories\Interfaces\OrderRepositoryInterface;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
 use App\Services\Payment\PaymentFactory;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class OrderService
 {
@@ -93,7 +97,7 @@ class OrderService
                 // Check stock availability
                 if ($product->stock_quantity < $requestedQuantity) {
                     throw new Exception(
-                        "Insufficient stock for product: {$product->name}. " .
+                        "Insufficient stock for product: {$product->name}. ".
                             "Available: {$product->stock_quantity}, Requested: {$requestedQuantity}"
                     );
                 }
@@ -157,17 +161,19 @@ class OrderService
             // Dispatch OrderPlaced event for real-time admin notifications
             event(new OrderPlaced($order));
 
-            // Xóa giỏ hàng sau khi đặt thành công
+            // Send order confirmation email (queued)
+            Mail::to($order->email)->queue(new OrderPlacedMail($order));
+
+            // Clear cart after successful order
             $this->cartService->clearCart();
 
-            // Trả về kết quả bao gồm cả Redirect URL nếu có
             return [
                 'order' => $order,
                 'payment_result' => $paymentResult,
             ];
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error('Checkout Failed: ' . $e->getMessage());
+            Log::error('Checkout Failed: '.$e->getMessage());
             throw $e;
         }
     }
@@ -253,7 +259,7 @@ class OrderService
                     'order_id' => $order->id,
                     'user_id' => $order->user_id,
                     'action' => 'Payment Received',
-                    'description' => "Payment successful via {$gatewayName}. TransNo: " . ($verificationResult['transaction_no'] ?? 'N/A'),
+                    'description' => "Payment successful via {$gatewayName}. TransNo: ".($verificationResult['transaction_no'] ?? 'N/A'),
                 ]);
 
                 Log::info('Payment processed successfully', [
@@ -280,7 +286,7 @@ class OrderService
                     'order_id' => $order->id,
                     'user_id' => $order->user_id,
                     'action' => 'Payment Failed',
-                    'description' => "Payment failed via {$gatewayName}. Code: " . ($verificationResult['response_code'] ?? 'Unknown'),
+                    'description' => "Payment failed via {$gatewayName}. Code: ".($verificationResult['response_code'] ?? 'Unknown'),
                 ]);
 
                 Log::warning('Payment failed, inventory restored', [
@@ -353,34 +359,46 @@ class OrderService
                 }
             }
 
-            // 5. Cập nhật trạng thái đơn hàng
+            // 5. Update order status
             $order->order_status = 'cancelled';
 
-            // Nếu đã thanh toán online (VNPay) nhưng chưa ship -> Cần quy trình Refund (Ở đây tạm đánh dấu logic)
-            // if ($order->payment_status === 'paid') { ...trigger refund logic... }
+            // 6. Automated refund for VNPay-paid orders
+            if ($order->payment_status === 'paid' && $order->payment_method === 'vnpay') {
+                Refund::create([
+                    'order_id' => $order->id,
+                    'amount' => $order->total,
+                    'reason' => $reason ?? 'Customer cancelled order',
+                    'status' => 'pending', // Admin reviews and triggers VNPay refund API
+                ]);
+
+                Log::info('Refund record created for cancelled paid order', [
+                    'order_id' => $order->id,
+                    'amount' => $order->total,
+                ]);
+            }
 
             $order->save();
 
-            // 6. Ghi lịch sử (Audit Log)
+            // 7. Audit log
             if (class_exists(\App\Models\OrderHistory::class)) {
                 \App\Models\OrderHistory::create([
                     'order_id' => $order->id,
                     'user_id' => $userId,
                     'action' => 'Order Cancelled',
-                    'description' => 'Customer cancelled order. Reason: ' . ($reason ?? 'No reason provided'),
+                    'description' => 'Customer cancelled order. Reason: '.($reason ?? 'No reason provided'),
                 ]);
             }
 
-            // 7. Gửi Email (Optional - Uncomment nếu đã setup Mail Queue)
-            // Mail::to($order->email)->queue(new \App\Mail\Order\OrderCancelledMail($order));
-
+            // 8. Send cancellation email (queued — after commit so it only fires on success)
             DB::commit();
+
+            Mail::to($order->email)->queue(new OrderCancelledMail($order, $reason));
 
             return $order;
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error('Order Cancellation Failed: ' . $e->getMessage());
-            throw $e; // Ném lỗi ra để Controller bắt
+            Log::error('Order Cancellation Failed: '.$e->getMessage());
+            throw $e;
         }
     }
 

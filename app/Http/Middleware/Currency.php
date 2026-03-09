@@ -2,8 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\CurrencyService;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\View;
 use Symfony\Component\HttpFoundation\Response;
 
 class Currency
@@ -15,8 +17,17 @@ class Currency
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $currency = $request->get('currency', session('currency', 'USD'));
-        session(['currency' => $currency]);
+        /** @var CurrencyService $currencyService */
+        $currencyService = app(CurrencyService::class);
+        $currency = $request->get('currency', session('currency', 'VND'));
+
+        if ($currencyService->isSupported($currency)) {
+            session(['currency' => strtoupper($currency)]);
+        } else {
+            $currency = 'VND'; // Fallback
+        }
+
+        View::share('activeCurrency', strtoupper($currency));
 
         return $next($request);
     }

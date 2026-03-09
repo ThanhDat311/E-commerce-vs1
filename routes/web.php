@@ -11,6 +11,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\Customer\ReviewController;
 use App\Http\Controllers\HelpController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
@@ -27,6 +28,9 @@ require __DIR__ . '/auth.php';
 // ====================================================
 // PUBLIC ROUTES (Khách vãng lai có thể truy cập)
 // ====================================================
+
+// Language switcher
+Route::get('locale/{lang}', [LocaleController::class, 'setLocale'])->name('locale.switch');
 
 // Google Auth
 Route::controller(\App\Http\Controllers\Auth\GoogleController::class)->group(function () {
@@ -82,7 +86,7 @@ Route::middleware(['auth'])->group(function () {
 // ====================================================
 // CART ROUTES (Giỏ hàng) - Dòng 36 bắt đầu ở đây
 // ====================================================
-Route::group(['prefix' => 'cart', 'as' => 'cart.'], function () {
+Route::middleware(['auth'])->prefix('cart')->name('cart.')->group(function () {
     Route::get('/', [CartController::class, 'index'])->name('index');
     Route::get('/add/{id}', [CartController::class, 'addToCart'])->name('add');
     Route::get('/remove/{id}', [CartController::class, 'removeFromCart'])->name('remove');
@@ -92,7 +96,7 @@ Route::group(['prefix' => 'cart', 'as' => 'cart.'], function () {
         return redirect()->route('checkout.index');
     })->name('checkout');
     Route::post('/place-order', [CheckoutController::class, 'process'])->name('placeOrder');
-}); // <--- [QUAN TRỌNG] Đã thêm đóng ngoặc kết thúc nhóm Cart tại đây
+});
 
 // ====================================================
 // GUEST CHECKOUT ROUTES
@@ -361,22 +365,6 @@ Route::middleware(['auth'])->group(function () {
     });
 });
 
-// ====================================================
-// API ROUTES (JSON responses for admin panels)
-// ====================================================
-Route::middleware(['auth'])->prefix('api')->name('api.')->group(function () {
-
-    // Products API
-    Route::apiResource('products', ProductController::class);
-
-    // Orders API
-    Route::controller(OrderController::class)->prefix('orders')->name('orders.')->group(function () {
-        Route::get('/', 'apiIndex')->name('index');
-        Route::get('/{order}', 'apiShow')->name('show');
-        Route::put('/{order}/status', 'updateStatus')->name('update-status');
-    });
-});
-
 // User Orders History
 
 // [NEW] Order Cancellation Route
@@ -385,43 +373,6 @@ Route::post('/my-orders/{order}/cancel', \App\Http\Controllers\Customer\OrderCan
 
 Route::post('/my-orders/{order}/repay', \App\Http\Controllers\Customer\OrderRepaymentController::class)
     ->name('orders.repay');
-
-// Test route for CSRF token
-Route::get('/test-csrf', function () {
-    return response()->json([
-        'csrf_token' => csrf_token(),
-        'session_id' => session()->getId(),
-        'app_url' => config('app.url'),
-        'session_domain' => config('session.domain'),
-        'session_driver' => config('session.driver'),
-        'session_cookie' => config('session.cookie'),
-        'session_secure' => config('session.secure'),
-        'session_same_site' => config('session.same_site'),
-        'session_lifetime' => config('session.lifetime'),
-    ]);
-})->name('test-csrf');
-
-// Debug Session Route (for troubleshooting 419 errors)
-Route::get('/debug-session', function () {
-    if (! config('app.debug')) {
-        abort(404);
-    }
-
-    return response()->json([
-        'session_id' => session()->getId(),
-        'session_data' => session()->all(),
-        'csrf_token' => csrf_token(),
-        'csrf_token_from_meta' => request()->header('X-CSRF-TOKEN'),
-        'session_config' => [
-            'driver' => config('session.driver'),
-            'lifetime' => config('session.lifetime'),
-            'cookie' => config('session.cookie'),
-            'domain' => config('session.domain'),
-            'secure' => config('session.secure'),
-            'same_site' => config('session.same_site'),
-        ],
-    ]);
-})->name('debug-session');
 
 // Fallback for Boost browser logs GET requests to prevent MethodNotAllowedHttpException
 Route::get('/_boost/browser-logs', function () {

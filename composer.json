@@ -7,6 +7,8 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "dedoc/scramble": "^0.13.14",
+        "intervention/image-laravel": "^1.5",
         "laravel/framework": "^12.0",
         "laravel/reverb": "^1.7",
         "laravel/scout": "^10.23",
@@ -30,7 +32,10 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        }
+        },
+        "files": [
+            "app/Helpers/currency_helpers.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

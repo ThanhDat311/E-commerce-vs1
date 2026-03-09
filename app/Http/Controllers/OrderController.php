@@ -65,25 +65,6 @@ class OrderController extends Controller
         return view('pages.store.orders.show', compact('order', 'user'));
     }
 
-    // API endpoints cho admin/staff/vendor
-    public function apiIndex()
-    {
-        $this->authorize('viewAny', Order::class);
-
-        $orders = Order::with('user')->paginate(10);
-
-        return response()->json($orders);
-    }
-
-    public function apiShow(Order $order)
-    {
-        $this->authorize('view', $order);
-
-        $order->load('orderItems.product', 'histories');
-
-        return response()->json($order);
-    }
-
     public function updateStatus(Request $request, Order $order)
     {
         $this->authorize('updateStatus', $order);
@@ -97,7 +78,7 @@ class OrderController extends Controller
         // Log history
         $order->histories()->create([
             'status' => $validated['order_status'],
-            'note' => $request->note ?? 'Status updated by '.Auth::user()->name,
+            'note' => $request->note ?? 'Status updated by ' . Auth::user()->name,
         ]);
 
         return response()->json($order);

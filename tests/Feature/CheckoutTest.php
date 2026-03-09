@@ -2,16 +2,18 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithFaker;
+use Tests\TestCase;
 
 class CheckoutTest extends TestCase
 {
-    use WithFaker; // Sử dụng để fake dữ liệu (tên, email, sđt)
+    // Sử dụng để fake dữ liệu (tên, email, sđt)
     use RefreshDatabase;
+    use WithFaker;
 
     /**
      * Test case: User cannot access checkout page if cart is empty.
@@ -42,7 +44,7 @@ class CheckoutTest extends TestCase
             'id' => 1,
             'category_id' => $category->id,
             'price' => 100,
-            'stock_quantity' => 10
+            'stock_quantity' => 10,
         ]);
 
         // Mock cart data in session
@@ -52,8 +54,8 @@ class CheckoutTest extends TestCase
                 'name' => $product->name,
                 'price' => $product->price,
                 'quantity' => 2, // Subtotal = 200
-                'image' => 'img/test.png'
-            ]
+                'image' => 'img/test.png',
+            ],
         ];
         session(['cart' => $cartData]);
 
@@ -75,13 +77,14 @@ class CheckoutTest extends TestCase
      */
     public function test_place_order_requires_validation()
     {
-        // 1. Arrange: Cart has items
+        // 1. Arrange: Cart has items (auth required now)
+        $user = User::factory()->create();
         $category = Category::factory()->create(['id' => 1]);
         $product = Product::factory()->create(['id' => 1, 'category_id' => 1, 'stock_quantity' => 10]);
         session(['cart' => [$product->id => ['id' => $product->id, 'price' => 10, 'quantity' => 1]]]);
 
-        // 2. Act: Submit empty data
-        $response = $this->post(route('cart.placeOrder'), []);
+        // 2. Act: Submit empty data as authenticated user
+        $response = $this->actingAs($user)->post(route('cart.placeOrder'), []);
 
         // 3. Assert: Check validation errors for required fields
         $response->assertSessionHasErrors(['first_name', 'phone', 'email', 'address']);
@@ -93,48 +96,47 @@ class CheckoutTest extends TestCase
      */
     public function test_place_order_successfully()
     {
-        // 1. Arrange: Tạo dữ liệu THẬT trong DB
+        // 1. Arrange: Create data in DB + auth user
+        $user = User::factory()->create();
+
         $category = Category::create([
             'name' => 'Test Category',
-            'slug' => 'test-category' // Nếu model Category có fillable slug
+            'slug' => 'test-category',
         ]);
 
-        // FIX: Dùng đúng tên cột khớp với Model & Database mới sửa
         $product = Product::create([
-            'name'           => 'Real Product',
-            'sku'            => 'TEST-SKU-001', // <-- Bắt buộc phải có
-            'price'          => 100,
-            'stock_quantity' => 50,             // <-- Dùng stock_quantity
-            'category_id'    => $category->id,
-            'description'    => 'Test desc',
-            'image_url'      => 'img/test.png'  // <-- Dùng image_url
+            'name' => 'Real Product',
+            'sku' => 'TEST-SKU-001',
+            'price' => 100,
+            'stock_quantity' => 50,
+            'category_id' => $category->id,
+            'description' => 'Test desc',
+            'image_url' => 'img/test.png',
         ]);
 
         // 2. Mock Session Giỏ hàng
-        // Lưu ý: Session cart vẫn dùng key cũ ('quantity', 'image') nếu CartService của bạn code như vậy.
-        // Session không liên quan trực tiếp đến DB nên giữ nguyên logic cũ của CartService.
         session(['cart' => [
             $product->id => [
-                'id'       => $product->id,
-                'name'     => $product->name,
-                'price'    => $product->price,
-                'quantity' => 1,            // Trong Session vẫn gọi là quantity (số lượng mua)
-                'image'    => 'img/test.png'
-            ]
+                'id' => $product->id,
+                'name' => $product->name,
+                'price' => $product->price,
+                'quantity' => 1,
+                'image' => 'img/test.png',
+            ],
         ]]);
 
         // Fake form data
         $formData = [
-            'first_name'     => $this->faker->firstName,
-            'last_name'      => $this->faker->lastName,
-            'email'          => $this->faker->email,
-            'phone'          => '0901234567',
-            'address'        => $this->faker->address,
+            'first_name' => $this->faker->firstName,
+            'last_name' => $this->faker->lastName,
+            'email' => $this->faker->email,
+            'phone' => '0901234567',
+            'address' => $this->faker->address,
             'payment_method' => 'cod',
         ];
 
-        // 3. Act
-        $response = $this->post(route('cart.placeOrder'), $formData);
+        // 3. Act as authenticated user
+        $response = $this->actingAs($user)->post(route('cart.placeOrder'), $formData);
 
         // 4. Assert
         $response->assertRedirect(route('checkout.success'));

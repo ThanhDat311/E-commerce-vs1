@@ -10,7 +10,7 @@
     "@playwright/test": "^1.58.2",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/forms": "^0.5.2",
-    "@types/node": "^25.2.3",
+    "@types/node": "^25.3.3",
     "alpinejs": "^3.4.2",
     "autoprefixer": "^10.4.2",
     "axios": "^1.11.0",

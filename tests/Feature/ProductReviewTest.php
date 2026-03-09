@@ -23,6 +23,16 @@ test('authenticated user can submit a review', function () {
     $user = User::factory()->create(['role_id' => 3, 'is_active' => true]);
     $product = Product::factory()->create();
 
+    // Create a delivered order for this user containing the product
+    $order = \App\Models\Order::factory()->create([
+        'user_id' => $user->id,
+        'order_status' => 'delivered',
+    ]);
+    \App\Models\OrderItem::factory()->create([
+        'order_id' => $order->id,
+        'product_id' => $product->id,
+    ]);
+
     $response = $this->actingAs($user)->post(route('reviews.store', $product), [
         'rating' => 4,
         'comment' => 'Really good quality!',

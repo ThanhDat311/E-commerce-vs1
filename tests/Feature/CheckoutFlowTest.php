@@ -20,7 +20,7 @@ test('authenticated user can checkout successfully', function () {
         'id' => 1,
         'category_id' => 1,
         'stock_quantity' => 10,
-        'price' => 100
+        'price' => 100,
     ]);
 
     // Sử dụng helper function thay vì $this->mockCartData
@@ -36,7 +36,7 @@ test('authenticated user can checkout successfully', function () {
             'allowed' => true,
             'score' => 0.1,
             'reason' => '',
-            'log_id' => 1
+            'log_id' => 1,
         ]);
     });
 
@@ -48,7 +48,7 @@ test('authenticated user can checkout successfully', function () {
             'email' => 'john@example.com',
             'phone' => '1234567890',
             'address' => '123 Street',
-            'payment_method' => 'cod'
+            'payment_method' => 'cod',
         ]);
 
     // 3. Assert
@@ -56,13 +56,16 @@ test('authenticated user can checkout successfully', function () {
     $this->assertDatabaseHas('orders', [
         'user_id' => $user->id,
         'email' => 'john@example.com',
-        'order_status' => 'pending'
+        'order_status' => 'pending',
     ]);
 });
 
 test('guest user can checkout successfully', function () {
     /** @var \Tests\TestCase $this */
 
+    // Note: cart.placeOrder now requires auth; guests are redirected to login.
+    // This test verifies a customer (non-admin) user can checkout.
+    $user = User::factory()->create();
     $mockData = getMockCartData();
 
     \App\Models\Category::factory()->create(['id' => 1]);
@@ -70,7 +73,7 @@ test('guest user can checkout successfully', function () {
         'id' => 1,
         'category_id' => 1,
         'stock_quantity' => 10,
-        'price' => 100
+        'price' => 100,
     ]);
 
     $this->mock(CartService::class, function ($mock) use ($mockData) {
@@ -82,54 +85,52 @@ test('guest user can checkout successfully', function () {
         $mock->shouldReceive('assessOrderRisk')->andReturn([
             'allowed' => true,
             'score' => 0.2,
-            'reason' => 'Guest',
-            'log_id' => null
+            'reason' => '',
+            'log_id' => null,
         ]);
     });
 
-    $response = $this->post(route('cart.placeOrder'), [
-        'first_name' => 'Guest',
-        'last_name'  => 'User',
-        'email' => 'guest@example.com',
+    $response = $this->actingAs($user)->post(route('cart.placeOrder'), [
+        'first_name' => 'Customer',
+        'last_name' => 'User',
+        'email' => 'customer@example.com',
         'phone' => '0987654321',
-        'address' => 'Guest House',
-        'payment_method' => 'cod'
+        'address' => 'Customer House',
+        'payment_method' => 'cod',
     ]);
 
     $response->assertRedirect(route('checkout.success'));
     $this->assertDatabaseHas('orders', [
-        'user_id' => null,
-        'email' => 'guest@example.com',
+        'user_id' => $user->id,
+        'email' => 'customer@example.com',
     ]);
 });
 
 test('checkout is blocked if cart is empty', function () {
     /** @var \Tests\TestCase $this */
+    $user = User::factory()->create();
 
     $this->mock(CartService::class, function ($mock) {
         $mock->shouldReceive('getCartDetails')->andReturn([
             'cartItems' => [],
-            'total' => 0
+            'total' => 0,
         ]);
     });
 
-    $response = $this->post(route('cart.placeOrder'), [
+    $response = $this->actingAs($user)->post(route('cart.placeOrder'), [
         'first_name' => 'Tester',
         'email' => 'test@test.com',
         'phone' => '123',
-        'address' => 'HCM'
+        'address' => 'HCM',
     ]);
 
-    // Tùy vào cách controller xử lý lỗi (redirect back hay trả về view lỗi)
-    // Nếu controller throw Exception, Pest sẽ fail trừ khi dùng ->withoutExceptionHandling()
-    // Giả sử controller redirect back with errors:
     $response->assertSessionHasErrors();
     $this->assertDatabaseCount('orders', 0);
 });
 
 test('checkout is blocked if risk score is high', function () {
     /** @var \Tests\TestCase $this */
-
+    $user = User::factory()->create();
     $mockData = getMockCartData();
 
     $this->mock(CartService::class, function ($mock) use ($mockData) {
@@ -141,15 +142,16 @@ test('checkout is blocked if risk score is high', function () {
             'allowed' => false,
             'score' => 0.9,
             'reason' => 'High Risk Detected',
-            'log_id' => 99
+            'log_id' => 99,
         ]);
     });
 
-    $response = $this->post(route('cart.placeOrder'), [
+    $response = $this->actingAs($user)->post(route('cart.placeOrder'), [
         'first_name' => 'Hacker',
         'email' => 'hacker@darkweb.com',
         'phone' => '000',
-        'address' => 'Unknown'
+        'address' => 'Unknown',
+        'payment_method' => 'cod',
     ]);
 
     $this->assertDatabaseCount('orders', 0);
@@ -165,9 +167,9 @@ function getMockCartData(): array
                 'name' => 'Test Product',
                 'quantity' => 1,
                 'price' => 100,
-                'total' => 100
-            ]
+                'total' => 100,
+            ],
         ],
-        'total' => 100
+        'total' => 100,
     ];
 }
