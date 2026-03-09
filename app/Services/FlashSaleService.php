@@ -14,6 +14,29 @@ use Illuminate\Support\Facades\Log;
  */
 class FlashSaleService
 {
+    protected array $preloadedSales = [];
+    protected bool $isPreloaded = false;
+
+    /**
+     * Preload active flash sales for multiple products to prevent N+1 queries
+     * 
+     * @param array $productIds
+     */
+    public function preloadForProducts(array $productIds): void
+    {
+        $sales = FlashSale::whereIn('product_id', $productIds)
+            ->where('is_active', true)
+            ->where('starts_at', '<=', now())
+            ->where('ends_at', '>', now())
+            ->get();
+
+        foreach ($sales as $sale) {
+            $this->preloadedSales[$sale->product_id] = $sale;
+        }
+
+        $this->isPreloaded = true;
+    }
+
     /**
      * Get active flash sale for a product
      * 
@@ -23,11 +46,15 @@ class FlashSaleService
      */
     public function getActiveFlashSale(int $productId): ?FlashSale
     {
-        $sale = FlashSale::where('product_id', $productId)
-            ->where('is_active', true)
-            ->where('starts_at', '<=', now())
-            ->where('ends_at', '>', now())
-            ->first();
+        if ($this->isPreloaded && array_key_exists($productId, $this->preloadedSales)) {
+            $sale = $this->preloadedSales[$productId];
+        } else {
+            $sale = FlashSale::where('product_id', $productId)
+                ->where('is_active', true)
+                ->where('starts_at', '<=', now())
+                ->where('ends_at', '>', now())
+                ->first();
+        }
 
         if ($sale) {
             // Check quantity limit if set
@@ -45,7 +72,7 @@ class FlashSaleService
      * 
      * @param Product $product
      * 
-     * @return decimal|null Sale price, or null if product has no active sale
+     * @return float|null Sale price, or null if product has no active sale
      */
     public function getSalePrice(Product $product)
     {

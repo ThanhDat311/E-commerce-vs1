@@ -68,6 +68,9 @@ class CartService
         $subTotal = 0;
         $shipping = 3.00; // Phí ship cố định (có thể tách ra config)
 
+        // Preload flash sales to prevent N+1 queries during loop
+        $this->flashSaleService->preloadForProducts($productIds);
+
         foreach ($products as $product) {
             $id = $product->id;
 

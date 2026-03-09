@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class Deal extends Model
@@ -51,6 +52,14 @@ class Deal extends Model
             if (empty($deal->slug)) {
                 $deal->slug = Str::slug($deal->name);
             }
+        });
+
+        static::saved(function ($model) {
+            Cache::forget('deals_active_list');
+        });
+
+        static::deleted(function ($model) {
+            Cache::forget('deals_active_list');
         });
     }
 

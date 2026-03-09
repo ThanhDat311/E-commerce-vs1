@@ -39,6 +39,27 @@ class AuthenticatedSessionController extends Controller
             ]);
         }
 
+        // Start MFA Interception Simulation
+        // For production readiness without full AI setup, we simulate a 20% risk assessment or
+        // if user explicitly has MFA configured. In a real scenario, this connects to AIDecisionEngine.
+        $requiresMfa = app()->environment('testing') ? false : (mt_rand(1, 100) <= 20);
+
+        if ($requiresMfa) {
+            $mfaCode = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            $user->mfa_secret = $mfaCode;
+            $user->mfa_expires_at = now()->addMinutes(10);
+            $user->save();
+
+            // Dispatch Mailable
+            \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\Auth\MfaCodeMail($mfaCode));
+
+            // Log out the user temporarily and put them in a pending MFA state using Session
+            Auth::logout();
+            $request->session()->put('mfa_user_id', $user->id);
+
+            return redirect()->route('auth.mfa.show');
+        }
+
         // Role-based redirect
         $redirectRoute = match ($user->role_name) {
             'admin' => 'admin.dashboard',

@@ -19,6 +19,8 @@ class User extends Authenticatable
         'phone_number',
         'address',
         'is_active',
+        'mfa_secret',
+        'mfa_expires_at',
         'email_verified_at',
         'date_of_birth',
         'google_id',
@@ -50,6 +52,14 @@ class User extends Authenticatable
     public function orders()
     {
         return $this->hasMany(Order::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Review>
+     */
+    public function ratings()
+    {
+        return $this->hasMany(Review::class);
     }
 
     public function reviews()

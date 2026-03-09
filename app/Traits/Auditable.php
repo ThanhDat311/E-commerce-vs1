@@ -60,7 +60,7 @@ trait Auditable
                 ->toArray();
         }
 
-        AuditLog::create([
+        \App\Jobs\CreateAuditLogJob::dispatch([
             'user_id' => Auth::id(),
             'action' => $action,
             'model_type' => get_class($model),

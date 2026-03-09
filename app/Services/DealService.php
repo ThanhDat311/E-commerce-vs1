@@ -6,6 +6,7 @@ use App\Models\Deal;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * DealService
@@ -35,8 +36,8 @@ class DealService
         return match ($deal->apply_scope) {
             'global' => true,
             'vendor' => $product->vendor_id === $deal->vendor_id,
-            'category' => $deal->categories()->whereIn('category_id', [$product->category_id])->exists(),
-            'product' => $deal->products()->where('product_id', $product->id)->exists(),
+            'category' => $deal->categories->contains('id', $product->category_id),
+            'product' => $deal->products->contains('id', $product->id),
             default => false,
         };
     }
@@ -48,18 +49,20 @@ class DealService
      */
     public function getActiveDealsForProduct(Product $product): Collection
     {
-        $deals = Deal::where('status', 'active')
-            ->where('start_date', '<=', now())
-            ->where('end_date', '>', now())
-            ->where(function ($query) {
-                $query->whereNull('usage_limit')
-                    ->orWhereColumn('usage_count', '<', 'usage_limit');
-            })
-            ->orderByDesc('priority')
-            ->with(['products', 'categories'])
-            ->get();
+        $deals = Cache::remember('deals_active_list', now()->addMinutes(15), function () {
+            return Deal::where('status', 'active')
+                ->where('start_date', '<=', now())
+                ->where('end_date', '>', now())
+                ->where(function ($query) {
+                    $query->whereNull('usage_limit')
+                        ->orWhereColumn('usage_count', '<', 'usage_limit');
+                })
+                ->orderByDesc('priority')
+                ->with(['products', 'categories'])
+                ->get();
+        });
 
-        return $deals->filter(fn (Deal $deal) => $this->isValidForProduct($deal, $product))->values();
+        return $deals->filter(fn(Deal $deal) => $this->isValidForProduct($deal, $product))->values();
     }
 
     /**

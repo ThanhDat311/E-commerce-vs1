@@ -16,12 +16,18 @@ class RoleMiddleware
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
         if (! $request->user()) {
-            return redirect()->route('login');
+            return $request->expectsJson()
+                ? response()->json(['message' => 'Unauthenticated.'], 401)
+                : redirect()->route('login');
         }
 
         // Check if user account is active
         if (! $request->user()->is_active) {
             \Illuminate\Support\Facades\Auth::logout();
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Your account has been deactivated. Please contact support.'], 403);
+            }
 
             return redirect()->route('login')->withErrors([
                 'email' => 'Your account has been deactivated. Please contact support.',

@@ -1,11 +1,136 @@
 
-  ...................................
-  ...................................
-  ...................................
-  ...................................
-  ...................................
-  ...............................
+  [39;41;1m FAIL [39;49;22m[39m Tests\Feature\Api\VendorProductApiTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit vendor can list their own products via the A[39m[90m…[39m [90m0.50s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit unauthenticated user cannot access vendor pr[39m[90m…[39m [90m0.03s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit customer cannot access the vendor product AP[39m[90m…[39m [90m0.04s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit vendor can view their own product detail[39m[90m     [39m [90m0.03s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit vendor cannot view another vendor product de[39m[90m…[39m [90m0.03s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit vendor can create a product via the API[39m[90m      [39m [90m0.04s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit vendor can update their own product[39m[90m          [39m [90m0.03s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit vendor cannot update another vendor product[39m[90m  [39m [90m0.03s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit vendor can soft-delete their own product[39m[90m     [39m [90m0.03s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit vendor cannot delete another vendor product[39m[90m  [39m [90m0.03s[39m  
+  [31m────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Feature\Api\VendorProductApiTest[22m [90m>[39m it c…   
+[39;1m  Expected response status code [403] but received 302.
+Failed asserting that 302 is identical to 403.
 
-  Tests:    206 passed (594 assertions)
-  Duration: 8.91s
+The following errors occurred during the last request:
+
+Your account has been deactivated. Please contact support.[39;22m
+
+  at [32mtests\Feature\Api\VendorProductApiTest.php[39m:[32m43[39m
+     39▕ it('customer cannot access the vendor product API', function () {
+     40▕     $customer = User::factory()->create(['role_id' => 3]);
+     41▕     $this->actingAs($customer);
+     42▕ 
+  ➜  43▕     $this->getJson('/api/v1/vendor/products')->assertForbidden();
+     44▕ });
+     45▕ 
+     46▕ it('vendor can view their own product detail', function () {
+     47▕     $this->actingAs($this->vendor);
+
+  [31m────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Feature\Api\VendorProductApiTest[22m [90m>[39m it v…   
+[39;1m  Expected response status code [403] but received 404.
+Failed asserting that 404 is identical to 403.[39;22m
+
+  at [32mtests\Feature\Api\VendorProductApiTest.php[39m:[32m58[39m
+     54▕ it('vendor cannot view another vendor product detail', function () {
+     55▕     $this->actingAs($this->vendor);
+     56▕ 
+     57▕     $this->getJson("/api/v1/vendor/products/{$this->otherProduct->id}")
+  ➜  58▕         ->assertForbidden();
+     59▕ });
+     60▕ 
+     61▕ it('vendor can create a product via the API', function () {
+     62▕     $this->actingAs($this->vendor);
+
+  [31m────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Feature\Api\VendorProductApiTest[22m [90m>[39m it v…   
+[39;1m  Expected response status code [201] but received 422.
+Failed asserting that 422 is identical to 201.
+
+The following errors occurred during the last request:
+
+{
+    "message": "Stock quantity is required.",
+    "errors": {
+        "quantity": [
+            "Stock quantity is required."
+        ]
+    }
+}[39;22m
+
+  at [32mtests\Feature\Api\VendorProductApiTest.php[39m:[32m73[39m
+     69▕         'description' => 'Test description for product.',
+     70▕     ];
+     71▕ 
+     72▕     $this->postJson('/api/v1/vendor/products', $payload)
+  ➜  73▕         ->assertCreated()
+     74▕         ->assertJsonFragment(['name' => 'Test API Product']);
+     75▕ 
+     76▕     $this->assertDatabaseHas('products', [
+     77▕         'name' => 'Test API Product',
+
+  [31m────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Feature\Api\VendorProductApiTest[22m [90m>[39m it v…   
+[39;1m  Expected response status code [200] but received 422.
+Failed asserting that 422 is identical to 200.
+
+The following errors occurred during the last request:
+
+{
+    "message": "Stock quantity is required.",
+    "errors": {
+        "quantity": [
+            "Stock quantity is required."
+        ]
+    }
+}[39;22m
+
+  at [32mtests\Feature\Api\VendorProductApiTest.php[39m:[32m91[39m
+     87▕         'price' => 149.99,
+     88▕         'stock_quantity' => 20,
+     89▕         'category_id' => $this->category->id,
+     90▕         'description' => 'Updated description.',
+  ➜  91▕     ])->assertOk()->assertJsonFragment(['name' => 'Updated Product Name']);
+     92▕ });
+     93▕ 
+     94▕ it('vendor cannot update another vendor product', function () {
+     95▕     $this->actingAs($this->vendor);
+
+  [31m────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Feature\Api\VendorProductApiTest[22m [90m>[39m it v…   
+[39;1m  Expected response status code [403] but received 404.
+Failed asserting that 404 is identical to 403.[39;22m
+
+  at [32mtests\Feature\Api\VendorProductApiTest.php[39m:[32m103[39m
+     99▕         'price' => 1.00,
+    100▕         'stock_quantity' => 1,
+    101▕         'category_id' => $this->category->id,
+    102▕         'description' => 'Hijacked.',
+  ➜ 103▕     ])->assertForbidden();
+    104▕ });
+    105▕ 
+    106▕ it('vendor can soft-delete their own product', function () {
+    107▕     $this->actingAs($this->vendor);
+
+  [31m────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Feature\Api\VendorProductApiTest[22m [90m>[39m it v…   
+[39;1m  Expected response status code [403] but received 404.
+Failed asserting that 404 is identical to 403.[39;22m
+
+  at [32mtests\Feature\Api\VendorProductApiTest.php[39m:[32m119[39m
+    115▕ it('vendor cannot delete another vendor product', function () {
+    116▕     $this->actingAs($this->vendor);
+    117▕ 
+    118▕     $this->deleteJson("/api/v1/vendor/products/{$this->otherProduct->id}")
+  ➜ 119▕         ->assertForbidden();
+    120▕ });
+    121▕
+
+
+  [90mTests:[39m    [31;1m6 failed[39;22m[90m,[39m[39m [39m[32;1m4 passed[39;22m[90m (14 assertions)[39m
+  [90mDuration:[39m [39m1.00s[39m
 

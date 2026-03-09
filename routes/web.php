@@ -363,16 +363,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{ticket}', [App\Http\Controllers\Customer\TicketController::class, 'show'])->name('show');
         Route::post('/{ticket}/messages', [App\Http\Controllers\Customer\TicketController::class, 'storeMessage'])->name('messages.store');
     });
+
+    // User Orders Actions
+    Route::post('/my-orders/{order}/cancel', \App\Http\Controllers\Customer\OrderCancellationController::class)->name('orders.cancel');
+    Route::post('/my-orders/{order}/repay', \App\Http\Controllers\Customer\OrderRepaymentController::class)->name('orders.repay');
 });
-
-// User Orders History
-
-// [NEW] Order Cancellation Route
-Route::post('/my-orders/{order}/cancel', \App\Http\Controllers\Customer\OrderCancellationController::class)
-    ->name('orders.cancel');
-
-Route::post('/my-orders/{order}/repay', \App\Http\Controllers\Customer\OrderRepaymentController::class)
-    ->name('orders.repay');
 
 // Fallback for Boost browser logs GET requests to prevent MethodNotAllowedHttpException
 Route::get('/_boost/browser-logs', function () {

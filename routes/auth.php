@@ -18,6 +18,9 @@ Route::middleware('guest')->group(function () {
     Route::post('register', [RegisteredUserController::class, 'store'])
         ->middleware('throttle:login');
 
+    Route::get('login/mfa', [\App\Http\Controllers\Auth\MfaController::class, 'show'])->name('auth.mfa.show');
+    Route::post('login/mfa', [\App\Http\Controllers\Auth\MfaController::class, 'verify'])->name('auth.mfa.verify');
+
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
 

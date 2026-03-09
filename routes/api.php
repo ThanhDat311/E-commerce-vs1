@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RecommendationController;
 use App\Http\Controllers\Api\SearchController;
+use App\Http\Controllers\Api\Vendor;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -97,6 +98,26 @@ Route::prefix('v1')->group(function () {
         Route::get('{orderId}/track', [OrderController::class, 'track'])->name('api.orders.track');
         Route::post('{orderId}/cancel', [OrderController::class, 'cancel'])->name('api.orders.cancel');
     });
+
+    // ==================== Vendor Routes ====================
+    Route::middleware(['auth:web', 'role.check:vendor'])
+        ->prefix('vendor')
+        ->name('api.vendor.')
+        ->group(function () {
+            // Dashboard
+            Route::get('dashboard', [Vendor\DashboardController::class, 'index'])->name('dashboard');
+
+            // Products (full CRUD)
+            Route::apiResource('products', Vendor\ProductController::class);
+
+            // Orders
+            Route::get('orders', [Vendor\OrderController::class, 'index'])->name('orders.index');
+            Route::get('orders/{orderId}', [Vendor\OrderController::class, 'show'])->name('orders.show');
+            Route::patch('orders/{orderId}/status', [Vendor\OrderController::class, 'updateStatus'])->name('orders.update-status');
+
+            // Finance
+            Route::get('finance', [Vendor\FinanceController::class, 'index'])->name('finance.index');
+        });
 });
 
 // Health check endpoint (no authentication required)

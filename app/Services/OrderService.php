@@ -71,33 +71,27 @@ class OrderService
         DB::beginTransaction();
 
         try {
-            // --- INVENTORY HANDLING (Theo quy trình ELECTRO-AI-ENGINE.md) ---
-            // 1. Check: Kiểm tra số lượng tồn
-            // 2. Lock: Khóa dòng dữ liệu trong DB (lockForUpdate)
-            // 3. Decrement: Trừ tồn kho
-            // 4. Rollback: Nếu lỗi, hoàn tác toàn bộ Transaction
+            // 1. Check & Lock: Kiểm tra số lượng tồn và Khóa dòng dữ liệu trong DB (lockForUpdate)
+            $productIds = array_column($cartItems, 'id');
+            $productsToLock = Product::whereIn('id', $productIds)
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
 
             foreach ($cartItems as $item) {
                 $productId = $item['id'];
                 $requestedQuantity = $item['quantity'];
 
-                // Get product via Repository (Clean Architecture)
-                $product = $this->productRepository->find($productId);
+                $product = $productsToLock->get($productId);
 
                 if (! $product) {
                     throw new Exception("Product #{$productId} not found");
                 }
 
-                // Lock product row for update (tránh race condition)
-                // Note: lockForUpdate() must be called within transaction
-                $product = Product::where('id', $productId)
-                    ->lockForUpdate()
-                    ->first();
-
                 // Check stock availability
                 if ($product->stock_quantity < $requestedQuantity) {
                     throw new Exception(
-                        "Insufficient stock for product: {$product->name}. ".
+                        "Insufficient stock for product: {$product->name}. " .
                             "Available: {$product->stock_quantity}, Requested: {$requestedQuantity}"
                     );
                 }
@@ -173,7 +167,7 @@ class OrderService
             ];
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error('Checkout Failed: '.$e->getMessage());
+            Log::error('Checkout Failed: ' . $e->getMessage());
             throw $e;
         }
     }
@@ -203,6 +197,7 @@ class OrderService
 
         // 3. Tìm Order trong DB với lockForUpdate để tránh race condition
         $orderId = $verificationResult['order_id'];
+        /** @var \App\Models\Order $order */
         $order = \App\Models\Order::with('items')->lockForUpdate()->find($orderId);
 
         if (! $order) {
@@ -259,7 +254,7 @@ class OrderService
                     'order_id' => $order->id,
                     'user_id' => $order->user_id,
                     'action' => 'Payment Received',
-                    'description' => "Payment successful via {$gatewayName}. TransNo: ".($verificationResult['transaction_no'] ?? 'N/A'),
+                    'description' => "Payment successful via {$gatewayName}. TransNo: " . ($verificationResult['transaction_no'] ?? 'N/A'),
                 ]);
 
                 Log::info('Payment processed successfully', [
@@ -286,7 +281,7 @@ class OrderService
                     'order_id' => $order->id,
                     'user_id' => $order->user_id,
                     'action' => 'Payment Failed',
-                    'description' => "Payment failed via {$gatewayName}. Code: ".($verificationResult['response_code'] ?? 'Unknown'),
+                    'description' => "Payment failed via {$gatewayName}. Code: " . ($verificationResult['response_code'] ?? 'Unknown'),
                 ]);
 
                 Log::warning('Payment failed, inventory restored', [
@@ -315,7 +310,7 @@ class OrderService
     /**
      * Xử lý hủy đơn hàng từ phía Customer
      *
-     * @return Order
+     * @return \App\Models\Order
      *
      * @throws Exception
      */
@@ -385,7 +380,7 @@ class OrderService
                     'order_id' => $order->id,
                     'user_id' => $userId,
                     'action' => 'Order Cancelled',
-                    'description' => 'Customer cancelled order. Reason: '.($reason ?? 'No reason provided'),
+                    'description' => 'Customer cancelled order. Reason: ' . ($reason ?? 'No reason provided'),
                 ]);
             }
 
@@ -397,7 +392,7 @@ class OrderService
             return $order;
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error('Order Cancellation Failed: '.$e->getMessage());
+            Log::error('Order Cancellation Failed: ' . $e->getMessage());
             throw $e;
         }
     }
