@@ -52,6 +52,11 @@ class MfaController extends Controller
         $request->session()->forget('mfa_user_id');
         $request->session()->regenerate();
 
+        // Record successful login history and grant device trust after passing MFA
+        $riskEngine = app(\App\Services\Auth\RiskEngineService::class);
+        $deviceId = $riskEngine->recordSuccessfulLogin($user, $request);
+        cookie()->queue(cookie()->forever(\App\Services\Auth\RiskEngineService::DEVICE_COOKIE_NAME, $deviceId));
+
         // Role-based redirect
         $redirectRoute = match ($user->role_name) {
             'admin' => 'admin.dashboard',

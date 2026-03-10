@@ -39,10 +39,9 @@ class AuthenticatedSessionController extends Controller
             ]);
         }
 
-        // Start MFA Interception Simulation
-        // For production readiness without full AI setup, we simulate a 20% risk assessment or
-        // if user explicitly has MFA configured. In a real scenario, this connects to AIDecisionEngine.
-        $requiresMfa = app()->environment('testing') ? false : (mt_rand(1, 100) <= 20);
+        // Use RiskEngineService to evaluate login risk
+        $riskEngine = app(\App\Services\Auth\RiskEngineService::class);
+        $requiresMfa = $riskEngine->evaluate($user, $request);
 
         if ($requiresMfa) {
             $mfaCode = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
@@ -59,6 +58,12 @@ class AuthenticatedSessionController extends Controller
 
             return redirect()->route('auth.mfa.show');
         }
+
+        // Record successful login history without MFA
+        $deviceId = $riskEngine->recordSuccessfulLogin($user, $request);
+
+        // Attach trusted device cookie
+        cookie()->queue(cookie()->forever(\App\Services\Auth\RiskEngineService::DEVICE_COOKIE_NAME, $deviceId));
 
         // Role-based redirect
         $redirectRoute = match ($user->role_name) {
