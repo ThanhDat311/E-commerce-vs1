@@ -34,5 +34,9 @@ return [
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
+    'ai_microservice' => [
+        'url'     => env('AI_MICROSERVICE_URL', 'http://localhost:8000'),
+        'timeout' => (int) env('AI_MICROSERVICE_TIMEOUT', 3),
+    ],
 
 ];

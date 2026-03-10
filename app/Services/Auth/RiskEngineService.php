@@ -4,7 +4,9 @@ namespace App\Services\Auth;
 
 use App\Models\LoginHistory;
 use App\Models\User;
+use App\Services\AiMicroserviceClient;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Stevebauman\Location\Facades\Location;
 
@@ -12,13 +14,25 @@ class RiskEngineService
 {
     public const DEVICE_COOKIE_NAME = 'mfa_trusted_device';
 
+    protected AiMicroserviceClient $aiClient;
+
+    public function __construct(AiMicroserviceClient $aiClient)
+    {
+        $this->aiClient = $aiClient;
+    }
+
     /**
      * Evaluate if the current login attempt is risky.
      * Returns true if MFA should be triggered.
+     *
+     * Priority:
+     *   1. Trusted device cookie → allow immediately (no AI call needed)
+     *   2. AI microservice → use its auth_decision
+     *   3. Fallback (AI offline) → legacy IP/Location check
      */
     public function evaluate(User $user, Request $request): bool
     {
-        // 1. Check Device Trust
+        // --- 1. Check Device Trust ---
         $deviceId = $request->cookie(self::DEVICE_COOKIE_NAME);
         $isDeviceTrusted = false;
 
@@ -28,25 +42,86 @@ class RiskEngineService
                 ->exists();
         }
 
-        // If device is trusted, we consider the login safe.
-        // In a true hybrid system, we might still check the IP, but for now, device trumps.
+        // Trusted device always bypasses everything (including AI)
         if ($isDeviceTrusted) {
             return false;
         }
 
-        // 2. Check IP Location History
-        $ip = $request->ip();
+        // --- 2. Detect device type from User-Agent ---
+        $userAgent  = $request->userAgent() ?? '';
+        $deviceType = $this->detectDeviceType($userAgent);
 
-        // Use generic testing IP if local, otherwise we get no location data
-        if ($ip === '127.0.0.1' || $ip === '::1') {
-            // We can optionally mock an IP for local testing, e.g.
-            // $ip = '8.8.8.8'; 
-            // But for now we just allow localhost to trigger MFA if device isn't trusted.
+        // --- 3. Try AI Microservice ---
+        $ip = $request->ip();
+        $aiResult = $this->aiClient->predictLoginRisk(
+            userId: $user->id,
+            ip: $ip,
+            userAgent: $userAgent,
+            deviceType: $deviceType,
+            country: null, // geolocation lookup done below if needed
+        );
+
+        if ($aiResult !== null) {
+            $authDecision = $aiResult['auth_decision'] ?? 'passive_auth_allow';
+            $riskScore    = $aiResult['risk_score']    ?? 0.0;
+            $reasons      = $aiResult['reasons']       ?? [];
+
+            Log::info('[RiskEngine] AI decision for login.', [
+                'user_id'      => $user->id,
+                'risk_score'   => $riskScore,
+                'auth_decision' => $authDecision,
+                'reasons'      => $reasons,
+            ]);
+
+            return match ($authDecision) {
+                'block_access'      => true,  // Block → treat as MFA-required (strongest check)
+                'challenge_otp'     => true,  // Challenge → trigger MFA
+                default             => false, // passive_auth_allow → let through
+            };
         }
 
-        $position = Location::get($ip);
+        // --- 4. Fallback: Legacy IP/Location check (AI service offline) ---
+        Log::warning('[RiskEngine] AI microservice unavailable, falling back to legacy IP check.');
+        return $this->legacyIpRiskCheck($user, $ip);
+    }
 
-        $locationName = $position ? ($position->cityName ?: 'Unknown') . ', ' . ($position->countryName ?: 'Unknown') : null;
+    /**
+     * Record a successful login and return a new or existing Device ID.
+     */
+    public function recordSuccessfulLogin(User $user, Request $request): string
+    {
+        $deviceId = $request->cookie(self::DEVICE_COOKIE_NAME) ?: Str::uuid()->toString();
+        $ip       = $request->ip();
+        $position = Location::get($ip);
+        $locationName = $position
+            ? ($position->cityName ?: 'Unknown') . ', ' . ($position->countryName ?: 'Unknown')
+            : null;
+
+        LoginHistory::create([
+            'user_id'    => $user->id,
+            'ip_address' => $ip,
+            'user_agent' => $request->userAgent(),
+            'device_id'  => $deviceId,
+            'location'   => [
+                'name' => $locationName,
+                'raw'  => $position ? $position->toArray() : null,
+            ],
+        ]);
+
+        return $deviceId;
+    }
+
+    /**
+     * Legacy IP/Location risk check (fallback when AI is offline).
+     * Returns true if MFA should be triggered.
+     */
+    private function legacyIpRiskCheck(User $user, string $ip): bool
+    {
+        // Use generic testing IP if local
+        $position     = Location::get($ip);
+        $locationName = $position
+            ? ($position->cityName ?: 'Unknown') . ', ' . ($position->countryName ?: 'Unknown')
+            : null;
 
         $hasLoginFromLocationOrIp = LoginHistory::where('user_id', $user->id)
             ->where(function ($query) use ($ip, $locationName) {
@@ -56,36 +131,25 @@ class RiskEngineService
                 }
             })->exists();
 
-        // 3. Decision
-        // If they have never logged in from this IP or generalized location AND the device is new
-        if (!$hasLoginFromLocationOrIp) {
-            return true; // Trigger MFA
-        }
-
-        return false;
+        return !$hasLoginFromLocationOrIp;
     }
 
     /**
-     * Record a successful login and return a new or existing Device ID.
+     * Detect device type from User-Agent string.
+     * Returns 'mobile' | 'tablet' | 'desktop'.
      */
-    public function recordSuccessfulLogin(User $user, Request $request): string
+    private function detectDeviceType(string $userAgent): string
     {
-        $deviceId = $request->cookie(self::DEVICE_COOKIE_NAME) ?: Str::uuid()->toString();
-        $ip = $request->ip();
-        $position = Location::get($ip);
-        $locationName = $position ? ($position->cityName ?: 'Unknown') . ', ' . ($position->countryName ?: 'Unknown') : null;
+        $ua = strtolower($userAgent);
 
-        LoginHistory::create([
-            'user_id' => $user->id,
-            'ip_address' => $ip,
-            'user_agent' => $request->userAgent(),
-            'device_id' => $deviceId,
-            'location' => [
-                'name' => $locationName,
-                'raw' => $position ? $position->toArray() : null,
-            ],
-        ]);
+        if (str_contains($ua, 'tablet') || str_contains($ua, 'ipad')) {
+            return 'tablet';
+        }
 
-        return $deviceId;
+        if (str_contains($ua, 'mobile') || str_contains($ua, 'android') || str_contains($ua, 'iphone')) {
+            return 'mobile';
+        }
+
+        return 'desktop';
     }
 }
