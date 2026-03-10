@@ -2,14 +2,37 @@
 
 use App\Models\User;
 
-test('profile page is displayed', function () {
-    $user = User::factory()->create();
+test('profile page is displayed for customers', function () {
+    $user = User::factory()->create(['role_id' => 3]);
 
     $response = $this
         ->actingAs($user)
         ->get('/profile');
 
     $response->assertOk();
+    $response->assertViewIs('profile.edit');
+});
+
+test('profile page is displayed for admins', function () {
+    $user = User::factory()->create(['role_id' => 1]);
+
+    $response = $this
+        ->actingAs($user)
+        ->get('/profile');
+
+    $response->assertOk();
+    $response->assertViewIs('pages.admin.profile.edit');
+});
+
+test('profile page is displayed for vendors', function () {
+    $user = User::factory()->create(['role_id' => 4]);
+
+    $response = $this
+        ->actingAs($user)
+        ->get('/profile');
+
+    $response->assertOk();
+    $response->assertViewIs('pages.vendor.profile.edit');
 });
 
 test('profile information can be updated', function () {

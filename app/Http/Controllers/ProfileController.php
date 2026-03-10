@@ -19,13 +19,13 @@ class ProfileController extends Controller
         $user = $request->user();
 
         if ($user->isAdmin()) {
-            return view('admin.profile.edit', [
+            return view('pages.admin.profile.edit', [
                 'user' => $user,
             ]);
         }
 
         if ($user->isVendor()) {
-            return view('vendor.profile.edit', [
+            return view('pages.vendor.profile.edit', [
                 'user' => $user,
             ]);
         }

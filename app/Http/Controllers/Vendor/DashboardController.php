@@ -42,11 +42,9 @@ class DashboardController extends Controller
         $outOfStock = \App\Models\Product::where('vendor_id', $vendorId)->where('stock_quantity', '<=', 0)->count();
 
         // Average Rating
-        // We can get this from the new 'averageRating' method or aggregate
-        $avgRating = \App\Models\Product::where('vendor_id', $vendorId)
-            ->withAvg('ratings', 'rating')
-            ->get()
-            ->avg('ratings_avg_rating') ?? 0;
+        $avgRating = \App\Models\Review::whereHas('product', function ($q) use ($vendorId) {
+            $q->where('vendor_id', $vendorId);
+        })->avg('rating') ?? 0;
 
         // 2. Recent Sales
         $recentOrders = $this->orderRepo->getLatestOrders(5, $vendorId);

@@ -58,6 +58,11 @@ class AiMicroserviceClient
                 'rtt_ms'      => $rttMs,
             ];
 
+            Log::info('[AiMicroserviceClient] Sending Login Risk Request', [
+                'url'     => "{$this->baseUrl}/api/v1/predict-login-risk",
+                'payload' => $payload
+            ]);
+
             $response = Http::timeout($this->timeout)
                 ->post("{$this->baseUrl}/api/v1/predict-login-risk", $payload);
 
@@ -113,6 +118,11 @@ class AiMicroserviceClient
                 'product_category' => $productCategory,
                 'customer_age'     => $customerAge,
             ];
+
+            Log::info('[AiMicroserviceClient] Sending Transaction Fraud Request', [
+                'url'     => "{$this->baseUrl}/api/v1/predict-transaction-fraud",
+                'payload' => $payload
+            ]);
 
             $response = Http::timeout($this->timeout)
                 ->post("{$this->baseUrl}/api/v1/predict-transaction-fraud", $payload);

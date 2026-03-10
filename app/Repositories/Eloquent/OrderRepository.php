@@ -50,32 +50,15 @@ class OrderRepository implements OrderRepositoryInterface
 
     public function getTotalRevenue($vendorId = null)
     {
-        $query = Order::where('order_status', '!=', 'cancelled');
-
         if ($vendorId) {
-            // Assuming orders are linked to vendors via order_items -> product -> vendor_id
-            // Or if orders table has vendor_id (unlikely for multi-vendor cart).
-            // Usually, for multi-vendor, we calculate revenue based on OrderItems.
-            // Let's check OrderItem linkage.
-            // If Order has no vendor_id, we must join order_items and products.
-
-            return $query->with('orderItems.product')
-                ->get()
-                ->sum(function ($order) use ($vendorId) {
-                    return $order->orderItems->sum(function ($item) use ($vendorId) {
-                        return $item->product->vendor_id == $vendorId ? $item->price * $item->quantity : 0;
-                    });
-                });
-
-            // OPTIMIZED QUERY:
-            // return OrderItem::whereHas('product', function($q) use ($vendorId) {
-            //     $q->where('vendor_id', $vendorId);
-            // })->whereHas('order', function($q) {
-            //     $q->where('order_status', '!=', 'cancelled');
-            // })->sum(DB::raw('price * quantity'));
+            return OrderItem::whereHas('product', function ($q) use ($vendorId) {
+                $q->where('vendor_id', $vendorId);
+            })->whereHas('order', function ($q) {
+                $q->where('order_status', '!=', 'cancelled');
+            })->sum(DB::raw('price * quantity'));
         }
 
-        return $query->sum('total');
+        return Order::where('order_status', '!=', 'cancelled')->sum('total');
     }
 
     // RE-IMPLEMENTING WITH OPTIMIZED QUERY FOR VENDOR
