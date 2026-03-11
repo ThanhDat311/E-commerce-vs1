@@ -2,6 +2,11 @@
     <div class="h-screen bg-gray-50 flex overflow-hidden" x-data="{ isSidebarOpen: false }">
         <!-- Sidebar -->
         <x-shared.sidebar>
+                {{-- ========================================== --}}
+                {{-- GROUP 1: MAIN / OVERVIEW                   --}}
+                {{-- ========================================== --}}
+                <div class="px-3 mt-5 mb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">Main / Overview</div>
+                
                 {{-- Dashboard --}}
                 <x-shared.sidebar-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
                     <x-slot:icon>
@@ -11,6 +16,129 @@
                     </x-slot:icon>
                     Dashboard
                 </x-shared.sidebar-link>
+
+                {{-- Reports (with sub-menu) --}}
+                <x-shared.sidebar-link :hasSubmenu="true" :active="request()->routeIs('admin.reports.*') || request()->routeIs('admin.analytics.*')" :submenuOpen="request()->routeIs('admin.reports.*') || request()->routeIs('admin.analytics.*')">
+                    <x-slot:icon>
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                        </svg>
+                    </x-slot:icon>
+                    <x-slot:label>Reports</x-slot:label>
+                    <x-slot:submenu>
+                        <x-shared.sidebar-link :href="route('admin.reports.index')" :active="request()->routeIs('admin.reports.*')">
+                            Sales Report
+                        </x-shared.sidebar-link>
+                        <x-shared.sidebar-link :href="route('admin.analytics.index')" :active="request()->routeIs('admin.analytics.*')">
+                            Revenue Analytics
+                        </x-shared.sidebar-link>
+                    </x-slot:submenu>
+                </x-shared.sidebar-link>
+
+                <div class="my-3 border-t border-slate-700/50"></div>
+
+                {{-- ========================================== --}}
+                {{-- GROUP 2: E-COMMERCE OPERATIONS             --}}
+                {{-- ========================================== --}}
+                <div class="px-3 md:mt-5 mb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">E-Commerce Operations</div>
+
+                {{-- Orders (with sub-menu) --}}
+                <x-shared.sidebar-link :hasSubmenu="true" :active="request()->routeIs('admin.orders.*') || request()->routeIs('admin.disputes.*')" :submenuOpen="request()->routeIs('admin.orders.*') || request()->routeIs('admin.disputes.*')">
+                    <x-slot:icon>
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                        </svg>
+                    </x-slot:icon>
+                    <x-slot:label>Orders</x-slot:label>
+                    <x-slot:submenu>
+                        <x-shared.sidebar-link :href="route('admin.orders.index')" :active="request()->routeIs('admin.orders.index')">
+                            All Orders
+                        </x-shared.sidebar-link>
+                        <x-shared.sidebar-link :href="route('admin.disputes.index')" :active="request()->routeIs('admin.disputes.*')">
+                            Disputes
+                        </x-shared.sidebar-link>
+                    </x-slot:submenu>
+                </x-shared.sidebar-link>
+
+                {{-- Products (with sub-menu) --}}
+                <x-shared.sidebar-link :hasSubmenu="true" :active="request()->routeIs('admin.products.*') || request()->routeIs('admin.categories.*') || request()->routeIs('admin.low-stock-alerts.*')" :submenuOpen="request()->routeIs('admin.products.*') || request()->routeIs('admin.categories.*') || request()->routeIs('admin.low-stock-alerts.*')">
+                    <x-slot:icon>
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                        </svg>
+                    </x-slot:icon>
+                    <x-slot:label>Products</x-slot:label>
+                    <x-slot:submenu>
+                        <x-shared.sidebar-link :href="route('admin.products.index')" :active="request()->routeIs('admin.products.*')">
+                            All Products
+                        </x-shared.sidebar-link>
+                        <x-shared.sidebar-link :href="route('admin.categories.index')" :active="request()->routeIs('admin.categories.*')">
+                            Categories
+                        </x-shared.sidebar-link>
+                        <x-shared.sidebar-link :href="route('admin.low-stock-alerts.index')" :active="request()->routeIs('admin.low-stock-alerts.*')">
+                            Low Stock Alerts
+                        </x-shared.sidebar-link>
+                    </x-slot:submenu>
+                </x-shared.sidebar-link>
+
+                {{-- Deals --}}
+                <x-shared.sidebar-link :href="route('admin.deals.index')" :active="request()->routeIs('admin.deals.*')">
+                    <x-slot:icon>
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" />
+                        </svg>
+                    </x-slot:icon>
+                    Deals
+                </x-shared.sidebar-link>
+
+                {{-- Finance --}}
+                <x-shared.sidebar-link :href="route('admin.finance.index')" :active="request()->routeIs('admin.finance.*')">
+                    <x-slot:icon>
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+                        </svg>
+                    </x-slot:icon>
+                    Finance
+                </x-shared.sidebar-link>
+
+                <div class="my-3 border-t border-slate-700/50"></div>
+
+                {{-- ========================================== --}}
+                {{-- GROUP 3: AI & INTELLIGENCE                 --}}
+                {{-- ========================================== --}}
+                <div class="px-3 md:mt-5 mb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">AI & Intelligence</div>
+
+                {{-- AI Management (with sub-menu) --}}
+                <x-shared.sidebar-link :hasSubmenu="true" :active="request()->routeIs('admin.ai.*')" :submenuOpen="request()->routeIs('admin.ai.*')">
+                    <x-slot:icon>
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.25 9.75L16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z" />
+                        </svg>
+                    </x-slot:icon>
+                    <x-slot:label>AI Management</x-slot:label>
+                    <x-slot:submenu>
+                        <x-shared.sidebar-link :href="route('admin.ai.dashboard.index')" :active="request()->routeIs('admin.ai.dashboard.*')">
+                            AI Dashboard
+                        </x-shared.sidebar-link>
+                        <x-shared.sidebar-link :href="route('admin.ai.settings.index')" :active="request()->routeIs('admin.ai.settings.*')">
+                            AI Settings
+                        </x-shared.sidebar-link>
+                        <x-shared.sidebar-link :href="route('admin.ai.price-suggestions.index')" :active="request()->routeIs('admin.ai.price-suggestions.*')">
+                            Price Suggestions
+                        </x-shared.sidebar-link>
+                        <x-shared.sidebar-link :href="route('admin.ai.risk-rules.index')" :active="request()->routeIs('admin.ai.risk-rules.*')">
+                            Risk Rules
+                        </x-shared.sidebar-link>
+                    </x-slot:submenu>
+                </x-shared.sidebar-link>
+
+                <div class="my-3 border-t border-slate-700/50"></div>
+
+                {{-- ========================================== --}}
+                {{-- GROUP 4: USER MANAGEMENT                   --}}
+                {{-- ========================================== --}}
+                <div class="px-3 md:mt-5 mb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">User Management</div>
 
                 {{-- Users (with sub-menu) --}}
                 <x-shared.sidebar-link :hasSubmenu="true" :active="request()->routeIs('admin.users.*') || request()->routeIs('admin.audit-logs.*')" :submenuOpen="request()->routeIs('admin.users.*') || request()->routeIs('admin.audit-logs.*')">
@@ -43,116 +171,12 @@
                     Vendors
                 </x-shared.sidebar-link>
 
-                {{-- Products (with sub-menu) --}}
-                <x-shared.sidebar-link :hasSubmenu="true" :active="request()->routeIs('admin.products.*') || request()->routeIs('admin.categories.*')" :submenuOpen="request()->routeIs('admin.products.*') || request()->routeIs('admin.categories.*')">
-                    <x-slot:icon>
-                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-                        </svg>
-                    </x-slot:icon>
-                    <x-slot:label>Products</x-slot:label>
-                    <x-slot:submenu>
-                        <x-shared.sidebar-link :href="route('admin.products.index')" :active="request()->routeIs('admin.products.*')">
-                            All Products
-                        </x-shared.sidebar-link>
-                        <x-shared.sidebar-link :href="route('admin.categories.index')" :active="request()->routeIs('admin.categories.*')">
-                            Categories
-                        </x-shared.sidebar-link>
-                    </x-slot:submenu>
-                </x-shared.sidebar-link>
-
-                {{-- Deals --}}
-                <x-shared.sidebar-link :href="route('admin.deals.index')" :active="request()->routeIs('admin.deals.*')">
-                    <x-slot:icon>
-                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" />
-                        </svg>
-                    </x-slot:icon>
-                    Deals
-                </x-shared.sidebar-link>
-
-                {{-- Orders (with sub-menu) --}}
-                <x-shared.sidebar-link :hasSubmenu="true" :active="request()->routeIs('admin.orders.*') || request()->routeIs('admin.disputes.*')" :submenuOpen="request()->routeIs('admin.orders.*') || request()->routeIs('admin.disputes.*')">
-                    <x-slot:icon>
-                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                        </svg>
-                    </x-slot:icon>
-                    <x-slot:label>Orders</x-slot:label>
-                    <x-slot:submenu>
-                        <x-shared.sidebar-link :href="route('admin.orders.index')" :active="request()->routeIs('admin.orders.index')">
-                            All Orders
-                        </x-shared.sidebar-link>
-                        <x-shared.sidebar-link :href="route('admin.disputes.index')" :active="request()->routeIs('admin.disputes.*')">
-                            Disputes
-                        </x-shared.sidebar-link>
-                    </x-slot:submenu>
-                </x-shared.sidebar-link>
-
-                {{-- Finance --}}
-                <x-shared.sidebar-link :href="route('admin.finance.index')" :active="request()->routeIs('admin.finance.*')">
-                    <x-slot:icon>
-                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
-                        </svg>
-                    </x-slot:icon>
-                    Finance
-                </x-shared.sidebar-link>
-
-                {{-- Reports (with sub-menu) --}}
-                <x-shared.sidebar-link :hasSubmenu="true" :active="request()->routeIs('admin.reports.*') || request()->routeIs('admin.analytics.*') || request()->routeIs('admin.low-stock-alerts.*')" :submenuOpen="request()->routeIs('admin.reports.*') || request()->routeIs('admin.analytics.*') || request()->routeIs('admin.low-stock-alerts.*')">
-                    <x-slot:icon>
-                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-                        </svg>
-                    </x-slot:icon>
-                    <x-slot:label>Reports</x-slot:label>
-                    <x-slot:submenu>
-                        <x-shared.sidebar-link :href="route('admin.reports.index')" :active="request()->routeIs('admin.reports.*')">
-                            Sales Report
-                        </x-shared.sidebar-link>
-                        <x-shared.sidebar-link :href="route('admin.analytics.index')" :active="request()->routeIs('admin.analytics.*')">
-                            Revenue Analytics
-                        </x-shared.sidebar-link>
-                        <x-shared.sidebar-link :href="route('admin.low-stock-alerts.index')" :active="request()->routeIs('admin.low-stock-alerts.*')">
-                            Low Stock Alerts
-                        </x-shared.sidebar-link>
-                    </x-slot:submenu>
-                </x-shared.sidebar-link>
-
-                {{-- AI Risk Dashboard --}}
-                <x-shared.sidebar-link :href="route('admin.ai-dashboard.index')" :active="request()->routeIs('admin.ai-dashboard.*')">
-                    <x-slot:icon>
-                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-                        </svg>
-                    </x-slot:icon>
-                    AI Dashboard
-                </x-shared.sidebar-link>
-
-                {{-- AI Price Suggestions --}}
-                <x-shared.sidebar-link :href="route('admin.price-suggestions.index')" :active="request()->routeIs('admin.price-suggestions.*')">
-                    <x-slot:icon>
-                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </x-slot:icon>
-                    Price Suggestions
-                </x-shared.sidebar-link>
-
-                {{-- Risk Rules --}}
-                <x-shared.sidebar-link :href="route('admin.risk-rules.index')" :active="request()->routeIs('admin.risk-rules.*')">
-                    <x-slot:icon>
-                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                        </svg>
-                    </x-slot:icon>
-                    Risk Rules
-                </x-shared.sidebar-link>
-
-                {{-- Separator --}}
                 <div class="my-3 border-t border-slate-700/50"></div>
+
+                {{-- ========================================== --}}
+                {{-- GROUP 5: SYSTEM & SETTINGS                 --}}
+                {{-- ========================================== --}}
+                <div class="px-3 md:mt-5 mb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">System & Settings</div>
 
                 {{-- Support --}}
                 <x-shared.sidebar-link :href="route('admin.support.index')" :active="request()->routeIs('admin.support.*')">

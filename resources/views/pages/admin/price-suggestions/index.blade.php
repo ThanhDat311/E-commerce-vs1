@@ -1,4 +1,4 @@
-<x-admin-layout :pageTitle="'AI Price Suggestions'" :breadcrumbs="['Admin' => route('admin.dashboard'), 'AI Price Suggestions' => route('admin.price-suggestions.index')]">
+<x-admin-layout :pageTitle="'AI Price Suggestions'" :breadcrumbs="['Admin' => route('admin.dashboard'), 'AI Price Suggestions' => route('admin.ai.price-suggestions.index')]">
 
     {{-- Page Header --}}
     <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -6,11 +6,25 @@
             <h1 class="text-2xl font-bold text-gray-900">AI Price Suggestions</h1>
             <p class="text-sm text-gray-500 mt-1">Review and act on AI-generated price recommendations for your products.</p>
         </div>
-        <div class="flex items-center gap-2">
-            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200">
-                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm0 3.5L20.5 19h-17L12 5.5zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z"/></svg>
-                {{ $suggestions->total() }} pending
-            </span>
+    </div>
+
+    {{-- KPI Banner --}}
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-amber-50 rounded-xl border border-amber-200 p-4">
+            <p class="text-xs font-semibold text-amber-600 uppercase tracking-wide mb-1">Pending Review</p>
+            <p class="text-2xl font-bold text-amber-800">{{ $kpi['pending'] }}</p>
+        </div>
+        <div class="bg-green-50 rounded-xl border border-green-200 p-4">
+            <p class="text-xs font-semibold text-green-600 uppercase tracking-wide mb-1">Approved Today</p>
+            <p class="text-2xl font-bold text-green-800">{{ $kpi['approved_today'] }}</p>
+        </div>
+        <div class="bg-red-50 rounded-xl border border-red-200 p-4">
+            <p class="text-xs font-semibold text-red-500 uppercase tracking-wide mb-1">Rejected Today</p>
+            <p class="text-2xl font-bold text-red-700">{{ $kpi['rejected_today'] }}</p>
+        </div>
+        <div class="bg-blue-50 rounded-xl border border-blue-200 p-4">
+            <p class="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">Total Approved</p>
+            <p class="text-2xl font-bold text-blue-800">{{ $kpi['total_approved'] }}</p>
         </div>
     </div>
 
@@ -158,7 +172,7 @@
                             <td class="px-5 py-4">
                                 <div class="flex items-center justify-end gap-2">
                                     {{-- Approve --}}
-                                    <form method="POST" action="{{ route('admin.price-suggestions.approve', $suggestion) }}"
+                                    <form method="POST" action="{{ route('admin.ai.price-suggestions.approve', $suggestion) }}"
                                           onsubmit="return confirm('Approve this price suggestion? The product price will be updated immediately.')">
                                         @csrf
                                         <button type="submit"
@@ -171,7 +185,7 @@
                                     </form>
 
                                     {{-- Reject --}}
-                                    <form method="POST" action="{{ route('admin.price-suggestions.reject', $suggestion) }}"
+                                    <form method="POST" action="{{ route('admin.ai.price-suggestions.reject', $suggestion) }}"
                                           onsubmit="return confirm('Reject this price suggestion?')">
                                         @csrf
                                         <button type="submit"

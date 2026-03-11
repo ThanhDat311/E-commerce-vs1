@@ -27,7 +27,14 @@ class PriceSuggestionController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
-        return view('pages.admin.price-suggestions.index', compact('suggestions'));
+        $kpi = [
+            'pending' => PriceSuggestion::where('status', 'pending')->count(),
+            'approved_today' => PriceSuggestion::where('status', 'approved')->whereDate('updated_at', today())->count(),
+            'rejected_today' => PriceSuggestion::where('status', 'rejected')->whereDate('updated_at', today())->count(),
+            'total_approved' => PriceSuggestion::where('status', 'approved')->count(),
+        ];
+
+        return view('pages.admin.price-suggestions.index', compact('suggestions', 'kpi'));
     }
 
     /**

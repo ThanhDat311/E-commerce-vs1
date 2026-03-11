@@ -1,4 +1,4 @@
-<x-admin-layout :pageTitle="'Edit Risk Rule'" :breadcrumbs="['Admin' => route('admin.dashboard'), 'Risk Rules' => route('admin.risk-rules.index'), 'Edit' => '#']">
+<x-admin-layout :pageTitle="'Edit Risk Rule'" :breadcrumbs="['Admin' => route('admin.dashboard'), 'Risk Rules' => route('admin.ai.risk-rules.index'), 'Edit' => '#']">
 
     <div class="max-w-2xl">
 
@@ -41,7 +41,7 @@
         </div>
 
         {{-- Edit Form --}}
-        <form method="POST" action="{{ route('admin.risk-rules.update', $riskRule) }}" class="space-y-5">
+        <form method="POST" action="{{ route('admin.ai.risk-rules.update', $riskRule) }}" class="space-y-5">
             @csrf
             @method('PUT')
 
@@ -112,7 +112,7 @@
 
             {{-- Form Actions --}}
             <div class="flex items-center justify-between pt-2">
-                <a href="{{ route('admin.risk-rules.index') }}"
+                <a href="{{ route('admin.ai.risk-rules.index') }}"
                    class="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg transition-colors">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />

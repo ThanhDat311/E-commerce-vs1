@@ -12,7 +12,6 @@ use App\Http\Controllers\Customer\ReviewController;
 use App\Http\Controllers\HelpController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LocaleController;
-use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
@@ -23,7 +22,7 @@ use App\Http\Controllers\Vendor\FinanceController as VendorFinanceController;
 use App\Http\Controllers\WishlistController;
 use Illuminate\Support\Facades\Route;
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';
 
 // ====================================================
 // PUBLIC ROUTES (Khách vãng lai có thể truy cập)
@@ -209,16 +208,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
             Route::get('/export', 'exportReport')->name('export');
         });
 
-    // Price Suggestions Management
-    Route::controller(\App\Http\Controllers\Admin\PriceSuggestionController::class)
-        ->prefix('price-suggestions')
-        ->name('price-suggestions.')
-        ->group(function () {
-            Route::get('/', 'index')->name('index');
-            Route::post('/{suggestion}/approve', 'approve')->name('approve');
-            Route::post('/{suggestion}/reject', 'reject')->name('reject');
-        });
-
     // Audit Logs Management
     Route::controller(\App\Http\Controllers\AuditLogController::class)
         ->prefix('audit-logs')
@@ -231,27 +220,52 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
             Route::get('/{auditLog}', 'show')->name('show');
         });
 
-    // Risk Rules Management
-    Route::controller(\App\Http\Controllers\Admin\RiskRuleController::class)
-        ->prefix('risk-rules')
-        ->name('risk-rules.')
+    // AI Management Group
+    Route::prefix('ai')
+        ->name('ai.')
         ->group(function () {
-            Route::get('/', 'index')->name('index');
-            Route::get('/{riskRule}/edit', 'edit')->name('edit');
-            Route::put('/{riskRule}', 'update')->name('update');
-            Route::patch('/{riskRule}/toggle', 'toggle')->name('toggle');
-            Route::post('/reset', 'reset')->name('reset');
-            Route::get('/statistics', 'statistics')->name('statistics');
-            Route::get('/export', 'export')->name('export');
-            Route::post('/import', 'import')->name('import');
-        });
+            // Dashboard
+            Route::controller(\App\Http\Controllers\Admin\AiController::class)
+                ->prefix('dashboard')
+                ->name('dashboard.')
+                ->group(function () {
+                    Route::get('/', 'index')->name('index');
+                });
 
-    // AI Management
-    Route::controller(\App\Http\Controllers\Admin\AiController::class)
-        ->prefix('ai-dashboard')
-        ->name('ai-dashboard.')
-        ->group(function () {
-            Route::get('/', 'index')->name('index');
+            // Settings
+            Route::controller(\App\Http\Controllers\Admin\AiSettingController::class)
+                ->prefix('settings')
+                ->name('settings.')
+                ->group(function () {
+                    Route::get('/', 'index')->name('index');
+                    Route::post('/', 'update')->name('update');
+                    Route::post('/test-connection', 'testConnection')->name('test');
+                });
+
+            // Price Suggestions
+            Route::controller(\App\Http\Controllers\Admin\PriceSuggestionController::class)
+                ->prefix('price-suggestions')
+                ->name('price-suggestions.')
+                ->group(function () {
+                    Route::get('/', 'index')->name('index');
+                    Route::post('/{suggestion}/approve', 'approve')->name('approve');
+                    Route::post('/{suggestion}/reject', 'reject')->name('reject');
+                });
+
+            // Risk Rules
+            Route::controller(\App\Http\Controllers\Admin\RiskRuleController::class)
+                ->prefix('risk-rules')
+                ->name('risk-rules.')
+                ->group(function () {
+                    Route::get('/', 'index')->name('index');
+                    Route::get('/{riskRule}/edit', 'edit')->name('edit');
+                    Route::put('/{riskRule}', 'update')->name('update');
+                    Route::patch('/{riskRule}/toggle', 'toggle')->name('toggle');
+                    Route::post('/reset', 'reset')->name('reset');
+                    Route::get('/statistics', 'statistics')->name('statistics');
+                    Route::get('/export', 'export')->name('export');
+                    Route::post('/import', 'import')->name('import');
+                });
         });
 
     // Analytics Management
