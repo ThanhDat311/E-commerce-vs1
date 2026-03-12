@@ -98,7 +98,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
-                    @forelse($products as $product)
+                    @forelse ($products as $product)
                         @php
                             $statusConfig = match($product['status']) {
                                 'critical' => ['bg' => 'bg-red-100',  'text' => 'text-red-700',  'bar' => 'bg-red-500',  'label' => 'Critical'],

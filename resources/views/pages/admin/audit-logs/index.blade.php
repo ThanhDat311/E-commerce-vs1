@@ -11,7 +11,7 @@
                 <label class="block text-xs font-medium text-gray-700 mb-1.5">Model Type</label>
                 <select name="model_type" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     <option value="">All Types</option>
-                    @foreach($modelTypes as $value => $label)
+                    @foreach ($modelTypes as $value => $label)
                         <option value="{{ $value }}" {{ request('model_type') == $value ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
                 </select>
@@ -33,7 +33,7 @@
                 <label class="block text-xs font-medium text-gray-700 mb-1.5">User</label>
                 <select name="user_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     <option value="">All Users</option>
-                    @foreach($users as $user)
+                    @foreach ($users as $user)
                         <option value="{{ $user->id }}" {{ request('user_id') == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
                     @endforeach
                 </select>
@@ -91,7 +91,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
-                    @forelse($auditLogs as $log)
+                    @forelse ($auditLogs as $log)
                         <tr class="hover:bg-gray-50/50 transition-colors group">
                             <td class="px-6 py-4 font-medium text-gray-500">
                                 #LOG-{{ 10000 + $log->id }}

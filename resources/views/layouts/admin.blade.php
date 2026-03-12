@@ -130,6 +130,9 @@
                         <x-shared.sidebar-link :href="route('admin.ai.risk-rules.index')" :active="request()->routeIs('admin.ai.risk-rules.*')">
                             Risk Rules
                         </x-shared.sidebar-link>
+                        <x-shared.sidebar-link :href="route('admin.ai.login-risk.index')" :active="request()->routeIs('admin.ai.login-risk.*')">
+                            Login Risk Logs
+                        </x-shared.sidebar-link>
                     </x-slot:submenu>
                 </x-shared.sidebar-link>
 

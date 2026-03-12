@@ -25,7 +25,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
-                    @forelse($categories as $category)
+                    @forelse ($categories as $category)
                         <tr class="hover:bg-gray-50/50 transition-colors">
                             <td class="px-5 py-4">
                                 @if($category->image_url)
@@ -119,8 +119,8 @@
                                     <label for="parent_id" class="block text-sm font-medium text-gray-700">Parent Category</label>
                                     <select name="parent_id" id="parent_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                                         <option value="">-- None --</option>
-                                        @foreach($categories as $cat)
-                                            @if(is_null($cat->parent_id))
+                                        @foreach ($categories as $cat)
+                                            @if (is_null($cat->parent_id))
                                                 <option value="{{ $cat->id }}">{{ $cat->name }}</option>
                                             @endif
                                         @endforeach

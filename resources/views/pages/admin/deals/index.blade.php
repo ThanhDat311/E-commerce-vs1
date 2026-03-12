@@ -34,7 +34,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
-                    @forelse($deals as $deal)
+                    @forelse ($deals as $deal)
                         <tr class="hover:bg-gray-50/50 transition-colors">
                             <td class="px-5 py-4 font-medium text-gray-900">
                                 {{ $deal->name }}

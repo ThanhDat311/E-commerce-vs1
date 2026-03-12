@@ -38,7 +38,7 @@
 
                         <!-- Address Cards Grid -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            @forelse($addresses as $address)
+                            @forelse ($addresses as $address)
                                 <div class="border rounded-lg p-5 relative {{ $address->is_default ? 'border-orange-300 bg-orange-50/30' : 'border-gray-200' }}">
                                     <!-- Label & Default Badge -->
                                     <div class="flex items-center gap-2 mb-3">

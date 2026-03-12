@@ -35,7 +35,8 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
     'ai_microservice' => [
-        'url'     => env('AI_MICROSERVICE_URL', 'http://localhost:8000'),
+        'url' => env('AI_MICROSERVICE_URL', 'http://localhost:8000'),
+        'api_key' => env('AI_MICROSERVICE_API_KEY', 'secret-ecommerce-ai-key-2026'),
         'timeout' => (int) env('AI_MICROSERVICE_TIMEOUT', 3),
     ],
 

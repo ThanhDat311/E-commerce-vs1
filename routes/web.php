@@ -266,6 +266,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
                     Route::get('/export', 'export')->name('export');
                     Route::post('/import', 'import')->name('import');
                 });
+
+            // Login Risk
+            Route::controller(\App\Http\Controllers\Admin\LoginRiskController::class)
+                ->prefix('login-risk')
+                ->name('login-risk.')
+                ->group(function () {
+                    Route::get('/', 'index')->name('index');
+                    Route::get('/{loginRisk}', 'show')->name('show');
+                });
         });
 
     // Analytics Management

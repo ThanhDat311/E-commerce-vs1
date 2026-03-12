@@ -51,7 +51,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
-                     @forelse($latestOrders as $order)
+                     @forelse ($latestOrders as $order)
                         <tr class="hover:bg-gray-50/50 transition-colors">
                             <td class="px-5 py-4">
                                 <span class="font-semibold text-blue-600">#{{ $order->id }}</span>

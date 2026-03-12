@@ -205,7 +205,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
-                    @forelse($transactions as $trx)
+                    @forelse ($transactions as $trx)
                         <tr class="hover:bg-gray-50/50 transition-colors">
                             <td class="px-5 py-4">
                                 <div>

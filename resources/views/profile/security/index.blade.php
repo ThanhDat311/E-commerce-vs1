@@ -91,7 +91,7 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-100">
-                                    @forelse($loginHistory as $log)
+                                    @forelse ($loginHistory as $log)
                                         <tr class="hover:bg-gray-50">
                                             <td class="py-3 px-4 text-gray-700">{{ $log->created_at->format('M d, Y H:i') }}</td>
                                             <td class="py-3 px-4 text-gray-500">{{ $log->ip_address ?? 'N/A' }}</td>

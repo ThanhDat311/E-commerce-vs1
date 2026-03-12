@@ -103,7 +103,7 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-100">
-                                    @forelse($tickets as $ticket)
+                                    @forelse ($tickets as $ticket)
                                         <tr class="hover:bg-gray-50/50 transition-colors cursor-pointer" onclick="window.location='{{ route('tickets.show', $ticket) }}'">
                                             <td class="px-5 py-4 font-medium text-gray-500">#{{ $ticket->id }}</td>
                                             <td class="px-5 py-4">

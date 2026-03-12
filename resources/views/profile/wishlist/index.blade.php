@@ -30,7 +30,7 @@
 
                         @if($wishlists->count() > 0)
                             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                @foreach($wishlists as $wishlist)
+                                @foreach ($wishlists as $wishlist)
                                     @if($wishlist->product)
                                         <div class="group border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
                                             <!-- Product Image -->

@@ -174,7 +174,7 @@
                             </div>
                         @else
                             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                @foreach($addresses as $address)
+                                @foreach ($addresses as $address)
                                 <div class="relative rounded-lg border p-4 shadow-sm flex cursor-pointer focus:outline-none"
                                      :class="selectedAddressId == {{ $address->id }} ? 'border-indigo-500 ring-1 ring-indigo-500' : 'border-gray-300'"
                                      @click="selectedAddressId = {{ $address->id }}">
@@ -318,7 +318,7 @@
                         <h2 class="text-lg font-medium text-gray-900 mb-6">Order Summary</h2>
 
                         <ul role="list" class="divide-y divide-gray-200 mb-6">
-                            @foreach($cartItems as $item)
+                            @foreach ($cartItems as $item)
                             <li class="flex py-4">
                                 <div class="h-16 w-16 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
                                     <img src="{{ $item['image_url'] }}" alt="{{ $item['name'] }}" class="h-full w-full object-cover object-center">

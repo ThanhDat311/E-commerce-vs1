@@ -26,7 +26,7 @@
                     'rejected' => 'Refunded',
                 ];
             @endphp
-            @foreach($tabs as $value => $tabLabel)
+            @foreach ($tabs as $value => $tabLabel)
                 <a href="{{ route('admin.disputes.index', array_merge(request()->except('status', 'page'), $value ? ['status' => $value] : [])) }}"
                    class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium transition-all duration-200
                           {{ $currentStatus === $value
@@ -69,7 +69,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
-                    @forelse($disputes as $dispute)
+                    @forelse ($disputes as $dispute)
                         <tr class="hover:bg-gray-50/50 transition-colors">
                             <td class="px-4 py-4">
                                 <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">

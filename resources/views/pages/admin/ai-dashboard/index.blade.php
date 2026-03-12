@@ -9,7 +9,7 @@
         <div class="flex flex-wrap items-center gap-3">
             {{-- Period Filter --}}
             <div class="flex items-center gap-1 bg-white border border-gray-200 rounded-lg shadow-sm p-1">
-                @foreach(['1' => 'Today', '7' => '7D', '30' => '30D', '90' => '90D'] as $days => $label)
+                @foreach (['1' => 'Today', '7' => '7D', '30' => '30D', '90' => '90D'] as $days => $label)
                     <a href="{{ route('admin.ai.dashboard.index', ['period' => $days]) }}"
                        class="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors
                               {{ $period == $days ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50' }}">
@@ -34,7 +34,10 @@
         </div>
     </div>
 
-    {{-- Metrics Grid --}}
+    {{-- Dashboard Title: Transaction Fraud --}}
+    <h2 class="text-xl font-bold text-gray-800 mb-4">Transaction Fraud Evaluations</h2>
+
+    {{-- Metrics Grid (Transactions) --}}
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-7">
         {{-- Total Evaluations --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
@@ -61,7 +64,7 @@
                         <h3 class="text-3xl font-bold text-red-700">{{ number_format($blockedTransactions) }}</h3>
                         <span class="text-xs font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">{{ $blockRate }}%</span>
                     </div>
-                    <p class="text-xs text-gray-400 mt-1">Risk score ≥ 80</p>
+                    <p class="text-xs text-gray-400 mt-1">Risk score ≥ 0.60</p>
                 </div>
                 <div class="p-2.5 bg-red-50 rounded-lg">
                     <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -80,7 +83,7 @@
                         <h3 class="text-3xl font-bold text-yellow-700">{{ number_format($flaggedTransactions) }}</h3>
                         <span class="text-xs font-bold text-yellow-700 bg-yellow-100 px-2 py-0.5 rounded-full">{{ $flagRate }}%</span>
                     </div>
-                    <p class="text-xs text-gray-400 mt-1">Score 50–79</p>
+                    <p class="text-xs text-gray-400 mt-1">Score 0.35–0.59</p>
                 </div>
                 <div class="p-2.5 bg-yellow-50 rounded-lg">
                     <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -108,6 +111,83 @@
             <div class="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                 <div class="h-1.5 rounded-full bg-gradient-to-r from-green-400 via-yellow-400 to-red-500"
                      style="width: {{ min($avgRiskScore, 100) }}%"></div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Dashboard Title: Login Risk --}}
+    <h2 class="text-xl font-bold text-gray-800 mb-4 mt-8">Login Risk Evaluations</h2>
+
+    {{-- Metrics Grid (Logins) --}}
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-7">
+        {{-- Total Logins --}}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Total Logins</p>
+                    <h3 class="text-3xl font-bold text-gray-900">{{ number_format($loginTotal) }}</h3>
+                    <p class="text-xs text-gray-400 mt-1">All time</p>
+                </div>
+                <div class="p-2.5 bg-blue-50 rounded-lg">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        {{-- Blocked Logins --}}
+        <div class="bg-white rounded-xl shadow-sm border border-red-100 p-5">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-red-400 uppercase tracking-wider mb-1.5">Blocked</p>
+                    <div class="flex items-baseline gap-2">
+                        <h3 class="text-3xl font-bold text-red-700">{{ number_format($loginBlocked) }}</h3>
+                        <span class="text-xs font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">{{ $loginBlockRate }}%</span>
+                    </div>
+                </div>
+                <div class="p-2.5 bg-red-50 rounded-lg">
+                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        {{-- Flagged Logins --}}
+        <div class="bg-white rounded-xl shadow-sm border border-yellow-100 p-5">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-yellow-500 uppercase tracking-wider mb-1.5">Flagged</p>
+                    <div class="flex items-baseline gap-2">
+                        <h3 class="text-3xl font-bold text-yellow-700">{{ number_format($loginFlagged) }}</h3>
+                        <span class="text-xs font-bold text-yellow-700 bg-yellow-100 px-2 py-0.5 rounded-full">{{ $loginFlagRate }}%</span>
+                    </div>
+                </div>
+                <div class="p-2.5 bg-yellow-50 rounded-lg">
+                    <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        {{-- Avg Login Risk Score --}}
+        <div class="bg-white rounded-xl shadow-sm border border-purple-100 p-5">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-purple-400 uppercase tracking-wider mb-1.5">Avg Score</p>
+                    <h3 class="text-3xl font-bold text-purple-700">{{ $loginAvgScore }}</h3>
+                </div>
+                <div class="p-2.5 bg-purple-50 rounded-lg">
+                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                </div>
+            </div>
+            <div class="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div class="h-1.5 rounded-full bg-gradient-to-r from-green-400 via-yellow-400 to-red-500"
+                     style="width: {{ min($loginAvgScore * 100, 100) }}%"></div>
             </div>
         </div>
     </div>
@@ -141,7 +221,7 @@
         <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
             <div>
                 <h3 class="text-base font-semibold text-gray-900">High-Risk Transactions</h3>
-                <p class="text-xs text-gray-400 mt-0.5">Showing last {{ count($highRiskLogs) }} events with risk score ≥ 50</p>
+                <p class="text-xs text-gray-400 mt-0.5">Showing last {{ count($highRiskLogs) }} events with risk score ≥ 0.35</p>
             </div>
             <a href="{{ route('admin.ai.risk-rules.index') }}"
                class="text-xs font-medium text-blue-600 hover:text-blue-800 flex items-center gap-1">
@@ -168,7 +248,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
-                    @forelse($highRiskLogs as $log)
+                    @forelse ($highRiskLogs as $log)
                         <tr class="hover:bg-gray-50/60 transition-colors">
                             <td class="px-5 py-3.5 whitespace-nowrap text-sm text-gray-500">
                                 <div>{{ $log->created_at->format('M d, Y') }}</div>
@@ -187,7 +267,7 @@
                                 {{ $log->ip_address ?? '—' }}
                             </td>
                             <td class="px-5 py-3.5 whitespace-nowrap">
-                                @if($log->risk_score >= 80)
+                                @if($log->risk_score >= 0.60)
                                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200">
                                         <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
                                         {{ $log->risk_score }} BLOCKED
