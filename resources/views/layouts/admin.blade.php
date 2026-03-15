@@ -133,6 +133,18 @@
                         <x-shared.sidebar-link :href="route('admin.ai.login-risk.index')" :active="request()->routeIs('admin.ai.login-risk.*')">
                             Login Risk Logs
                         </x-shared.sidebar-link>
+                        <x-shared.sidebar-link :href="route('admin.ai.transaction-risk.index')" :active="request()->routeIs('admin.ai.transaction-risk.*')">
+                            Transaction Risk
+                        </x-shared.sidebar-link>
+                        <x-shared.sidebar-link :href="route('admin.ai.recommendations.index')" :active="request()->routeIs('admin.ai.recommendations.*')">
+                            Recommendations
+                        </x-shared.sidebar-link>
+                        <x-shared.sidebar-link :href="route('admin.ai.content-generation.index')" :active="request()->routeIs('admin.ai.content-generation.*')">
+                            Content Generation
+                        </x-shared.sidebar-link>
+                        <x-shared.sidebar-link :href="route('admin.ai.semantic-search.index')" :active="request()->routeIs('admin.ai.semantic-search.*')">
+                            Semantic Search
+                        </x-shared.sidebar-link>
                     </x-slot:submenu>
                 </x-shared.sidebar-link>
 

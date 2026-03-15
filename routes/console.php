@@ -12,3 +12,5 @@ Artisan::command('inspire', function () {
 Schedule::call(function () {
     app(DealService::class)->expireDeals();
 })->hourly()->name('expire-deals')->withoutOverlapping();
+
+Schedule::job(new \App\Jobs\AutoApplyPriceSuggestions)->hourly();

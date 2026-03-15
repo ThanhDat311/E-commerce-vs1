@@ -33,6 +33,50 @@ class RiskEngineService
      */
     public function evaluate(User $user, Request $request): bool
     {
+        $ip = $request->ip();
+
+        // --- 0a. Check Explicit IP Block ---
+        $isIpBlocked = \App\Models\RiskList::where('type', 'ip')
+            ->where('value', $ip)
+            ->where('action', 'block')
+            ->where(function ($q) {
+                $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })->exists();
+
+        if ($isIpBlocked) {
+            Log::warning('[RiskEngine] Explicit IP block triggered.', ['ip' => $ip, 'user_id' => $user->id]);
+
+            AuthLog::create([
+                'user_id' => $user->id,
+                'session_id' => $request->hasSession() ? $request->session()->getId() : 'no-session',
+                'ip_address' => $ip,
+                'user_agent' => $request->userAgent(),
+                'risk_score' => 100,
+                'risk_level' => 'critical',
+                'auth_decision' => 'block_access',
+                'is_successful' => false,
+                'reasons' => ['IP explicitly blocked by admin'],
+            ]);
+
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'email' => __('Your IP address has been temporarily blocked for security reasons.'),
+            ]);
+        }
+
+        // --- 0b. Check Explicit User Whitelist ---
+        $isUserWhitelisted = \App\Models\RiskList::where('type', 'user_id')
+            ->where('value', (string) $user->id)
+            ->where('action', 'whitelist')
+            ->where(function ($q) {
+                $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })->exists();
+
+        if ($isUserWhitelisted) {
+            Log::info('[RiskEngine] User is explicitly whitelisted.', ['user_id' => $user->id]);
+
+            return false;
+        }
+
         // --- 1. Check Device Trust ---
         $deviceId = $request->cookie(self::DEVICE_COOKIE_NAME);
         $isDeviceTrusted = false;
@@ -53,7 +97,6 @@ class RiskEngineService
         $deviceType = $this->detectDeviceType($userAgent);
 
         // --- 3. Try AI Microservice ---
-        $ip = $request->ip();
         $aiResult = $this->aiClient->predictLoginRisk(
             userId: $user->id,
             ip: $ip,

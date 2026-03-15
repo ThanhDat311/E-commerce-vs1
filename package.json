@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite"
+    "dev": "concurrently -c \"cyan,magenta\" \"vite\" \"npm run dev:ai\"",
+    "dev:ai": "cd ../E-commerce-AI && venv\\Scripts\\python main.py"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",

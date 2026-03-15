@@ -3,7 +3,40 @@
     <div x-data="{
         search: '',
         levelFilter: 'all',
-        rules: {{ Js::from($rules->map(fn($r) => ['key' => $r->rule_key, 'desc' => $r->description, 'level' => $r->risk_level, 'active' => $r->is_active])) }},
+        rules: {{ Js::from($rules->map(fn($r) => ['key' => $r->rule_key, 'desc' => $r->description, 'level' => $r->risk_level, 'active' => $r->is_active, 'weight' => $r->weight])) }},
+        simulating: false,
+        showSimModal: false,
+        simRuleData: { key: '', currentWeight: 0, newWeight: 0 },
+        simResult: null,
+        openSimulateModal(rule) {
+            this.simRuleData = { key: rule.rule_key, currentWeight: rule.weight, newWeight: rule.weight };
+            this.simResult = null;
+            this.simulating = false;
+            this.showSimModal = true;
+        },
+        async runSimulation() {
+            this.simulating = true;
+            this.simResult = null;
+            try {
+                const resp = await fetch('{{ route('admin.ai.risk-rules.simulate') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        rule_key: this.simRuleData.key,
+                        weight: this.simRuleData.newWeight
+                    })
+                });
+                this.simResult = await resp.json();
+            } catch (e) {
+                console.error(e);
+            } finally {
+                this.simulating = false;
+            }
+        },
         get filtered() {
             return this.rules.filter(r => {
                 const matchesSearch = !this.search ||
@@ -224,6 +257,13 @@
                                 {{-- Actions --}}
                                 <td class="px-5 py-4">
                                     <div class="flex items-center justify-end gap-2">
+                                        <button @click="openSimulateModal({{ Js::from($rule) }})" type="button"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold rounded-lg transition-colors">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                                            </svg>
+                                            Simulate
+                                        </button>
                                         <a href="{{ route('admin.ai.risk-rules.edit', $rule) }}"
                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors">
                                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -259,6 +299,83 @@
             <div x-show="filtered.length === 0 && {{ $rules->count() }} > 0"
                  class="px-6 py-10 text-center text-sm text-gray-400">
                 No rules match your current search or filter.
+            </div>
+        </div>
+
+        {{-- Simulate Modal --}}
+        <div x-show="showSimModal" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                <div x-show="showSimModal" x-transition.opacity class="fixed inset-0 transition-opacity bg-gray-900 bg-opacity-50" @click="showSimModal = false"></div>
+                
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                
+                <div x-show="showSimModal" x-transition.scale.origin.bottom class="inline-block px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-xl shadow-xl border sm:my-8 sm:align-middle sm:max-w-xl sm:w-full sm:p-6 relative">
+                    
+                    <button @click="showSimModal = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-500">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+
+                    <h3 class="text-lg font-bold leading-6 text-gray-900 mb-2">Rule Simulation</h3>
+                    <p class="text-sm text-gray-500 mb-5">
+                        Test the impact of changing <code class="font-mono bg-gray-100 text-gray-800 px-1 rounded" x-text="simRuleData.key"></code> 
+                        against the last 100 actual orders.
+                    </p>
+
+                    <div class="mb-5 flex gap-4">
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Current Weight</label>
+                            <input type="number" readonly x-model="simRuleData.currentWeight" class="block w-full rounded-md border-gray-300 bg-gray-50 text-gray-500 shadow-sm sm:text-sm">
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">New Weight to Simulate</label>
+                            <input type="number" x-model.number="simRuleData.newWeight" min="0" max="100" class="block w-full rounded-md border-blue-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm sm:text-sm">
+                        </div>
+                    </div>
+
+                    <div class="flex justify-start mb-6">
+                        <button type="button" @click="runSimulation()" :disabled="simulating"
+                                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm disabled:opacity-50">
+                            <span x-show="simulating">
+                                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                </svg>
+                            </span>
+                            <span x-show="!simulating">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </span>
+                            <span x-text="simulating ? 'Analyzing past 100 orders...' : 'Run Backtest Simulation'"></span>
+                        </button>
+                    </div>
+
+                    {{-- Results Area --}}
+                    <div x-show="simResult" x-transition.opacity class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <h4 class="text-sm font-bold text-gray-900 mb-3 border-b pb-2">Simulation Results</h4>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <h5 class="text-xs font-semibold text-gray-500 uppercase">Original</h5>
+                                <ul class="mt-2 text-sm space-y-1">
+                                    <li>Blocked: <span class="font-medium text-red-600" x-text="simResult?.original_blocked"></span></li>
+                                    <li>Flagged: <span class="font-medium text-amber-600" x-text="simResult?.original_flagged"></span></li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h5 class="text-xs font-semibold text-gray-500 uppercase">If new rules applied</h5>
+                                <ul class="mt-2 text-sm space-y-1">
+                                    <li>Blocked: <span class="font-medium text-red-600" x-text="simResult?.simulated_blocked"></span> <span class="text-xs font-bold" :class="simResult?.diff_blocked > 0 ? 'text-red-500' : (simResult?.diff_blocked < 0 ? 'text-green-500' : 'text-gray-400')" x-text="simResult?.diff_blocked > 0 ? '(+' + simResult?.diff_blocked + ')' : (simResult?.diff_blocked < 0 ? '(' + simResult?.diff_blocked + ')' : '(0)')"></span></li>
+                                    <li>Flagged: <span class="font-medium text-amber-600" x-text="simResult?.simulated_flagged"></span> <span class="text-xs font-bold" :class="simResult?.diff_flagged > 0 ? 'text-amber-500' : (simResult?.diff_flagged < 0 ? 'text-green-500' : 'text-gray-400')" x-text="simResult?.diff_flagged > 0 ? '(+' + simResult?.diff_flagged + ')' : (simResult?.diff_flagged < 0 ? '(' + simResult?.diff_flagged + ')' : '(0)')"></span></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
 

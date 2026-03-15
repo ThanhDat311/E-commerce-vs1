@@ -6,12 +6,12 @@ use App\Models\RiskRule;
 
 /**
  * AI Decision Engine - Stateless Service
- * 
+ *
  * Quy tắc Vàng: Stateless - Không lưu trạng thái, không query DB trực tiếp
  * Chỉ nhận dữ liệu -> Xử lý -> Trả kết quả
- * 
+ *
  * Rules are loaded from database and cached
- * 
+ *
  * @see doc/AI_DECISION_ENGINE.md
  * @see doc/ELECTRO-AI-ENGINE.md
  */
@@ -19,10 +19,8 @@ class AIDecisionEngine
 {
     /**
      * Get Risk Rules from Cache
-     * 
+     *
      * Score: 0-100 (0 = No risk, 100 = Maximum risk)
-     * 
-     * @return array
      */
     private function getRiskRules(): array
     {
@@ -33,24 +31,25 @@ class AIDecisionEngine
      * Decision Thresholds
      */
     private const THRESHOLD_BLOCK = 80;  // Score >= 80: BLOCK
+
     private const THRESHOLD_FLAG = 50;   // Score 50-79: FLAG
     // Score < 50: APPROVE
 
     /**
      * 1. Fraud Risk Assessment
-     * 
+     *
      * Đánh giá rủi ro gian lận dựa trên đơn hàng, user và context
-     * 
-     * @param array $orderData ['total' => float, 'quantity' => int]
-     * @param array $userData ['id' => int|null, 'created_at' => Carbon|null]
-     * @param array $contextData ['hour' => int, 'ip' => string]
+     *
+     * @param  array  $orderData  ['total' => float, 'quantity' => int]
+     * @param  array  $userData  ['id' => int|null, 'created_at' => Carbon|null]
+     * @param  array  $contextData  ['hour' => int, 'ip' => string]
      * @return array ['decision' => string, 'score' => int, 'reasons' => array]
      */
-    public function assessFraudRisk(array $orderData, array $userData, array $contextData = []): array
+    public function assessFraudRisk(array $orderData, array $userData, array $contextData = [], array $overrideRules = []): array
     {
         $score = 0;
         $reasons = [];
-        $rules = $this->getRiskRules();
+        $rules = array_merge($this->getRiskRules(), $overrideRules);
 
         // 1. Guest Checkout
         if (empty($userData['id'])) {
@@ -59,7 +58,7 @@ class AIDecisionEngine
         }
 
         // 2. New User (< 24 hours)
-        if (!empty($userData['created_at'])) {
+        if (! empty($userData['created_at'])) {
             $userAge = now()->diffInHours($userData['created_at']);
             if ($userAge < 24) {
                 $score += $rules['new_user_24h'] ?? 0;
@@ -109,11 +108,11 @@ class AIDecisionEngine
 
     /**
      * 2. Inventory Risk Assessment
-     * 
+     *
      * Đánh giá rủi ro tồn kho dựa trên stock level và demand patterns
-     * 
-     * @param array $productData ['stock_quantity' => int, 'product_id' => int]
-     * @param array $demandData ['seasonal_spike' => bool, 'supplier_delay' => bool, 'recent_sales' => int]
+     *
+     * @param  array  $productData  ['stock_quantity' => int, 'product_id' => int]
+     * @param  array  $demandData  ['seasonal_spike' => bool, 'supplier_delay' => bool, 'recent_sales' => int]
      * @return array ['decision' => string, 'score' => int, 'reasons' => array]
      */
     public function assessInventoryRisk(array $productData, array $demandData = []): array
@@ -126,6 +125,7 @@ class AIDecisionEngine
         if ($stockQuantity <= 0) {
             $score = 100;
             $reasons[] = 'Out of stock';
+
             return [
                 'decision' => 'CRITICAL_RESTOCK',
                 'score' => $score,
@@ -140,13 +140,13 @@ class AIDecisionEngine
         }
 
         // 2. Seasonal Demand Spike
-        if (!empty($demandData['seasonal_spike'])) {
+        if (! empty($demandData['seasonal_spike'])) {
             $score += 25;
             $reasons[] = 'Seasonal demand spike detected';
         }
 
         // 3. Supplier Delay Risk
-        if (!empty($demandData['supplier_delay'])) {
+        if (! empty($demandData['supplier_delay'])) {
             $score += 20;
             $reasons[] = 'Supplier delay risk';
         }
@@ -175,8 +175,9 @@ class AIDecisionEngine
 
     /**
      * 3. Dynamic Pricing Suggestions
-     * @param array $productData ['price' => float, 'cost_price' => float, 'stock_quantity' => int]
-     * @param array $marketData ['high_demand' => bool, 'competitor_lower_price' => bool, 'competitor_price' => float]
+     *
+     * @param  array  $productData  ['price' => float, 'cost_price' => float, 'stock_quantity' => int]
+     * @param  array  $marketData  ['high_demand' => bool, 'competitor_lower_price' => bool, 'competitor_price' => float]
      * @return array ['decision' => float, 'score' => int, 'reasons' => array]
      */
     public function suggestDynamicPrice(array $productData, array $marketData = []): array
@@ -189,7 +190,7 @@ class AIDecisionEngine
         $reasons = [];
 
         // 1. High Demand - Increase Price
-        if (!empty($marketData['high_demand'])) {
+        if (! empty($marketData['high_demand'])) {
             $increase = $currentPrice * 0.1; // 10% increase
             $suggestedPrice += $increase;
             $score += 40;
@@ -205,7 +206,7 @@ class AIDecisionEngine
         }
 
         // 3. Competitor Lower Price - Decrease Price
-        if (!empty($marketData['competitor_lower_price']) && !empty($marketData['competitor_price'])) {
+        if (! empty($marketData['competitor_lower_price']) && ! empty($marketData['competitor_price'])) {
             $competitorPrice = $marketData['competitor_price'];
             if ($competitorPrice < $currentPrice) {
                 $decrease = ($currentPrice - $competitorPrice) * 0.5; // Match 50% of difference
@@ -234,12 +235,10 @@ class AIDecisionEngine
 
     /**
      * 4. Order Decision Making
-     * 
+     *
      * Quyết định cuối cùng dựa trên tổng hợp các risk scores
-     * 
-     * @param array $orderData
-     * @param array $userData
-     * @param array $riskResults Array of risk assessment results
+     *
+     * @param  array  $riskResults  Array of risk assessment results
      * @return array ['decision' => string, 'score' => int, 'reasons' => array]
      */
     public function decideOrder(array $orderData, array $userData, array $riskResults = []): array
@@ -259,7 +258,7 @@ class AIDecisionEngine
 
         // Average the scores (or use max, depending on business logic)
         $avgScore = count($riskResults) > 0 ? ($totalScore / count($riskResults)) : 0;
-        $finalScore = min(100, (int)round($avgScore));
+        $finalScore = min(100, (int) round($avgScore));
 
         // Final decision
         $decision = $this->getDecisionFromScore($finalScore);
@@ -273,9 +272,8 @@ class AIDecisionEngine
 
     /**
      * Get Rules Configuration
-     * 
-     * @param string|null $category 'risk' | null for all
-     * @return array
+     *
+     * @param  string|null  $category  'risk' | null for all
      */
     public function getRules(?string $category = null): array
     {
@@ -294,13 +292,8 @@ class AIDecisionEngine
 
     /**
      * Update Rule (for dynamic configuration)
-     * 
+     *
      * Note: In production, this should persist to config/database
-     * 
-     * @param string $category
-     * @param string $ruleName
-     * @param int $value
-     * @return bool
      */
     public function updateRule(string $category, string $ruleName, int $value): bool
     {
@@ -311,8 +304,8 @@ class AIDecisionEngine
 
     /**
      * Convert score to decision
-     * 
-     * @param int $score 0-100
+     *
+     * @param  int  $score  0-100
      * @return string 'APPROVE' | 'FLAG' | 'BLOCK' | 'REQUIRE_MFA'
      */
     private function getDecisionFromScore(int $score): string

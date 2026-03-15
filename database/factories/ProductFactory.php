@@ -16,10 +16,13 @@ class ProductFactory extends Factory
      */
     public function definition(): array
     {
+        $name = fake()->words(3, true);
+
         return [
             'vendor_id' => \App\Models\User::factory()->create(['role_id' => 4])->id,
             'category_id' => \App\Models\Category::factory(),
-            'name' => fake()->words(3, true),
+            'name' => $name,
+            'slug' => \Illuminate\Support\Str::slug($name),
             'sku' => 'SKU-'.fake()->unique()->numerify('######'),
             'price' => fake()->randomFloat(2, 10, 500),
             'sale_price' => null,

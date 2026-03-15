@@ -252,6 +252,43 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
                     Route::post('/{suggestion}/reject', 'reject')->name('reject');
                 });
 
+            // Transaction Risk Logs
+            Route::controller(\App\Http\Controllers\Admin\AI\TransactionRiskController::class)
+                ->prefix('transaction-risk')
+                ->name('transaction-risk.')
+                ->group(function () {
+                    Route::get('/', 'index')->name('index');
+                    Route::post('/{order}/freeze', 'freeze')->name('freeze');
+                    Route::post('/{order}/release', 'release')->name('release');
+                });
+
+            // Product Recommendations
+            Route::controller(\App\Http\Controllers\Admin\AI\RecommendationController::class)
+                ->prefix('recommendations')
+                ->name('recommendations.')
+                ->group(function () {
+                    Route::get('/', 'index')->name('index');
+                });
+
+            // Content Generation & SEO
+            Route::controller(\App\Http\Controllers\Admin\AI\ContentGenerationController::class)
+                ->prefix('content-generation')
+                ->name('content-generation.')
+                ->group(function () {
+                    Route::get('/', 'index')->name('index');
+                    Route::post('/{product}/generate', 'generate')->name('generate');
+                });
+
+            // Semantic Search
+            Route::controller(\App\Http\Controllers\Admin\AI\SemanticSearchController::class)
+                ->prefix('semantic-search')
+                ->name('semantic-search.')
+                ->group(function () {
+                    Route::get('/', 'index')->name('index');
+                    Route::post('/synonyms', 'addSynonym')->name('synonyms.add');
+                    Route::delete('/synonyms/{index}', 'removeSynonym')->name('synonyms.remove');
+                });
+
             // Risk Rules
             Route::controller(\App\Http\Controllers\Admin\RiskRuleController::class)
                 ->prefix('risk-rules')
@@ -265,6 +302,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
                     Route::get('/statistics', 'statistics')->name('statistics');
                     Route::get('/export', 'export')->name('export');
                     Route::post('/import', 'import')->name('import');
+                    Route::post('/simulate', 'simulate')->name('simulate');
                 });
 
             // Login Risk
@@ -273,6 +311,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
                 ->name('login-risk.')
                 ->group(function () {
                     Route::get('/', 'index')->name('index');
+                    Route::post('/toggle-ip', 'toggleIpBlock')->name('toggle-ip');
+                    Route::post('/toggle-user', 'toggleUserWhitelist')->name('toggle-user');
                     Route::get('/{loginRisk}', 'show')->name('show');
                 });
         });

@@ -13,6 +13,7 @@ use App\Repositories\Interfaces\OrderRepositoryInterface;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
 use App\Services\Payment\PaymentFactory;
 use Exception;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -68,10 +69,17 @@ class OrderService
         }
         // -----------------------------------------
 
-        DB::beginTransaction();
+        // 1. Atomic Lock: Prevent duplicate requests from the same user (Idempotency)
+        $lockKey = "checkout_lock_user_{$userId}";
+        $lock = Cache::lock($lockKey, 5); // Lock for 5 seconds
+
+        if (! $lock->get()) {
+            throw new Exception('Your previous checkout is still processing. Please wait.', 409);
+        }
 
         try {
-            // 1. Check & Lock: Kiểm tra số lượng tồn và Khóa dòng dữ liệu trong DB (lockForUpdate)
+            DB::beginTransaction();
+            // 2. Check & Lock: Kiểm tra số lượng tồn và Khóa dòng dữ liệu trong DB (lockForUpdate)
             $productIds = array_column($cartItems, 'id');
             $productsToLock = Product::whereIn('id', $productIds)
                 ->lockForUpdate()
@@ -91,7 +99,7 @@ class OrderService
                 // Check stock availability
                 if ($product->stock_quantity < $requestedQuantity) {
                     throw new Exception(
-                        "Insufficient stock for product: {$product->name}. " .
+                        "Insufficient stock for product: {$product->name}. ".
                             "Available: {$product->stock_quantity}, Requested: {$requestedQuantity}"
                     );
                 }
@@ -158,7 +166,6 @@ class OrderService
             // Send order confirmation email (queued)
             Mail::to($order->email)->queue(new OrderPlacedMail($order));
 
-            // Clear cart after successful order
             $this->cartService->clearCart();
 
             return [
@@ -167,8 +174,11 @@ class OrderService
             ];
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error('Checkout Failed: ' . $e->getMessage());
+            Log::error('Checkout Failed: '.$e->getMessage());
             throw $e;
+        } finally {
+            // Always release the lock, even if transaction fails
+            $lock->release();
         }
     }
 
@@ -254,7 +264,7 @@ class OrderService
                     'order_id' => $order->id,
                     'user_id' => $order->user_id,
                     'action' => 'Payment Received',
-                    'description' => "Payment successful via {$gatewayName}. TransNo: " . ($verificationResult['transaction_no'] ?? 'N/A'),
+                    'description' => "Payment successful via {$gatewayName}. TransNo: ".($verificationResult['transaction_no'] ?? 'N/A'),
                 ]);
 
                 Log::info('Payment processed successfully', [
@@ -281,7 +291,7 @@ class OrderService
                     'order_id' => $order->id,
                     'user_id' => $order->user_id,
                     'action' => 'Payment Failed',
-                    'description' => "Payment failed via {$gatewayName}. Code: " . ($verificationResult['response_code'] ?? 'Unknown'),
+                    'description' => "Payment failed via {$gatewayName}. Code: ".($verificationResult['response_code'] ?? 'Unknown'),
                 ]);
 
                 Log::warning('Payment failed, inventory restored', [
@@ -380,7 +390,7 @@ class OrderService
                     'order_id' => $order->id,
                     'user_id' => $userId,
                     'action' => 'Order Cancelled',
-                    'description' => 'Customer cancelled order. Reason: ' . ($reason ?? 'No reason provided'),
+                    'description' => 'Customer cancelled order. Reason: '.($reason ?? 'No reason provided'),
                 ]);
             }
 
@@ -392,7 +402,7 @@ class OrderService
             return $order;
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error('Order Cancellation Failed: ' . $e->getMessage());
+            Log::error('Order Cancellation Failed: '.$e->getMessage());
             throw $e;
         }
     }

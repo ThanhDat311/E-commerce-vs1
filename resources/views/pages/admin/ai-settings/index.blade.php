@@ -133,7 +133,8 @@
                                 </div>
                                 <input type="password" name="ai_api_key" id="ai_api_key"
                                        class="pl-9 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                       placeholder="Leave blank if no auth is required">
+                                       placeholder="Leave blank if no auth is required"
+                                       value="{{ old('ai_api_key', $settings['ai_api_key']) }}">
                             </div>
                             <p class="mt-1 text-xs text-gray-500">Provide if the AI service requires a Bearer token.</p>
                         </div>
@@ -168,8 +169,21 @@
                             </div>
                             <label class="relative inline-flex items-center cursor-pointer" x-data>
                                 <input type="hidden" name="strict_mode" value="0">
-                                <input type="checkbox" name="strict_mode" value="1" class="sr-only peer">
+                                <input type="checkbox" name="strict_mode" value="1" class="sr-only peer" {{ $settings['strict_mode'] == '1' ? 'checked' : '' }}>
                                 <div class="w-11 h-6 bg-gray-200 border border-gray-300 peer-focus:ring-2 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+                            </label>
+                        </div>
+
+                        {{-- Auto-Apply Price Suggestions --}}
+                        <div class="border-t border-gray-100 pt-5 flex items-center justify-between">
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-900">Auto-Apply Price Suggestions</h4>
+                                <p class="text-xs text-gray-500 mt-1">Automatically approve pricing changes recommended by the AI (within safe margins).</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer" x-data>
+                                <input type="hidden" name="auto_apply_price_suggestions" value="0">
+                                <input type="checkbox" name="auto_apply_price_suggestions" value="1" class="sr-only peer" {{ $settings['auto_apply_price_suggestions'] == '1' ? 'checked' : '' }}>
+                                <div class="w-11 h-6 bg-gray-200 border border-gray-300 peer-focus:ring-2 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
                             </label>
                         </div>
                     </div>

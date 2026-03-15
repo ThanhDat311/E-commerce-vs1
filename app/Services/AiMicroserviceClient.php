@@ -158,6 +158,35 @@ class AiMicroserviceClient
     }
 
     /**
+     * Generate a product description using the AI microservice.
+     *
+     * @param  array  $productData  ['name' => string, 'price' => float, 'category' => string]
+     * @return string|null The generated description, or null if unavailable.
+     */
+    public function generateProductDescription(array $productData): ?string
+    {
+        try {
+            $response = Http::timeout($this->timeout)
+                ->withHeaders(['X-API-KEY' => $this->apiKey])
+                ->post("{$this->baseUrl}/api/v1/generate-description", $productData);
+
+            if ($response->successful()) {
+                return $response->json('data.description') ?? null;
+            }
+
+            Log::warning('[AiMicroserviceClient] generateProductDescription returned non-success.', [
+                'status' => $response->status(),
+            ]);
+
+            return null;
+        } catch (\Throwable $e) {
+            Log::warning('[AiMicroserviceClient] generateProductDescription failed: '.$e->getMessage());
+
+            return null;
+        }
+    }
+
+    /**
      * Kiểm tra xem AI service có đang hoạt động không.
      */
     public function isHealthy(): bool

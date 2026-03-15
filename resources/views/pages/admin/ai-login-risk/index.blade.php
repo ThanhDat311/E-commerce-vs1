@@ -135,9 +135,43 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <a href="{{ route('admin.ai.login-risk.show', $log->id) }}" class="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded transition-colors">
-                                    Details
-                                </a>
+                                <div class="flex items-center justify-end gap-2">
+                                    {{-- Toggle IP Block --}}
+                                    <form action="{{ route('admin.ai.login-risk.toggle-ip') }}" method="POST" class="inline" onsubmit="return confirm('Toggle block for this IP?');">
+                                        @csrf
+                                        <input type="hidden" name="ip_address" value="{{ $log->ip_address }}">
+                                        @if(in_array($log->ip_address, $blockedIps))
+                                            <button type="submit" class="text-white bg-red-600 hover:bg-red-700 px-2 py-1.5 rounded text-xs transition-colors shadow-sm font-semibold" title="Unblock IP">
+                                                Unblock IP
+                                            </button>
+                                        @else
+                                            <button type="submit" class="text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 px-2 py-1.5 rounded text-xs transition-colors font-semibold" title="Block IP">
+                                                Block IP
+                                            </button>
+                                        @endif
+                                    </form>
+
+                                    {{-- Toggle User Whitelist --}}
+                                    @if($log->user_id)
+                                        <form action="{{ route('admin.ai.login-risk.toggle-user') }}" method="POST" class="inline" onsubmit="return confirm('Toggle whitelist for this user?');">
+                                            @csrf
+                                            <input type="hidden" name="user_id" value="{{ $log->user_id }}">
+                                            @if(in_array($log->user_id, $whitelistedUsers))
+                                                <button type="submit" class="text-white bg-green-600 hover:bg-green-700 px-2 py-1.5 rounded text-xs transition-colors shadow-sm font-semibold" title="Remove User from Whitelist">
+                                                    Un-Whitelist
+                                                </button>
+                                            @else
+                                                <button type="submit" class="text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 px-2 py-1.5 rounded text-xs transition-colors font-semibold" title="Whitelist User">
+                                                    Whitelist User
+                                                </button>
+                                            @endif
+                                        </form>
+                                    @endif
+
+                                    <a href="{{ route('admin.ai.login-risk.show', $log->id) }}" class="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded transition-colors ml-1 font-semibold text-xs">
+                                        Details
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     @empty

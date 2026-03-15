@@ -170,4 +170,74 @@ class RiskRuleController extends Controller
         return redirect()->route('admin.risk-rules.index')
             ->with('success', "Imported {$imported} risk rules successfully!");
     }
+
+    /**
+     * Simulate a rule change against recent feature store logs.
+     */
+    public function simulate(Request $request, \App\Services\AIDecisionEngine $aiEngine)
+    {
+        $validated = $request->validate([
+            'rule_key' => 'required|string',
+            'weight' => 'required|integer|min:0|max:100',
+        ]);
+
+        $ruleKey = $validated['rule_key'];
+        $newWeight = $validated['weight'];
+
+        // Get last 100 features that have order_id (using AiFeatureStore)
+        $recentLogs = \App\Models\AiFeatureStore::whereNotNull('order_id')
+            ->orderBy('created_at', 'desc')
+            ->take(100)
+            ->get();
+
+        $originalBlocked = 0;
+        $simulatedBlocked = 0;
+        $originalFlagged = 0;
+        $simulatedFlagged = 0;
+
+        foreach ($recentLogs as $log) {
+            // Count original
+            if ($log->label === 'block') {
+                $originalBlocked++;
+            } elseif ($log->label === 'flag') {
+                $originalFlagged++;
+            }
+
+            // Simulate
+            $orderData = [
+                'id' => $log->order_id,
+                'total' => $log->total_amount,
+                'quantity' => 1,
+            ];
+
+            $userData = ['id' => null];
+
+            // Context Data
+            $contextData = [
+                'hour' => clone $log->created_at ? $log->created_at->hour : now()->hour,
+                'ip' => $log->ip_address,
+            ];
+
+            // Run simulation with override
+            $simResult = $aiEngine->assessFraudRisk($orderData, $userData, $contextData, [
+                $ruleKey => $newWeight,
+            ]);
+
+            if ($simResult['decision'] === 'BLOCK') {
+                $simulatedBlocked++;
+            } elseif ($simResult['decision'] === 'FLAG') {
+                $simulatedFlagged++;
+            }
+        }
+
+        return response()->json([
+            'analyzed_count' => $recentLogs->count(),
+            'original_blocked' => $originalBlocked,
+            'simulated_blocked' => $simulatedBlocked,
+            'original_flagged' => $originalFlagged,
+            'simulated_flagged' => $simulatedFlagged,
+            'diff_blocked' => $simulatedBlocked - $originalBlocked,
+            'diff_flagged' => $simulatedFlagged - $originalFlagged,
+        ]);
+    }
 }

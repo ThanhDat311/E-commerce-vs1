@@ -1,9 +1,10 @@
 <?php
 
-use App\Models\User;
 use App\Models\LoginHistory;
+use App\Models\User;
 use App\Services\Auth\RiskEngineService;
-use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
@@ -12,6 +13,23 @@ test('login without trusted device triggers mfa', function () {
         'password' => bcrypt('password'),
         'is_active' => true,
     ]);
+
+    // Ensure a deterministic high-risk response from the AI microservice.
+    // Without this, the real HTTP call may return null (fail-open) or a low-risk score,
+    // causing the fallback legacyIpRiskCheck to also return false for a fresh user.
+    Http::fake([
+        '*/api/v1/predict-login-risk' => Http::response([
+            'status' => 'success',
+            'data' => [
+                'risk_score' => 0.85,
+                'auth_decision' => 'challenge_otp',
+                'reasons' => ['Unrecognized device', 'New IP address'],
+            ],
+        ], 200),
+    ]);
+
+    // Prevent actual email from being dispatched during the test.
+    Mail::fake();
 
     $response = $this->post('/login', [
         'email' => $user->email,
