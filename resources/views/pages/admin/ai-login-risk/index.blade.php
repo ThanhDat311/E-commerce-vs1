@@ -186,8 +186,13 @@
         </div>
         
         @if($logs->hasPages())
-            <div class="px-6 py-4 border-t border-gray-100 bg-gray-50">
-                {{ $logs->links() }}
+            <div class="px-6 py-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-gray-50">
+                <p class="text-sm text-gray-500">
+                    Showing <span class="font-medium">{{ $logs->firstItem() }}</span> to <span class="font-medium">{{ $logs->lastItem() }}</span> of <span class="font-bold text-gray-700">{{ $logs->total() }}</span> results
+                </p>
+                <div>
+                    {{ $logs->links('vendor.pagination.admin') }}
+                </div>
             </div>
         @endif
     </div>

@@ -11,21 +11,32 @@ use Illuminate\View\View;
 class RiskRuleController extends Controller
 {
     /**
-     * Display a listing of risk rules.
+     * Display a listing of risk rules filtered by AI type.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
-        $rules = RiskRule::all()->sortBy('rule_key');
+        $activeType = $request->query('type', RiskRule::TYPE_TRANSACTION);
 
-        // Statistics
+        // Guard against invalid type values
+        if (! in_array($activeType, [RiskRule::TYPE_TRANSACTION, RiskRule::TYPE_LOGIN])) {
+            $activeType = RiskRule::TYPE_TRANSACTION;
+        }
+
+        $rules = RiskRule::forType($activeType)->get()->sortBy('rule_key')->values();
+
         $stats = [
-            'total_rules' => RiskRule::count(),
-            'active_rules' => RiskRule::where('is_active', true)->count(),
-            'inactive_rules' => RiskRule::where('is_active', false)->count(),
-            'average_weight' => RiskRule::where('is_active', true)->avg('weight'),
+            'total_rules' => RiskRule::forType($activeType)->count(),
+            'active_rules' => RiskRule::forType($activeType)->where('is_active', true)->count(),
+            'inactive_rules' => RiskRule::forType($activeType)->where('is_active', false)->count(),
+            'average_weight' => RiskRule::forType($activeType)->where('is_active', true)->avg('weight'),
         ];
 
-        return view('pages.admin.risk-rules.index', compact('rules', 'stats'));
+        $aiTypes = [
+            RiskRule::TYPE_TRANSACTION => 'Transaction Fraud AI',
+            RiskRule::TYPE_LOGIN => 'Login Risk AI',
+        ];
+
+        return view('pages.admin.risk-rules.index', compact('rules', 'stats', 'activeType', 'aiTypes'));
     }
 
     /**
@@ -49,7 +60,7 @@ class RiskRuleController extends Controller
 
         $riskRule->update($validated);
 
-        return redirect()->route('admin.risk-rules.index')
+        return redirect()->route('admin.ai.risk-rules.index', ['type' => $riskRule->ai_type])
             ->with('success', "Risk rule '{$riskRule->rule_key}' updated successfully!");
     }
 
@@ -65,39 +76,55 @@ class RiskRuleController extends Controller
     }
 
     /**
-     * Reset all rules to default values.
+     * Reset all rules of the current type to default values.
      */
-    public function reset(): RedirectResponse
+    public function reset(Request $request): RedirectResponse
     {
-        $defaultRules = [
-            'guest_checkout' => 20,
-            'new_user_24h' => 15,
-            'high_value_5000' => 25,
-            'high_value_1000' => 10,
-            'suspicious_time' => 30,
-            'large_quantity' => 20,
-            'round_amount' => 10,
-        ];
+        $type = $request->query('type', RiskRule::TYPE_TRANSACTION);
+
+        $defaultRules = match ($type) {
+            RiskRule::TYPE_LOGIN => [
+                'failed_attempts_3' => 25,
+                'failed_attempts_5' => 45,
+                'new_ip_address' => 20,
+                'suspicious_login_hour' => 15,
+                'new_device_fingerprint' => 20,
+                'vpn_proxy_detected' => 35,
+                'impossible_travel' => 40,
+                'credential_stuffing_pattern' => 50,
+            ],
+            default => [
+                'guest_checkout' => 20,
+                'new_user_24h' => 15,
+                'high_value_5000' => 25,
+                'high_value_1000' => 10,
+                'suspicious_time' => 30,
+                'large_quantity' => 20,
+                'round_amount' => 10,
+            ],
+        };
 
         foreach ($defaultRules as $key => $weight) {
-            RiskRule::where('rule_key', $key)->update(['weight' => $weight]);
+            RiskRule::where('rule_key', $key)->where('ai_type', $type)->update(['weight' => $weight]);
         }
 
-        RiskRule::clearCache();
+        RiskRule::clearCache($type);
 
-        return redirect()->route('admin.risk-rules.index')
-            ->with('success', 'All risk rules reset to default values!');
+        return redirect()->route('admin.ai.risk-rules.index', ['type' => $type])
+            ->with('success', 'All rules reset to default values!');
     }
 
     /**
      * Get risk rules statistics (JSON API).
      */
-    public function statistics()
+    public function statistics(Request $request)
     {
-        $rules = RiskRule::where('is_active', true)->get();
+        $type = $request->query('type', RiskRule::TYPE_TRANSACTION);
+        $rules = RiskRule::forType($type)->where('is_active', true)->get();
 
         return response()->json([
-            'total_rules' => RiskRule::count(),
+            'ai_type' => $type,
+            'total_rules' => RiskRule::forType($type)->count(),
             'active_rules' => $rules->count(),
             'average_weight' => $rules->avg('weight'),
             'max_weight' => $rules->max('weight'),
@@ -117,13 +144,17 @@ class RiskRuleController extends Controller
     /**
      * Export rules as JSON.
      */
-    public function export()
+    public function export(Request $request)
     {
-        $rules = RiskRule::all()
+        $type = $request->query('type', RiskRule::TYPE_TRANSACTION);
+
+        $rules = RiskRule::forType($type)->get()
             ->map(function ($rule) {
                 return [
                     'rule_key' => $rule->rule_key,
+                    'ai_type' => $rule->ai_type,
                     'weight' => $rule->weight,
+                    'risk_level' => $rule->risk_level,
                     'description' => $rule->description,
                     'is_active' => $rule->is_active,
                 ];
@@ -131,7 +162,7 @@ class RiskRuleController extends Controller
             ->toArray();
 
         return response()->json($rules)
-            ->header('Content-Disposition', 'attachment; filename="risk-rules-'.date('Y-m-d-H-i-s').'.json"');
+            ->header('Content-Disposition', 'attachment; filename="risk-rules-'.$type.'-'.date('Y-m-d-H-i-s').'.json"');
     }
 
     /**
@@ -156,7 +187,9 @@ class RiskRuleController extends Controller
                 RiskRule::updateOrCreate(
                     ['rule_key' => $item['rule_key']],
                     [
+                        'ai_type' => $item['ai_type'] ?? RiskRule::TYPE_TRANSACTION,
                         'weight' => $item['weight'],
+                        'risk_level' => $item['risk_level'] ?? 'medium',
                         'description' => $item['description'] ?? '',
                         'is_active' => $item['is_active'] ?? true,
                     ]
@@ -167,7 +200,7 @@ class RiskRuleController extends Controller
 
         RiskRule::clearCache();
 
-        return redirect()->route('admin.risk-rules.index')
+        return redirect()->route('admin.ai.risk-rules.index')
             ->with('success', "Imported {$imported} risk rules successfully!");
     }
 
@@ -184,7 +217,6 @@ class RiskRuleController extends Controller
         $ruleKey = $validated['rule_key'];
         $newWeight = $validated['weight'];
 
-        // Get last 100 features that have order_id (using AiFeatureStore)
         $recentLogs = \App\Models\AiFeatureStore::whereNotNull('order_id')
             ->orderBy('created_at', 'desc')
             ->take(100)
@@ -196,14 +228,12 @@ class RiskRuleController extends Controller
         $simulatedFlagged = 0;
 
         foreach ($recentLogs as $log) {
-            // Count original
             if ($log->label === 'block') {
                 $originalBlocked++;
             } elseif ($log->label === 'flag') {
                 $originalFlagged++;
             }
 
-            // Simulate
             $orderData = [
                 'id' => $log->order_id,
                 'total' => $log->total_amount,
@@ -212,13 +242,11 @@ class RiskRuleController extends Controller
 
             $userData = ['id' => null];
 
-            // Context Data
             $contextData = [
                 'hour' => clone $log->created_at ? $log->created_at->hour : now()->hour,
                 'ip' => $log->ip_address,
             ];
 
-            // Run simulation with override
             $simResult = $aiEngine->assessFraudRisk($orderData, $userData, $contextData, [
                 $ruleKey => $newWeight,
             ]);

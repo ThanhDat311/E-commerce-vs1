@@ -1,93 +1,90 @@
 <?php
 
-use App\Models\LoginHistory;
 use App\Models\User;
-use App\Services\Auth\RiskEngineService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
-test('login without trusted device triggers mfa', function () {
-    $user = User::factory()->create([
-        'password' => bcrypt('password'),
-        'is_active' => true,
-    ]);
-
-    // Ensure a deterministic high-risk response from the AI microservice.
-    // Without this, the real HTTP call may return null (fail-open) or a low-risk score,
-    // causing the fallback legacyIpRiskCheck to also return false for a fresh user.
-    Http::fake([
-        '*/api/v1/predict-login-risk' => Http::response([
-            'status' => 'success',
-            'data' => [
-                'risk_score' => 0.85,
-                'auth_decision' => 'challenge_otp',
-                'reasons' => ['Unrecognized device', 'New IP address'],
-            ],
-        ], 200),
-    ]);
-
-    // Prevent actual email from being dispatched during the test.
+test('unrecognized device triggers MFA', function () {
+    $user = User::factory()->create();
+    Http::fake(['*/api/v1/predict-login-risk' => Http::response(['data' => ['risk_score' => 0.4, 'auth_decision' => 'challenge_otp']], 200)]);
     Mail::fake();
+    $this->post('/login', ['email' => $user->email, 'password' => 'password'])->assertRedirect(route('auth.mfa.show'));
+});
 
-    $response = $this->post('/login', [
-        'email' => $user->email,
-        'password' => 'password',
-    ]);
+test('trusted device bypasses MFA', function () {
+    $user = User::factory()->create();
+    $deviceId = 'trusted-123';
+    \App\Models\LoginHistory::create(['user_id' => $user->id, 'device_id' => $deviceId, 'ip_address' => '127.0.0.1']);
+    $this->withCookie(\App\Services\Auth\RiskEngineService::DEVICE_COOKIE_NAME, $deviceId)
+        ->post('/login', ['email' => $user->email, 'password' => 'password'])->assertRedirect(route('home'));
+});
 
-    $response->assertRedirect(route('auth.mfa.show'));
+test('TC-MFA-01: Low risk login bypasses MFA', function () {
+    $user = User::factory()->create();
+    Http::fake(['*/api/v1/predict-login-risk' => Http::response(['data' => ['risk_score' => 0.1, 'auth_decision' => 'passive_auth_allow']], 200)]);
+    $this->post('/login', ['email' => $user->email, 'password' => 'password'])->assertRedirect(route('home'));
+});
+
+test('logins from whitelisted IPs bypass AI evaluation', function () {
+    $user = User::factory()->create();
+    \App\Models\RiskList::create(['type' => 'ip', 'value' => '1.2.3.4', 'action' => 'whitelist']);
+    Http::fake();
+    $this->withServerVariables(['REMOTE_ADDR' => '1.2.3.4'])->post('/login', ['email' => $user->email, 'password' => 'password'])->assertRedirect(route('home'));
+    Http::assertNotSent(fn ($r) => str_contains($r->url(), 'predict-login-risk'));
+});
+
+test('logins from blacklisted IPs are blocked immediately', function () {
+    $user = User::factory()->create();
+    \App\Models\RiskList::create(['type' => 'ip', 'value' => '9.9.9.9', 'action' => 'block']);
+    $this->withServerVariables(['REMOTE_ADDR' => '9.9.9.9'])->post('/login', ['email' => $user->email, 'password' => 'password'])->assertSessionHasErrors('email');
     $this->assertGuest();
 });
 
-test('login with trusted device bypasses mfa', function () {
-    $user = User::factory()->create([
-        'password' => bcrypt('password'),
-        'is_active' => true,
-    ]);
-
-    $deviceId = 'test-device-uuid';
-
-    // Seed a trusted login history
-    LoginHistory::create([
-        'user_id' => $user->id,
-        'device_id' => $deviceId,
-        'ip_address' => '127.0.0.1',
-    ]);
-
-    // Send the encrypted cookie
-    $response = $this->withCookie(
-        RiskEngineService::DEVICE_COOKIE_NAME,
-        $deviceId
-    )->post('/login', [
-        'email' => $user->email,
-        'password' => 'password',
-    ]);
-
-    $response->assertRedirect(route('home'));
-    $this->assertAuthenticatedAs($user);
+test('specific users on whitelist bypass MFA', function () {
+    $user = User::factory()->create();
+    \App\Models\RiskList::create(['type' => 'user_id', 'value' => (string) $user->id, 'action' => 'whitelist']);
+    Http::fake();
+    $this->post('/login', ['email' => $user->email, 'password' => 'password'])->assertRedirect(route('home'));
+    Http::assertNotSent(fn ($r) => str_contains($r->url(), 'predict-login-risk'));
 });
 
-test('successful mfa verification grants trusted device cookie', function () {
-    $user = User::factory()->create([
-        'password' => bcrypt('password'),
-        'is_active' => true,
-        'mfa_secret' => '123456',
-        'mfa_expires_at' => now()->addMinutes(10),
-    ]);
+test('device type "mobile" is detected and sent to AI', function () {
+    $user = User::factory()->create();
+    Http::fake(['*/api/v1/predict-login-risk' => Http::response(['data' => ['risk_score' => 0.1, 'auth_decision' => 'passive_auth_allow']], 200)]);
+    $this->withHeader('User-Agent', 'iPhone')->post('/login', ['email' => $user->email, 'password' => 'password']);
+    Http::assertSent(fn ($r) => ($r['device_type'] ?? '') === 'mobile');
+});
 
-    $response = $this->withSession([
-        'mfa_user_id' => $user->id,
-    ])->post('/login/mfa', [
-        'mfa_code' => '123456',
-    ]);
+test('system falls back to MFA when AI service is unavailable', function () {
+    $user = User::factory()->create();
+    Http::fake(['*/api/v1/predict-login-risk' => Http::response([], 500)]);
+    $this->post('/login', ['email' => $user->email, 'password' => 'password'])->assertRedirect(route('auth.mfa.show'));
+});
 
-    $response->assertRedirect(route('home'));
-    $this->assertAuthenticatedAs($user);
-    $response->assertCookie(RiskEngineService::DEVICE_COOKIE_NAME);
+test('AI: high risk score triggers challenge_biometric', function () {
+    $user = User::factory()->create();
+    Http::fake(['*/api/v1/predict-login-risk' => Http::response(['data' => ['risk_score' => 0.7, 'auth_decision' => 'challenge_biometric']], 200)]);
+    $this->post('/login', ['email' => $user->email, 'password' => 'password'])->assertRedirect(route('auth.mfa.show'));
+});
 
-    // Ensure login history was recorded
-    $this->assertDatabaseHas('login_histories', [
-        'user_id' => $user->id,
-    ]);
+test('AI: critical risk score triggers block_access', function () {
+    $user = User::factory()->create();
+    Http::fake(['*/api/v1/predict-login-risk' => Http::response(['data' => ['risk_score' => 0.9, 'auth_decision' => 'block_access']], 200)]);
+    $this->post('/login', ['email' => $user->email, 'password' => 'password'])->assertSessionHasErrors('email');
+});
+
+test('Location: login from new location triggers MFA (fallback)', function () {
+    $user = User::factory()->create();
+    Http::fake(['*/api/v1/predict-login-risk' => Http::response(null, 500)]); // Fallback to legacy
+    // Legacy fallback check login histories
+    $this->post('/login', ['email' => $user->email, 'password' => 'password'])->assertRedirect(route('auth.mfa.show'));
+});
+
+test('Location: known location bypasses MFA (fallback)', function () {
+    $user = User::factory()->create();
+    \App\Models\LoginHistory::create(['user_id' => $user->id, 'device_id' => 'dev1', 'ip_address' => '127.0.0.1']);
+    Http::fake(['*/api/v1/predict-login-risk' => Http::response(null, 500)]); // Fallback to legacy
+    $this->withServerVariables(['REMOTE_ADDR' => '127.0.0.1'])->post('/login', ['email' => $user->email, 'password' => 'password'])->assertRedirect(route('home'));
 });

@@ -2,11 +2,16 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
 class RiskRule extends Model
 {
+    public const TYPE_TRANSACTION = 'transaction';
+
+    public const TYPE_LOGIN = 'login';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -14,6 +19,7 @@ class RiskRule extends Model
      */
     protected $fillable = [
         'rule_key',
+        'ai_type',
         'weight',
         'description',
         'risk_level',
@@ -39,51 +45,69 @@ class RiskRule extends Model
     {
         parent::boot();
 
-        // Invalidate cache when rule is created, updated, or deleted
         static::created(function ($model) {
-            self::clearCache();
+            self::clearCache($model->ai_type);
         });
 
         static::updated(function ($model) {
-            self::clearCache();
+            self::clearCache($model->ai_type);
         });
 
         static::deleted(function ($model) {
-            self::clearCache();
+            self::clearCache($model->ai_type);
         });
     }
 
     /**
-     * Clear the risk rules cache.
+     * Scope rules by AI type.
      */
-    public static function clearCache()
+    public function scopeForType(Builder $query, string $type): Builder
     {
-        Cache::forget('risk_rules');
+        return $query->where('ai_type', $type);
+    }
+
+    /**
+     * Clear the risk rules cache for a given type.
+     */
+    public static function clearCache(?string $type = null): void
+    {
+        if ($type) {
+            Cache::forget("risk_rules_{$type}");
+            Cache::forget("risk_rules_full_{$type}");
+        } else {
+            Cache::forget('risk_rules_'.self::TYPE_TRANSACTION);
+            Cache::forget('risk_rules_'.self::TYPE_LOGIN);
+            Cache::forget('risk_rules_full_'.self::TYPE_TRANSACTION);
+            Cache::forget('risk_rules_full_'.self::TYPE_LOGIN);
+            // Legacy keys
+            Cache::forget('risk_rules');
+            Cache::forget('risk_rules_full');
+        }
     }
 
     /**
      * Get all active risk rules from cache or database.
-     * 
+     *
      * @return array Array of rule_key => weight
      */
-    public static function getRules(): array
+    public static function getRules(string $type = self::TYPE_TRANSACTION): array
     {
-        return Cache::rememberForever('risk_rules', function () {
+        return Cache::rememberForever("risk_rules_{$type}", function () use ($type) {
             return self::where('is_active', true)
+                ->where('ai_type', $type)
                 ->pluck('weight', 'rule_key')
                 ->toArray();
         });
     }
 
     /**
-     * Get all rules with descriptions.
-     *
-     * @return array
+     * Get all rules with descriptions for a given AI type.
      */
-    public static function getRulesWithDescriptions(): array
+    public static function getRulesWithDescriptions(string $type = self::TYPE_TRANSACTION): array
     {
-        return Cache::rememberForever('risk_rules_full', function () {
+        return Cache::rememberForever("risk_rules_full_{$type}", function () use ($type) {
             return self::where('is_active', true)
+                ->where('ai_type', $type)
                 ->get()
                 ->map(function ($rule) {
                     return [
@@ -99,27 +123,22 @@ class RiskRule extends Model
 
     /**
      * Get a specific rule weight.
-     *
-     * @param string $ruleKey
-     * @return int
      */
-    public static function getWeight(string $ruleKey): int
+    public static function getWeight(string $ruleKey, string $type = self::TYPE_TRANSACTION): int
     {
-        $rules = self::getRules();
+        $rules = self::getRules($type);
+
         return $rules[$ruleKey] ?? 0;
     }
 
     /**
      * Update rule weight and clear cache.
-     *
-     * @param string $ruleKey
-     * @param int $weight
-     * @return bool
      */
-    public static function updateWeight(string $ruleKey, int $weight): bool
+    public static function updateWeight(string $ruleKey, int $weight, string $type = self::TYPE_TRANSACTION): bool
     {
-        $result = self::where('rule_key', $ruleKey)->update(['weight' => $weight]);
-        self::clearCache();
+        $result = self::where('rule_key', $ruleKey)->where('ai_type', $type)->update(['weight' => $weight]);
+        self::clearCache($type);
+
         return $result > 0;
     }
 
@@ -142,7 +161,7 @@ class RiskRule extends Model
      */
     public function getRiskLevelLabel(): string
     {
-        return ucfirst($this->risk_level) . ' Risk';
+        return ucfirst($this->risk_level).' Risk';
     }
 
     /**

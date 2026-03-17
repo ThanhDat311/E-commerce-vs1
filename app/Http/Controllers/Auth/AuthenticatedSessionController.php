@@ -41,7 +41,13 @@ class AuthenticatedSessionController extends Controller
 
         // Use RiskEngineService to evaluate login risk
         $riskEngine = app(\App\Services\Auth\RiskEngineService::class);
-        $requiresMfa = $riskEngine->evaluate($user, $request);
+
+        try {
+            $requiresMfa = $riskEngine->evaluate($user, $request);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Auth::logout();
+            throw $e;
+        }
 
         if ($requiresMfa) {
             $mfaCode = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);

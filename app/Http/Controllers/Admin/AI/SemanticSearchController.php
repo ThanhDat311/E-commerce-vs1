@@ -50,7 +50,7 @@ class SemanticSearchController extends Controller
             'synonym' => strtolower(trim($request->synonym)),
         ];
 
-        Setting::set('search_synonyms', $synonyms, 'ai');
+        Setting::set('search_synonyms', $synonyms, 'ai', 'json');
 
         return back()->with('success', 'Synonym added successfully.');
     }
@@ -68,7 +68,7 @@ class SemanticSearchController extends Controller
         }
 
         unset($synonyms[$request->index]);
-        Setting::set('search_synonyms', array_values($synonyms), 'ai');
+        Setting::set('search_synonyms', array_values($synonyms), 'ai', 'json');
 
         return back()->with('success', 'Synonym removed.');
     }

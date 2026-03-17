@@ -35,32 +35,39 @@ class RiskEngineService
     {
         $ip = $request->ip();
 
-        // --- 0a. Check Explicit IP Block ---
-        $isIpBlocked = \App\Models\RiskList::where('type', 'ip')
+        // --- 0a. Check Explicit IP Whitelist/Blacklist ---
+        $riskEntry = \App\Models\RiskList::where('type', 'ip')
             ->where('value', $ip)
-            ->where('action', 'block')
             ->where(function ($q) {
                 $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
-            })->exists();
+            })->first();
 
-        if ($isIpBlocked) {
-            Log::warning('[RiskEngine] Explicit IP block triggered.', ['ip' => $ip, 'user_id' => $user->id]);
+        if ($riskEntry) {
+            if ($riskEntry->action === 'whitelist') {
+                Log::info('[RiskEngine] IP is explicitly whitelisted.', ['ip' => $ip]);
 
-            AuthLog::create([
-                'user_id' => $user->id,
-                'session_id' => $request->hasSession() ? $request->session()->getId() : 'no-session',
-                'ip_address' => $ip,
-                'user_agent' => $request->userAgent(),
-                'risk_score' => 100,
-                'risk_level' => 'critical',
-                'auth_decision' => 'block_access',
-                'is_successful' => false,
-                'reasons' => ['IP explicitly blocked by admin'],
-            ]);
+                return false;
+            }
 
-            throw \Illuminate\Validation\ValidationException::withMessages([
-                'email' => __('Your IP address has been temporarily blocked for security reasons.'),
-            ]);
+            if ($riskEntry->action === 'block' || $riskEntry->action === 'blacklist') {
+                Log::warning('[RiskEngine] Explicit IP block triggered.', ['ip' => $ip, 'user_id' => $user->id]);
+
+                AuthLog::create([
+                    'user_id' => $user->id,
+                    'session_id' => $request->hasSession() ? $request->session()->getId() : 'no-session',
+                    'ip_address' => $ip,
+                    'user_agent' => $request->userAgent(),
+                    'risk_score' => 100,
+                    'risk_level' => 'critical',
+                    'auth_decision' => 'block_access',
+                    'is_successful' => false,
+                    'reasons' => ['IP explicitly blocked by admin'],
+                ]);
+
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'email' => __('Your IP address has been temporarily blocked for security reasons.'),
+                ]);
+            }
         }
 
         // --- 0b. Check Explicit User Whitelist ---
@@ -87,10 +94,8 @@ class RiskEngineService
                 ->exists();
         }
 
-        // Trusted device always bypasses everything (including AI)
-        if ($isDeviceTrusted) {
-            return false;
-        }
+        // We no longer return early here, so that the AI microservice is always called
+        // and a Login Risk record is always created in AuthLog.
 
         // --- 2. Detect device type from User-Agent ---
         $userAgent = $request->userAgent() ?? '';
@@ -113,6 +118,12 @@ class RiskEngineService
             // to prevent inconsistencies from AI microservice
             $riskLevel = $this->calculateRiskLevel($riskScore);
             $authDecision = $this->calculateDecision($riskScore);
+
+            // Trusted device overrides the enforcement
+            if ($isDeviceTrusted) {
+                $authDecision = 'passive_auth_allow';
+                $reasons[] = 'Allowed due to trusted device (AI logic bypassed for enforcement)';
+            }
 
             Log::info('[RiskEngine] AI decision for login.', [
                 'user_id' => $user->id,
@@ -144,16 +155,25 @@ class RiskEngineService
                 'is_successful' => $authDecision === 'passive_auth_allow',
             ]);
 
+            if ($authDecision === 'block_access') {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'email' => 'Your access has been blocked due to high security risk.',
+                ]);
+            }
+
             return match ($authDecision) {
-                'block_access' => true,  // Block → treat as MFA-required (strongest check)
-                'challenge_otp' => true,  // Challenge OTP → trigger MFA
-                'challenge_biometric' => true,  // Challenge Biometric → trigger MFA
-                default => false, // passive_auth_allow → let through
+                'challenge_otp' => true,
+                'challenge_biometric' => true,
+                default => false,
             };
         }
 
         // --- 4. Fallback: Legacy IP/Location check (AI service offline) ---
         Log::warning('[RiskEngine] AI microservice unavailable, falling back to legacy IP check.');
+
+        if ($isDeviceTrusted) {
+            return false;
+        }
 
         return $this->legacyIpRiskCheck($user, $ip);
     }

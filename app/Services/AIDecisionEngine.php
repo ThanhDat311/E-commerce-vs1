@@ -216,7 +216,15 @@ class AIDecisionEngine
             }
         }
 
-        // 4. Ensure minimum margin (20% above cost)
+        // 4. Low Demand - Decrease Price
+        if (! empty($marketData['low_demand'])) {
+            $decrease = $currentPrice * 0.05; // 5% decrease
+            $suggestedPrice -= $decrease;
+            $score += 10;
+            $reasons[] = 'Low demand suggests price decrease';
+        }
+
+        // 5. Ensure minimum margin (20% above cost)
         $minPrice = $costPrice * 1.2;
         if ($suggestedPrice < $minPrice) {
             $suggestedPrice = $minPrice;

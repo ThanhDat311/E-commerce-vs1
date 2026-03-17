@@ -20,22 +20,32 @@ class Setting extends Model
     /**
      * Get a setting value by key.
      *
-     * @param string $key
-     * @param mixed $default
+     * @param  mixed  $default
      * @return mixed
      */
     public static function get(string $key, $default = null)
     {
-        $value = Cache::rememberForever("settings.{$key}", function () use ($key) {
-            return static::where('key', $key)->value('value');
+        $setting = Cache::rememberForever("settings.{$key}", function () use ($key) {
+            return static::where('key', $key)->first(['value', 'type']);
         });
 
-        if (is_null($value)) {
+        if (! $setting instanceof \App\Models\Setting) {
             return $default;
         }
 
-        // Auto-decode JSON or Boolean if needed? For now straightforward.
-        // If type is boolean/json we could cast, but value is text.
+        $value = $setting->value;
+
+        if ($setting->type === 'json' || $setting->type === 'array') {
+            return json_decode($value, true) ?: [];
+        }
+
+        if ($setting->type === 'boolean') {
+            return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+        }
+
+        if ($setting->type === 'integer' || $setting->type === 'int') {
+            return (int) $value;
+        }
 
         return $value;
     }
@@ -43,18 +53,22 @@ class Setting extends Model
     /**
      * Set a setting value by key.
      *
-     * @param string $key
-     * @param mixed $value
-     * @param string $group
-     * @param string $type
+     * @param  mixed  $value
      * @return void
      */
     public static function set(string $key, $value, string $group = 'general', string $type = 'text')
     {
+        $finalValue = $value;
+
+        if (is_array($value) || is_object($value) || $type === 'json') {
+            $finalValue = json_encode($value);
+            $type = 'json';
+        }
+
         static::updateOrCreate(
             ['key' => $key],
             [
-                'value' => $value,
+                'value' => $finalValue,
                 'group' => $group,
                 'type' => $type,
             ]
