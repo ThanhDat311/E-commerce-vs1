@@ -45,7 +45,9 @@
                 <div>
                     <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Total Evaluations</p>
                     <h3 class="text-3xl font-bold text-gray-900">{{ number_format($totalEvaluations) }}</h3>
-                    <p class="text-xs text-gray-400 mt-1">All time</p>
+                    <p class="text-xs text-gray-400 mt-1">
+                        {{ $period == '1' ? 'Today' : ($period == '7' ? 'Last 7 Days' : ($period == '30' ? 'Last 30 Days' : 'Last 90 Days')) }}
+                    </p>
                 </div>
                 <div class="p-2.5 bg-blue-50 rounded-lg">
                     <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -110,7 +112,7 @@
             {{-- Mini progress bar --}}
             <div class="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                 <div class="h-1.5 rounded-full bg-gradient-to-r from-green-400 via-yellow-400 to-red-500"
-                     style="width: {{ min($avgRiskScore, 100) }}%"></div>
+                     style="width: {{ min($avgRiskScore * 100, 100) }}%"></div>
             </div>
         </div>
     </div>
@@ -126,7 +128,9 @@
                 <div>
                     <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Total Logins</p>
                     <h3 class="text-3xl font-bold text-gray-900">{{ number_format($loginTotal) }}</h3>
-                    <p class="text-xs text-gray-400 mt-1">All time</p>
+                    <p class="text-xs text-gray-400 mt-1">
+                        {{ $period == '1' ? 'Today' : ($period == '7' ? 'Last 7 Days' : ($period == '30' ? 'Last 30 Days' : 'Last 90 Days')) }}
+                    </p>
                 </div>
                 <div class="p-2.5 bg-blue-50 rounded-lg">
                     <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -197,7 +201,10 @@
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-6">
         <div class="flex items-center justify-between mb-3">
             <h4 class="text-sm font-semibold text-gray-700">Overall Threat Distribution</h4>
-            <span class="text-xs text-gray-400">All {{ number_format($totalEvaluations) }} evaluations</span>
+            <span class="text-xs text-gray-400">
+                {{ $period == '1' ? 'Today' : ($period == '7' ? 'Last 7 Days' : ($period == '30' ? 'Last 30 Days' : 'Last 90 Days')) }}
+                ({{ number_format($totalEvaluations) }} evaluations)
+            </span>
         </div>
         <div class="flex h-3 rounded-full overflow-hidden gap-px">
             @php
@@ -220,8 +227,8 @@
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
             <div>
-                <h3 class="text-base font-semibold text-gray-900">High-Risk Transactions</h3>
-                <p class="text-xs text-gray-400 mt-0.5">Showing last {{ count($highRiskLogs) }} events with risk score ≥ 0.35</p>
+                <h3 class="text-base font-semibold text-gray-900">High-Risk Evaluations</h3>
+                <p class="text-xs text-gray-400 mt-0.5">Showing last {{ count($highRiskEvaluations) }} events with risk score ≥ 0.35</p>
             </div>
             <a href="{{ route('admin.ai.risk-rules.index') }}"
                class="text-xs font-medium text-blue-600 hover:text-blue-800 flex items-center gap-1">
@@ -235,6 +242,7 @@
                 <thead class="bg-gray-50/80">
                     <tr>
                         <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date & Time</th>
+                        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Type</th>
                         <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Order / Target</th>
                         <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">IP Address</th>
                         <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Risk Score</th>
@@ -248,45 +256,56 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
-                    @forelse ($highRiskLogs as $log)
+                    @forelse ($highRiskEvaluations as $log)
                         <tr class="hover:bg-gray-50/60 transition-colors">
                             <td class="px-5 py-3.5 whitespace-nowrap text-sm text-gray-500">
-                                <div>{{ $log->created_at->format('M d, Y') }}</div>
-                                <div class="text-xs text-gray-400">{{ $log->created_at->format('H:i:s') }}</div>
+                                <div>{{ $log['date']->format('M d, Y') }}</div>
+                                <div class="text-xs text-gray-400">{{ $log['date']->format('H:i:s') }}</div>
+                            </td>
+                            <td class="px-5 py-3.5 whitespace-nowrap text-sm text-gray-500">
+                                @if($log['type'] === 'transaction')
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                                        Transaction
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-purple-50 text-purple-700 border border-purple-100">
+                                        Login
+                                    </span>
+                                @endif
                             </td>
                             <td class="px-5 py-3.5 whitespace-nowrap text-sm font-medium text-gray-900">
-                                @if($log->order_id)
-                                    <a href="{{ route('admin.orders.show', $log->order_id) }}" class="text-blue-600 hover:underline">
-                                        #ORD-{{ str_pad($log->order_id, 5, '0', STR_PAD_LEFT) }}
+                                @if($log['target_url'])
+                                    <a href="{{ $log['target_url'] }}" class="text-blue-600 hover:underline">
+                                        {{ $log['target_label'] }}
                                     </a>
                                 @else
-                                    <span class="text-gray-400 italic text-xs">Pre-checkout</span>
+                                    <span class="text-gray-400 italic text-xs">{{ $log['target_label'] }}</span>
                                 @endif
                             </td>
                             <td class="px-5 py-3.5 whitespace-nowrap text-sm text-gray-500 font-mono text-xs">
-                                {{ $log->ip_address ?? '—' }}
+                                {{ $log['ip_address'] ?? '—' }}
                             </td>
                             <td class="px-5 py-3.5 whitespace-nowrap">
-                                @if($log->risk_score >= 0.60)
+                                @if($log['risk_score'] >= 0.60)
                                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200">
                                         <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                                        {{ $log->risk_score }} BLOCKED
+                                        {{ $log['risk_score'] }} BLOCKED
                                     </span>
                                 @else
                                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700 border border-yellow-200">
                                         <span class="w-1.5 h-1.5 rounded-full bg-yellow-500"></span>
-                                        {{ $log->risk_score }} FLAGGED
+                                        {{ $log['risk_score'] }} FLAGGED
                                     </span>
                                 @endif
                             </td>
                             <td class="px-5 py-3.5 text-sm text-gray-500 max-w-[220px]">
-                                @if(is_array($log->reasons) && count($log->reasons))
+                                @if(is_array($log['reasons']) && count($log['reasons']))
                                     <div class="space-y-0.5">
-                                        @foreach(array_slice($log->reasons, 0, 2) as $reason)
+                                        @foreach(array_slice($log['reasons'], 0, 2) as $reason)
                                             <div class="text-xs bg-gray-100 rounded px-1.5 py-0.5 truncate">{{ $reason }}</div>
                                         @endforeach
-                                        @if(count($log->reasons) > 2)
-                                            <div class="text-xs text-indigo-500 font-medium">+{{ count($log->reasons) - 2 }} more</div>
+                                        @if(count($log['reasons']) > 2)
+                                            <div class="text-xs text-indigo-500 font-medium">+{{ count($log['reasons']) - 2 }} more</div>
                                         @endif
                                     </div>
                                 @else
@@ -294,9 +313,9 @@
                                 @endif
                             </td>
                             <td class="px-5 py-3.5 text-sm max-w-[200px]">
-                                @if($log->ai_insight)
-                                    <p class="text-xs text-indigo-700 font-medium leading-tight" title="{{ $log->ai_insight }}">
-                                        {{ Str::limit($log->ai_insight, 60) }}
+                                @if($log['ai_insight'])
+                                    <p class="text-xs text-indigo-700 font-medium leading-tight" title="{{ $log['ai_insight'] }}">
+                                        {{ Str::limit($log['ai_insight'], 60) }}
                                     </p>
                                 @else
                                     <span class="text-gray-300 italic text-xs">Waiting…</span>
