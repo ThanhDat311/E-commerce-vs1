@@ -1,174 +1,168 @@
-# 🛍️ E-Commerce Platform - AI-Powered Smart Shopping Solution
+<div align="center">
+  <img src="public/favicon.ico" alt="Logo" width="80" height="auto" />
+  <h1>🛍️ Electro - AI-Powered Multi-Vendor E-Commerce Platform</h1>
+  <p>
+    <strong>A modern, intelligent marketplace built with Laravel 12 and powered by an advanced AI Decision Engine for fraud detection and risk management.</strong>
+  </p>
 
-> A modern, intelligent e-commerce platform built with **Laravel 12**, featuring advanced AI decision engine, fraud detection, real-time analytics, and professional payment integration.
-
-[![Laravel](https://img.shields.io/badge/Laravel-12-FF2D20?style=flat-square&logo=laravel)](https://laravel.com)
-[![PHP](https://img.shields.io/badge/PHP-8.2%2B-777BB4?style=flat-square&logo=php)](https://www.php.net)
-[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.1-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com)
-[![Vite](https://img.shields.io/badge/Vite-7.0-646CFF?style=flat-square&logo=vite)](https://vitejs.dev)
-[![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
-
----
-
-## 📋 Table of Contents
-
-- [Key Features](#-key-features)
-- [System Architecture](#-system-architecture)
-- [Tech Stack](#-tech-stack)
-- [Installation](#-installation)
-- [Configuration](#-configuration)
-- [Documentation](#-documentation)
-- [Demo Users](#-demo-users)
-- [Project Structure](#-project-structure)
-- [Testing](#-testing)
-- [Security](#-security)
-- [License](#-license)
+  <p>
+    <a href="https://laravel.com"><img src="https://img.shields.io/badge/Laravel-12-FF2D20?style=for-the-badge&logo=laravel" alt="Laravel 12"></a>
+    <a href="https://www.php.net"><img src="https://img.shields.io/badge/PHP-8.2+-777BB4?style=for-the-badge&logo=php" alt="PHP 8.2"></a>
+    <a href="https://tailwindcss.com"><img src="https://img.shields.io/badge/Tailwind_CSS-3.1-38B2AC?style=for-the-badge&logo=tailwind-css" alt="Tailwind CSS"></a>
+    <a href="https://alpinejs.dev/"><img src="https://img.shields.io/badge/Alpine.js-8BC0D0?style=for-the-badge&logo=alpine.js&logoColor=white" alt="Alpine JS"></a>
+    <a href="https://pestphp.com/"><img src="https://img.shields.io/badge/Pest-F7CA18?style=for-the-badge&logo=testing-library&logoColor=black" alt="Pest PHP"></a>
+  </p>
+</div>
 
 ---
 
-## ✨ Key Features
-
-### 👥 Customer Features
-
-- **Smart Shopping Experience**
-    - Intelligent product search and filtering
-    - Advanced multi-criteria filtering
-    - Detailed product views with ratings and reviews
-- **Shopping Cart & Checkout**
-    - Optimized checkout flow
-    - Supported payment methods: **COD**, **VNPay**
-    - Cart persistence and recovery
-- **Account Management**
-    - Comprehensive user profile management
-    - Secure password management
-    - Address book management (Multiple delivery addresses)
-    - Complete order history tracking (Pending → Processing → Shipping → Completed)
-    - Order cancellation capability (before processing)
-
-### 🔧 Management & Administration
-
-- **Real-time Dashboard**
-    - Revenue statistics and sales KPIs
-    - Real-time order monitoring
-    - Best-selling products analytics
-- **Product & Inventory**
-    - Full CRUD for products and categories
-    - Inventory management with low-stock alerts
-    - Product image management via Laravel Storage
-- **Role-Based Access Control (RBAC)**
-    - Multi-role support: **Admin**, **Staff**, **Vendor**, **Customer**
-    - Fine-grained permission system
-
-### 🤖 AI & Security Features
-
-- **Electro AI Engine**
-    - **AI Decision Engine**: Automated order risk analysis
-    - **Fraud Detection**: Real-time fraud detection using custom risk rules
-    - **Risk Management**: Comprehensive risk assessment for transactions
-- **Security Protocols**
-    - Detailed authentication logs and audit trails
-    - CSRF, XSS, and SQL Injection protection
-    - Rate limiting on critical routes
+## 📖 Welcome to Electro
+Electro isn't just another e-commerce site; it's a **secure, multi-vendor marketplace** designed for scale. By integrating a dedicated AI Risk Engine, it protects both buyers and sellers from fraudulent transactions and suspicious logins while providing a seamless, real-time shopping experience.
 
 ---
 
-## 🛠 Tech Stack
+## ✨ Outstanding Features
 
-| Component           | Technology                                           |
-| ------------------- | ---------------------------------------------------- |
-| **Backend**         | Laravel 12, PHP 8.2+                                 |
-| **Database**        | MySQL 8.0+                                           |
-| **Frontend**        | Blade Templates, Alpine.js 3, Tailwind CSS 3         |
-| **Build Tool**      | Vite 7                                               |
-| **Real-time**       | Laravel Echo, Pusher/Reverb                          |
-| **Payment Gateway** | VNPay API                                            |
-| **Testing**         | Pest 4, PHPUnit                                      |
+### 🛒 Multi-Vendor Marketplace
+- **Vendor Dashboards:** Dedicated panels for sellers to manage products, view sales, and request payouts.
+- **Commission System:** Automated commission calculation and tiered `CommissionSettings`.
+- **Payout Management:** Secure handling of `VendorPayout` and wallet balances.
+
+### 🤖 AI-Powered Risk & Security Engine
+- **Transaction Fraud Detection:** Real-time AI evaluation of every checkout attempt.
+- **Smart Login Risk:** Adaptive MFA triggers based on `UserBehaviorProfile` and `LoginHistory` anomalies.
+- **Dynamic Risk Rules:** Configurable `RiskRule` and `RiskList` management via an intuitive admin dashboard.
+
+### 💰 Dynamic Promotions & Pricing
+- **Flash Sales & Deals:** Time-bound `FlashSale` events with countdown timers.
+- **Smart Coupons:** Advanced `Coupon` usage restrictions and user-specific `UserCoupon` tracking.
+- **Price Suggestions:** Interactive `PriceSuggestion` system for B2B or wholesale negotiations.
+
+### 📊 Real-Time Analytics & Operations
+- **Live Dashboards:** Powered by **Laravel Reverb**, experience real-time order monitoring.
+- **Inventory Alerts:** Automated `LowStockAlerts` to keep sellers informed.
+- **Revenue Analytics:** Deep dive into `TopSellingProducts` and sales KPIs with interactive charts.
+
+### 🛡️ Customer Support & Trust
+- **Ticketing System:** Integrated `SupportTicket` and `TicketMessage` threading.
+- **Dispute Resolution:** Built-in `Dispute` and `Refund` tracking for buyer protection.
+- **Verified Reviews:** Product `Review` system tied directly to verified purchases.
 
 ---
 
-## 🚀 Installation
+## 🏗️ System Architecture
+
+The project utilizes a modern decoupled architecture:
+1. **Core Application (Laravel 12):** Handles routing, ORM, multi-auth, queue processing, and real-time broadcasting via **Laravel Reverb**.
+2. **AI Microservice (Python/FastAPI):** A dedicated service located in `../E-commerce-AI` that provides real-time risk scoring, behavior profiling, and fraud detection using machine learning models. It communicates with Laravel via a REST API.
+
+---
+
+## 💻 Tech Stack
+
+| Domain | Technologies |
+| :--- | :--- |
+| **Backend Framework** | Laravel 12, PHP 8.2+ |
+| **Database** | MySQL 8.0+ |
+| **Frontend Styling** | Tailwind CSS 3.1, PostCSS |
+| **Frontend Logic** | Alpine.js 3, Blade Components |
+| **Asset Bundling** | Vite 7 |
+| **Real-Time WebSockets**| Laravel Reverb, Laravel Echo |
+| **Search Engine** | Laravel Scout |
+| **Testing** | Pest 4 (PHP), Playwright (E2E) |
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
+- PHP >= 8.2
+- Composer
+- Node.js >= 18 & NPM
+- MySQL >= 8.0
+- Python (for the AI Microservice)
 
-- **PHP** >= 8.2
-- **Composer** (dependency manager)
-- **MySQL** >= 8.0
-- **Node.js** >= 18 & **npm**
-- **Git**
-
-### Step-by-Step Setup
+### Step-by-step Installation
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/yourusername/e-commerce-platform.git
-   cd e-commerce-platform
+   git clone https://github.com/ThanhDat311/E-commerce-vs1.git
+   cd E-commerce-vs1
    ```
 
-2. **Install Dependencies**
+2. **Install PHP and Node Dependencies**
    ```bash
    composer install
    npm install
    ```
 
-3. **Environment Configuration**
+3. **Configure Environment**
    ```bash
    cp .env.example .env
    php artisan key:generate
    ```
+   > ⚠️ **Important**: Update your `.env` file with your specific `DB_*` credentials. Provide configuration if using external services like VNPay or Pusher.
 
-4. **Database Setup**
-   Update `.env` with your database credentials, then run:
+4. **Database Migration & Seeding**
    ```bash
    php artisan migrate --seed
    ```
+   *This will set up the massive schema including multi-vendor tables, risk rules, and seed demo users.*
 
-5. **Storage & Assets**
+5. **AI Microservice Setup**
+   Clone the **E-commerce-AI** repository into a sibling directory or any preferred location:
+   ```bash
+   git clone https://github.com/ThanhDat311/E-commerce-AI.git
+   cd E-commerce-AI
+   # Ensure you are inside the E-commerce-AI directory
+   python -m venv venv
+   source venv/bin/activate  # Or venv\Scripts\activate on Windows
+   pip install -r requirements.txt
+   ```
+
+6. **Symlink Storage**
    ```bash
    php artisan storage:link
-   npm run build
    ```
 
-6. **Start the Application**
+7. **Start the Servers**
+   To run both the Laravel application and the AI Microservice concurrently, use our custom NPM script:
    ```bash
-   php artisan serve
+   npm run dev
    ```
-   Access at: [http://localhost:8000](http://localhost:8000)
+   *(This launches the Vite dev server and the Python AI service simultaneously).*
 
 ---
 
-## 👤 Demo Users
+## 👥 Demo Users
 
-Test the platform with the following credentials:
+Jump right in with our pre-seeded roles:
 
-| Role     | Email              | Password |
-| -------- | ------------------ | -------- |
-| Admin    | `admin@demo.com`    | `password` |
-| Staff    | `staff@demo.com`    | `password` |
-| Customer | `customer@demo.com` | `password` |
-| Vendor   | `vendor@demo.com`   | `password` |
-
----
-
-## 📚 Documentation
-
-Detailed guides for core modules:
-
-- **[Electro AI Engine](doc/ELECTRO-AI-ENGINE.md)** - AI system architecture
-- **[Order Processing Workflow](doc/ELECTRO-UI-FLOWS.md)** - UI flows and logic
-- **[Security & Risk Management](doc/ELECTRO-SECURITY.md)** - Security protocols
-- **[System Audit Report](doc/SYSTEM_AUDIT_REPORT.md)** - Audit findings
+| Role | Email | Password | Access Area |
+| :--- | :--- | :--- | :--- |
+| **Super Admin** | `admin@demo.com` | `password` | `/admin/dashboard` |
+| **Store Staff** | `staff@demo.com` | `password` | `/staff/dashboard` |
+| **Vendor** | `vendor@demo.com` | `password` | `/vendor/dashboard` |
+| **Customer** | `customer@demo.com` | `password` | `/` (Storefront) |
 
 ---
 
 ## 🧪 Testing
 
-Run tests using Pest:
+We take reliability seriously. The project utilizes **Pest** for unit & feature testing.
+
 ```bash
-./vendor/bin/pest
+# Run all PHP tests
+php artisan test --compact
+
+# Or run specific test suites
+php artisan test --filter=RiskEngineTest
 ```
+
+For End-to-End browser testing, Playwright is configured in the `/e2e` directory.
 
 ---
 
-## � License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+<div align="center">
+  <i>Built with ❤️ by the development team. Fully licensed under the MIT License.</i>
+</div>
