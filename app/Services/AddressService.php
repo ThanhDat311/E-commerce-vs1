@@ -3,8 +3,8 @@
 namespace App\Services;
 
 use App\Models\Address;
-use Illuminate\Support\Facades\DB;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class AddressService
 {
@@ -53,6 +53,7 @@ class AddressService
         }
 
         $address->update($data);
+
         return $address;
     }
 
@@ -81,7 +82,7 @@ class AddressService
 
         // Không cho xóa nếu là địa chỉ mặc định (bắt buộc phải có 1 cái, trừ khi xóa hết)
         if ($address->is_default && Address::where('user_id', $userId)->count() > 1) {
-            throw new Exception("Cannot delete default address. Please set another address as default first.");
+            throw new Exception('Cannot delete default address. Please set another address as default first.');
         }
 
         return $address->delete();

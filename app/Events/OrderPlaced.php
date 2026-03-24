@@ -3,9 +3,7 @@
 namespace App\Events;
 
 use App\Models\Order;
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -55,7 +53,7 @@ class OrderPlaced implements ShouldBroadcast
     {
         return [
             'order_id' => $this->order->id,
-            'customer_name' => $this->order->first_name . ' ' . $this->order->last_name,
+            'customer_name' => $this->order->first_name.' '.$this->order->last_name,
             'customer_email' => $this->order->email,
             'amount' => $this->amount,
             'payment_method' => $this->order->payment_method,
@@ -67,8 +65,6 @@ class OrderPlaced implements ShouldBroadcast
 
     /**
      * The event's broadcast name.
-     *
-     * @return string
      */
     public function broadcastAs(): string
     {

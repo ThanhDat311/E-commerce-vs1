@@ -24,7 +24,7 @@
         </div>
         <div class="bg-white rounded-xl shadow-sm border border-purple-100 p-5">
             <p class="text-xs font-semibold text-purple-400 uppercase tracking-wider mb-1.5">Avg Risk Score</p>
-            <h3 class="text-3xl font-bold text-purple-700">{{ $stats['avg_score'] }}</h3>
+            <h3 class="text-3xl font-bold text-purple-700">{{ number_format($stats['avg_score'] * 100, 2) }}%</h3>
         </div>
     </div>
 
@@ -115,7 +115,7 @@
                                     elseif ($log->risk_score >= 0.3) $scoreColor = 'yellow';
                                 @endphp
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-{{ $scoreColor }}-100 text-{{ $scoreColor }}-800">
-                                    {{ $log->risk_score }} / {{ ucfirst($log->risk_level) }}
+                                    {{ number_format($log->risk_score * 100, 2) }}% / {{ ucfirst($log->risk_level) }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

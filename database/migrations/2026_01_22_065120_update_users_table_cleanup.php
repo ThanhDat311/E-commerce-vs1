@@ -20,7 +20,7 @@ return new class extends Migration
 
             // 2. Thêm cột address mới
             // Đặt sau cột phone_number (hoặc email nếu chưa có phone_number)
-            if (!Schema::hasColumn('users', 'address')) {
+            if (! Schema::hasColumn('users', 'address')) {
                 $table->string('address')->nullable()->after('email');
             }
         });

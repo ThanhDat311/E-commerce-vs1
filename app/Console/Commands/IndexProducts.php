@@ -38,9 +38,11 @@ class IndexProducts extends Command
             Product::query()->searchable();
 
             $this->info("✓ Successfully indexed {$total} products");
+
             return Command::SUCCESS;
         } catch (\Exception $e) {
-            $this->error('Failed to index products: ' . $e->getMessage());
+            $this->error('Failed to index products: '.$e->getMessage());
+
             return Command::FAILURE;
         }
     }

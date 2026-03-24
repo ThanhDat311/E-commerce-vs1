@@ -7,7 +7,6 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -17,6 +16,7 @@ class ProductImageTest extends TestCase
     use RefreshDatabase;
 
     protected $admin;
+
     protected $product;
 
     protected function setUp(): void
@@ -43,20 +43,20 @@ class ProductImageTest extends TestCase
         // Controller uses: File::exists(public_path($image->image_path))
 
         // Let's mock a file in public path
-        $filename = 'test_image_' . uniqid() . '.jpg';
+        $filename = 'test_image_'.uniqid().'.jpg';
         $directory = public_path('img/products/gallery');
 
-        if (!File::exists($directory)) {
+        if (! File::exists($directory)) {
             File::makeDirectory($directory, 0755, true);
         }
 
-        $path = $directory . '/' . $filename;
+        $path = $directory.'/'.$filename;
         file_put_contents($path, 'fake image content');
 
         // Create ProductImage record
         $image = ProductImage::create([
             'product_id' => $this->product->id,
-            'image_path' => 'img/products/gallery/' . $filename,
+            'image_path' => 'img/products/gallery/'.$filename,
         ]);
 
         $this->assertDatabaseHas('product_images', ['id' => $image->id]);

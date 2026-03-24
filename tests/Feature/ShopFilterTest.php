@@ -2,22 +2,23 @@
 
 namespace Tests\Feature;
 
+use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
-use App\Models\Product;
-use App\Models\Category;
 
 class ShopFilterTest extends TestCase
 {
-    use RefreshDatabase; 
+    use RefreshDatabase;
 
     protected $categoryElectronics;
+
     protected $categoryFurniture;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Tạo dữ liệu mẫu
         $this->categoryElectronics = Category::factory()->create(['name' => 'Electronics']);
         $this->categoryFurniture = Category::factory()->create(['name' => 'Furniture']);
@@ -26,21 +27,21 @@ class ShopFilterTest extends TestCase
             'name' => 'iPhone 15 Pro',
             'price' => 1000,
             'category_id' => $this->categoryElectronics->id,
-            'created_at' => now()->subDays(5)
+            'created_at' => now()->subDays(5),
         ]);
 
         Product::factory()->create([
             'name' => 'Samsung Galaxy S24',
             'price' => 900,
             'category_id' => $this->categoryElectronics->id,
-            'created_at' => now()->subDays(2)
+            'created_at' => now()->subDays(2),
         ]);
 
         Product::factory()->create([
             'name' => 'Wooden Chair',
             'price' => 50,
             'category_id' => $this->categoryFurniture->id,
-            'created_at' => now()->subDays(10)
+            'created_at' => now()->subDays(10),
         ]);
     }
 
@@ -67,7 +68,7 @@ class ShopFilterTest extends TestCase
     {
         $response = $this->get(route('shop.index', ['min_price' => 800, 'max_price' => 950]));
         $response->assertStatus(200);
-        $response->assertSee('Samsung Galaxy S24'); 
+        $response->assertSee('Samsung Galaxy S24');
         $response->assertDontSee('iPhone 15 Pro');
     }
 
@@ -84,12 +85,12 @@ class ShopFilterTest extends TestCase
     {
         Product::factory()->count(15)->create([
             'name' => 'iPhone Clone',
-            'category_id' => $this->categoryElectronics->id
+            'category_id' => $this->categoryElectronics->id,
         ]);
 
         $response = $this->get(route('shop.index', ['keyword' => 'iPhone']));
         $response->assertStatus(200);
-        
+
         // Kiểm tra logic appends()
         $response->assertSee('keyword=iPhone');
     }

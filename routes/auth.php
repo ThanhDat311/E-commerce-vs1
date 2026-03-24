@@ -19,8 +19,12 @@ Route::middleware('guest')->group(function () {
         ->middleware('throttle:login');
 
     Route::get('login/mfa', [\App\Http\Controllers\Auth\MfaController::class, 'show'])->name('auth.mfa.show');
-    Route::post('login/mfa', [\App\Http\Controllers\Auth\MfaController::class, 'verify'])->name('auth.mfa.verify');
-
+    Route::post('login/mfa', [\App\Http\Controllers\Auth\MfaController::class, 'verify'])
+        ->middleware('throttle:5,1')
+        ->name('auth.mfa.verify');
+    Route::post('login/mfa/resend', [\App\Http\Controllers\Auth\MfaController::class, 'resend'])
+        ->middleware('throttle:3,1')
+        ->name('auth.mfa.resend');
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
 

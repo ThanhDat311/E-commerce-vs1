@@ -44,13 +44,13 @@ class Product extends Model
     {
         static::creating(function ($product) {
             if (empty($product->slug)) {
-                $product->slug = \Illuminate\Support\Str::slug($product->name) . '-' . \Illuminate\Support\Str::random(6);
+                $product->slug = \Illuminate\Support\Str::slug($product->name).'-'.\Illuminate\Support\Str::random(6);
             }
         });
 
         static::updating(function ($product) {
             if ($product->isDirty('name') && empty($product->slug)) {
-                $product->slug = \Illuminate\Support\Str::slug($product->name) . '-' . $product->id;
+                $product->slug = \Illuminate\Support\Str::slug($product->name).'-'.$product->id;
             }
         });
     }
@@ -158,7 +158,7 @@ class Product extends Model
         }
 
         // Fallback to regular 'sale_price' column
-        if (!empty($this->attributes['sale_price']) && $this->attributes['sale_price'] < $this->price) {
+        if (! empty($this->attributes['sale_price']) && $this->attributes['sale_price'] < $this->price) {
             return $this->attributes['sale_price'];
         }
 
@@ -175,6 +175,7 @@ class Product extends Model
                 $activeDeals = $dealService->getActiveDealsForProduct($this);
                 if ($activeDeals->isNotEmpty()) {
                     $dealResult = $priceCalc->applyBestDeal($this, $activeDeals);
+
                     return $dealResult['deal'] ?? null;
                 }
             }

@@ -1,8 +1,8 @@
 <?php
 
-use App\Models\User;
-use App\Models\Role;
 use App\Models\Order;
+use App\Models\Role;
+use App\Models\User;
 
 beforeEach(function () {
     // Ensure roles exist
@@ -59,7 +59,7 @@ it('displays the user profile page', function () {
     Order::factory()->count(3)->create([
         'user_id' => $user->id,
         'total' => 100,
-        'order_status' => 'delivered'
+        'order_status' => 'delivered',
     ]);
 
     $response = $this->actingAs($this->admin)

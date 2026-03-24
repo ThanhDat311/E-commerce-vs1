@@ -31,14 +31,16 @@ class TestOrderNotification extends Command
 
         if ($orderId) {
             $order = Order::find($orderId);
-            if (!$order) {
+            if (! $order) {
                 $this->error("Order #{$orderId} not found");
+
                 return;
             }
         } else {
             $order = Order::latest()->first();
-            if (!$order) {
+            if (! $order) {
                 $this->error('No orders found in database. Create an order first.');
+
                 return;
             }
         }
@@ -48,9 +50,9 @@ class TestOrderNotification extends Command
             ['Field', 'Value'],
             [
                 ['Order ID', $order->id],
-                ['Customer', $order->first_name . ' ' . $order->last_name],
+                ['Customer', $order->first_name.' '.$order->last_name],
                 ['Email', $order->email],
-                ['Amount', '$' . $order->total],
+                ['Amount', '$'.$order->total],
                 ['Status', $order->order_status],
                 ['Payment Method', $order->payment_method],
             ]

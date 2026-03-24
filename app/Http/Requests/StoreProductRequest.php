@@ -14,43 +14,43 @@ class StoreProductRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'           => ['required', 'string', 'max:255'],
-            'sku'            => ['nullable', 'string', 'max:50', 'unique:products,sku'],
-            'price'          => ['required', 'numeric', 'min:0.01'],
-            'quantity'       => ['required', 'integer', 'min:0'],
-            'category_id'    => ['nullable', 'exists:categories,id'],
-            'description'    => ['required', 'string'],
-            'image'          => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
-            'gallery.*'      => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
-            'is_new'         => ['nullable', 'boolean'],
-            'is_featured'    => ['nullable', 'boolean'],
+            'name' => ['required', 'string', 'max:255'],
+            'sku' => ['nullable', 'string', 'max:50', 'unique:products,sku'],
+            'price' => ['required', 'numeric', 'min:0.01'],
+            'quantity' => ['required', 'integer', 'min:0'],
+            'category_id' => ['nullable', 'exists:categories,id'],
+            'description' => ['required', 'string'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+            'gallery.*' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+            'is_new' => ['nullable', 'boolean'],
+            'is_featured' => ['nullable', 'boolean'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'name.required'      => 'Product name is required.',
-            'name.string'        => 'Product name must be a string.',
-            'name.max'           => 'Product name cannot exceed 255 characters.',
+            'name.required' => 'Product name is required.',
+            'name.string' => 'Product name must be a string.',
+            'name.max' => 'Product name cannot exceed 255 characters.',
 
-            'sku.unique'         => 'This SKU already exists. Please use a different SKU.',
-            'sku.max'            => 'SKU cannot exceed 50 characters.',
+            'sku.unique' => 'This SKU already exists. Please use a different SKU.',
+            'sku.max' => 'SKU cannot exceed 50 characters.',
 
-            'price.required'     => 'Price is required.',
-            'price.numeric'      => 'Price must be a number.',
-            'price.min'          => 'Price must be greater than 0.',
+            'price.required' => 'Price is required.',
+            'price.numeric' => 'Price must be a number.',
+            'price.min' => 'Price must be greater than 0.',
 
-            'quantity.required'  => 'Stock quantity is required.',
-            'quantity.integer'   => 'Stock quantity must be an integer.',
-            'quantity.min'       => 'Stock quantity cannot be negative.',
+            'quantity.required' => 'Stock quantity is required.',
+            'quantity.integer' => 'Stock quantity must be an integer.',
+            'quantity.min' => 'Stock quantity cannot be negative.',
 
             'description.required' => 'Description is required.',
-            'description.string'   => 'Description must be text.',
+            'description.string' => 'Description must be text.',
 
-            'image.image'        => 'File must be an image.',
-            'image.mimes'        => 'Image must be JPG, PNG, or GIF.',
-            'image.max'          => 'Image cannot exceed 2MB.',
+            'image.image' => 'File must be an image.',
+            'image.mimes' => 'Image must be JPG, PNG, or GIF.',
+            'image.max' => 'Image cannot exceed 2MB.',
         ];
     }
 }

@@ -9,10 +9,7 @@ trait ApiResponse
     /**
      * Success response format
      *
-     * @param mixed $data
-     * @param string $message
-     * @param int $status
-     * @return JsonResponse
+     * @param  mixed  $data
      */
     public function successResponse($data = null, string $message = 'Success', int $status = 200): JsonResponse
     {
@@ -26,10 +23,7 @@ trait ApiResponse
     /**
      * Error response format
      *
-     * @param string $message
-     * @param int $status
-     * @param mixed $errors
-     * @return JsonResponse
+     * @param  mixed  $errors
      */
     public function errorResponse(string $message = 'Error', int $status = 400, $errors = null): JsonResponse
     {
@@ -47,11 +41,6 @@ trait ApiResponse
 
     /**
      * Validation error response
-     *
-     * @param array $errors
-     * @param string $message
-     * @param int $status
-     * @return JsonResponse
      */
     public function validationErrorResponse(array $errors, string $message = 'Validation failed', int $status = 422): JsonResponse
     {
@@ -65,10 +54,7 @@ trait ApiResponse
     /**
      * Paginated response format
      *
-     * @param mixed $data
-     * @param string $message
-     * @param int $status
-     * @return JsonResponse
+     * @param  mixed  $data
      */
     public function paginatedResponse($data, string $message = 'Success', int $status = 200): JsonResponse
     {

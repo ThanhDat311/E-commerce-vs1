@@ -6,7 +6,6 @@ use App\Models\Commission;
 use App\Models\Order;
 use App\Models\User;
 
-
 beforeEach(function () {
     $this->vendor = User::factory()->create(['role_id' => 4, 'is_active' => true]);
     $this->otherVendor = User::factory()->create(['role_id' => 4, 'is_active' => true]);

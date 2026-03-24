@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use App\Models\AiFeatureStore;
-use App\Models\Order;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Http;
@@ -14,6 +13,7 @@ class AnalyzeOrderRiskWithAI implements ShouldQueue
     use Queueable;
 
     public $tries = 3;
+
     public $backoff = [10, 30, 60];
 
     protected $featureLogId;
@@ -33,7 +33,7 @@ class AnalyzeOrderRiskWithAI implements ShouldQueue
     {
         $log = AiFeatureStore::with('order.user', 'order.items.product')->find($this->featureLogId);
 
-        if (!$log || !$log->order) {
+        if (! $log || ! $log->order) {
             return;
         }
 
@@ -45,14 +45,14 @@ class AnalyzeOrderRiskWithAI implements ShouldQueue
         $ipHash = substr(hash('sha256', $log->ip_address), 0, 8);
 
         // Bảo mật: Chuyển Model Prompt sang JSON chặt chẽ để AI tuân thủ cấu trúc & giảm thiểu prompt injection
-        $systemPrompt = "You are an E-commerce Fraud Analyst API. You must evaluate risk parameters and ALWAYS respond in strictly valid JSON format matching this schema: {\"insight\": \"A brief 2 sentence analysis\", \"recommendation\": \"APPROVE or REVIEW\"}.";
+        $systemPrompt = 'You are an E-commerce Fraud Analyst API. You must evaluate risk parameters and ALWAYS respond in strictly valid JSON format matching this schema: {"insight": "A brief 2 sentence analysis", "recommendation": "APPROVE or REVIEW"}.';
 
         $userPrompt = json_encode([
-            "total_value" => $order->total,
-            "account_status" => $order->user_id ? "Registered" : "Guest Checkout",
-            "ip_fingerprint" => $ipHash,
-            "algorithmic_score" => $riskScore,
-            "system_flags" => $reasons
+            'total_value' => $order->total,
+            'account_status' => $order->user_id ? 'Registered' : 'Guest Checkout',
+            'ip_fingerprint' => $ipHash,
+            'algorithmic_score' => $riskScore,
+            'system_flags' => $reasons,
         ]);
 
         $apiKey = config('services.openai.key');
@@ -61,6 +61,7 @@ class AnalyzeOrderRiskWithAI implements ShouldQueue
             // Fallback for demo purposes if no key is set
             $log->ai_insight = "System Simulation Mode: The algorithmic risk score is {$riskScore}. Based on the system flags ({$reasons}), no manual intervention is required at this time. To activate real Generative AI analysis, configure OPENAI_API_KEY in the `.env` file.";
             $log->save();
+
             return;
         }
 
@@ -75,10 +76,10 @@ class AnalyzeOrderRiskWithAI implements ShouldQueue
                     'response_format' => ['type' => 'json_object'], // Ép trả về JSON
                     'messages' => [
                         ['role' => 'system', 'content' => $systemPrompt],
-                        ['role' => 'user', 'content' => $userPrompt]
+                        ['role' => 'user', 'content' => $userPrompt],
                     ],
                     'max_tokens' => 150,
-                    'temperature' => 0.2 // Hạ nhiệt độ để tăng tính ổn định & phán đoán logic
+                    'temperature' => 0.2, // Hạ nhiệt độ để tăng tính ổn định & phán đoán logic
                 ]);
 
             // Quăng Exception nếu response có HTTP Status báo lỗi (429, 50x,...)
@@ -91,20 +92,20 @@ class AnalyzeOrderRiskWithAI implements ShouldQueue
             Log::info('OpenAI Risk Analysis Success', [
                 'order_id' => $order->id,
                 'tokens_used' => $usage,
-                'model' => $data['model'] ?? 'unknown'
+                'model' => $data['model'] ?? 'unknown',
             ]);
 
-            if (!empty($aiResponse['insight'])) {
-                $recommendationText = isset($aiResponse['recommendation']) ? "[{$aiResponse['recommendation']}] " : "";
-                $log->ai_insight = $recommendationText . trim($aiResponse['insight']);
+            if (! empty($aiResponse['insight'])) {
+                $recommendationText = isset($aiResponse['recommendation']) ? "[{$aiResponse['recommendation']}] " : '';
+                $log->ai_insight = $recommendationText.trim($aiResponse['insight']);
                 $log->save();
             }
         } catch (\Exception $e) {
-            Log::error('Exception in AI Risk Analysis Job: ' . $e->getMessage());
+            Log::error('Exception in AI Risk Analysis Job: '.$e->getMessage());
 
             // Cập nhật giá trị insight mặc định nếu đã hết số lần Retry
             if ($this->attempts() >= $this->tries) {
-                $log->ai_insight = "Error connecting to AI service. Fallback analysis: Proceed with caution.";
+                $log->ai_insight = 'Error connecting to AI service. Fallback analysis: Proceed with caution.';
                 $log->save();
             }
 

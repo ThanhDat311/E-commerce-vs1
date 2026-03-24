@@ -25,9 +25,31 @@
                         discount: {{ $discount }},
                         shipping: {{ $shipping }},
                         couponCode: '',
-                        
+                        selectedItems: {{ json_encode(array_column($cartItems, 'id')) }},
+
                         get total() {
                             return this.subTotal + this.shipping - this.discount;
+                        },
+
+                        get areAllSelected() {
+                            return this.cartItems.length > 0 && this.selectedItems.length === this.cartItems.length;
+                        },
+
+                        toggleAll() {
+                            if (this.areAllSelected) {
+                                this.selectedItems = [];
+                            } else {
+                                this.selectedItems = this.cartItems.map(i => i.id);
+                            }
+                        },
+
+                        toggleItem(id) {
+                            const idx = this.selectedItems.indexOf(id);
+                            if (idx > -1) {
+                                this.selectedItems.splice(idx, 1);
+                            } else {
+                                this.selectedItems.push(id);
+                            }
                         },
 
                         formatMoney(amount) {
@@ -36,14 +58,12 @@
 
                         updateQuantity(id, newQty) {
                             if (newQty < 1) return;
-                            
-                            // Finds the item and update optimized first for UI responsiveness
+
                             const itemIndex = this.cartItems.findIndex(i => i.id === id);
                             if (itemIndex > -1) {
                                 this.cartItems[itemIndex].quantity = newQty;
                             }
 
-                            // Perform AJAX request
                             fetch(`/cart/update/${id}`, {
                                 method: 'PATCH',
                                 headers: {
@@ -58,8 +78,6 @@
                                     this.subTotal = data.subtotal;
                                     this.discount = data.discount;
                                     this.shipping = data.shipping;
-                                    // Update item subtotal if needed
-                                    // this.cartItems[itemIndex].subtotal = data.item_total; 
                                 } else {
                                     window.showToast(data.message, 'error');
                                 }
@@ -78,7 +96,7 @@
                          <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-6">
                             <!-- Header -->
                              <div class="p-4 border-b border-gray-200 bg-gray-50 flex items-center">
-                                <input type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                <input type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" :checked="areAllSelected" @change="toggleAll()">
                                 <span class="ml-2 text-sm font-medium text-gray-700">Select All ({{ count($cartItems) }} Items)</span>
                             </div>
 
@@ -87,7 +105,7 @@
                                 <template x-for="item in cartItems" :key="item.id">
                                     <li class="p-6 flex flex-col sm:flex-row sm:items-center">
                                          <div class="flex items-center mb-4 sm:mb-0">
-                                            <input type="checkbox" checked class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mr-4">
+                                            <input type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mr-4" :checked="selectedItems.includes(item.id)" @change="toggleItem(item.id)">
                                             <div class="flex-shrink-0 w-24 h-24 border border-gray-200 rounded-md overflow-hidden">
                                                 <img :src="item.image_url" :alt="item.name" class="w-full h-full object-center object-cover">
                                             </div>
@@ -200,10 +218,19 @@
                                 </form>
                             </div>
 
-                             <div class="mt-8 flex justify-center space-x-2 opacity-50">
-                                <div class="h-8 w-12 bg-gray-200 rounded"></div> <!-- VISA placeholder -->
-                                <div class="h-8 w-12 bg-gray-200 rounded"></div> <!-- MC placeholder -->
-                                <div class="h-8 w-12 bg-gray-200 rounded"></div> <!-- PP placeholder -->
+                             <div class="mt-8 flex justify-center space-x-3 opacity-70">
+                                <!-- Visa -->
+                                <div class="h-8 w-12 bg-white border border-gray-200 rounded flex items-center justify-center" title="Visa">
+                                    <svg viewBox="0 0 48 48" class="h-5 w-auto" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="48" rx="4" fill="#1A1F71"/><path d="M19.5 31.5h-3.2l2-12h3.2l-2 12zm11.2-11.7c-.6-.2-1.6-.5-2.8-.5-3.1 0-5.3 1.6-5.3 3.9 0 1.7 1.5 2.6 2.7 3.2 1.2.6 1.6 1 1.6 1.5 0 .8-.9 1.2-1.8 1.2-1.2 0-1.8-.2-2.8-.6l-.4-.2-.4 2.5c.7.3 1.9.6 3.2.6 3.3 0 5.5-1.6 5.5-4 0-1.3-.8-2.3-2.6-3.2-1.1-.5-1.8-.9-1.8-1.4 0-.5.6-1 1.9-1 1.1 0 1.9.2 2.5.5l.3.1.4-2.6zm5.2 7.4l1.3-3.4.4-.9.2 1 .7 3.3h-2.6zm3.8-7.7H37c-.7 0-1.2.2-1.5.9l-4.4 10.9h3.1l.6-1.7h3.8l.4 1.7h2.8l-2.3-11.8zm-25 0l-3.1 8.2-.3-1.6c-.6-1.9-2.4-4-4.4-5l2.8 10.4h3.2l4.8-12h-3z" fill="#fff"/></svg>
+                                </div>
+                                <!-- Mastercard -->
+                                <div class="h-8 w-12 bg-white border border-gray-200 rounded flex items-center justify-center" title="Mastercard">
+                                    <svg viewBox="0 0 48 48" class="h-5 w-auto" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="48" rx="4" fill="#252525"/><circle cx="19" cy="24" r="9" fill="#EB001B"/><circle cx="29" cy="24" r="9" fill="#F79E1B"/><path d="M24 16.8a9 9 0 0 1 0 14.4A9 9 0 0 1 24 16.8z" fill="#FF5F00"/></svg>
+                                </div>
+                                <!-- PayPal -->
+                                <div class="h-8 w-12 bg-white border border-gray-200 rounded flex items-center justify-center" title="PayPal">
+                                    <svg viewBox="0 0 48 48" class="h-5 w-auto" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="48" rx="4" fill="#fff"/><path d="M35.2 16.5c.2-1.3 0-2.2-.7-3-1.4-1.6-4-2.3-7.4-2.3H18c-.6 0-1.1.5-1.2 1.1l-3.5 22.3c-.1.5.3.9.7.9h5l1.3-8 0 .3c.1-.6.6-1.1 1.2-1.1h2.5c4.9 0 8.8-2 9.9-7.8.1-.3.1-.6.2-.9-.1 0-.1 0 0 0 .4-2.5 0-4.2-1.1-5.5z" fill="#003087"/><path d="M35.2 16.5c.2-1.3 0-2.2-.7-3-1.4-1.6-4-2.3-7.4-2.3H18c-.6 0-1.1.5-1.2 1.1l-3.5 22.3c-.1.5.3.9.7.9h5l1.3-8-.1.3c.1-.6.6-1.1 1.2-1.1h2.5c4.9 0 8.8-2 9.9-7.8.1-.3.1-.6.2-.9-.4 0-.4 0 0 0z" fill="#003087"/><path d="M21.6 18c.1-.5.4-.8.8-.9h5.9c.7 0 1.4.1 2 .2.2 0 .4.1.5.1.2 0 .3.1.5.1l.2.1c.8.3 1.4.8 1.7 1.4.4 2.5 0 4.2-1.1 5.5-1.1 1.4-3.2 2.1-5.9 2.1h-1.5c-.6 0-1.1.5-1.2 1.1l-1 6.3H18l3.6-16z" fill="#009CDE"/></svg>
+                                </div>
                              </div>
                              
                              <p class="mt-4 text-xs text-center text-gray-400">
@@ -218,26 +245,27 @@
                      <h2 class="text-2xl font-bold text-gray-900 mb-6">You Might Also Like</h2>
                      
                      <div class="grid grid-cols-1 gap-y-10 sm:grid-cols-2 gap-x-6 lg:grid-cols-4 xl:gap-x-8">
-                        <!-- Placeholder Related Products -->
-                        @for($i = 0; $i < 4; $i++)
+                        @forelse($relatedProducts as $product)
                         <div class="group relative">
                             <div class="w-full min-h-80 bg-gray-200 aspect-w-1 aspect-h-1 rounded-md overflow-hidden group-hover:opacity-75 lg:h-80 lg:aspect-none">
-                                <img src="{{ asset('img/product-'.($i+1).'.png') }}" alt="Product Image" class="w-full h-full object-center object-cover lg:w-full lg:h-full">
+                                <img src="{{ $product->image_url ?? asset('img/product-1.png') }}" alt="{{ $product->name }}" class="w-full h-full object-center object-cover lg:w-full lg:h-full">
                             </div>
                             <div class="mt-4 flex justify-between">
                                 <div>
                                     <h3 class="text-sm text-gray-700">
-                                        <a href="#">
+                                        <a href="{{ route('shop.show', $product->slug) }}">
                                             <span aria-hidden="true" class="absolute inset-0"></span>
-                                            Product Name {{ $i + 1 }}
+                                            {{ $product->name }}
                                         </a>
                                     </h3>
-                                    <p class="mt-1 text-sm text-gray-500">Black</p>
+                                    <p class="mt-1 text-sm text-gray-500">{{ $product->category->name ?? '' }}</p>
                                 </div>
-                                <p class="text-sm font-medium text-gray-900">$35.00</p>
+                                <p class="text-sm font-medium text-gray-900">${{ number_format($product->price, 2) }}</p>
                             </div>
                         </div>
-                        @endfor
+                        @empty
+                        <p class="col-span-4 text-sm text-gray-400 text-center py-8">No recommendations available.</p>
+                        @endforelse
                      </div>
                 </section>
             @endif

@@ -41,10 +41,19 @@ class PriceSuggestion extends Model
     {
         $percent = $this->getConfidencePercentage();
 
-        if ($percent >= 80) return 'Very High';
-        if ($percent >= 60) return 'High';
-        if ($percent >= 40) return 'Medium';
-        if ($percent >= 20) return 'Low';
+        if ($percent >= 80) {
+            return 'Very High';
+        }
+        if ($percent >= 60) {
+            return 'High';
+        }
+        if ($percent >= 40) {
+            return 'Medium';
+        }
+        if ($percent >= 20) {
+            return 'Low';
+        }
+
         return 'Very Low';
     }
 
@@ -61,7 +70,10 @@ class PriceSuggestion extends Model
      */
     public function getPriceDifferencePercent()
     {
-        if ($this->old_price == 0) return 0;
+        if ($this->old_price == 0) {
+            return 0;
+        }
+
         return ($this->getPriceDifference() / $this->old_price) * 100;
     }
 }

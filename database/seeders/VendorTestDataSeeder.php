@@ -2,14 +2,14 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use App\Models\Product;
+use App\Models\Category;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\Category;
+use App\Models\Product;
+use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class VendorTestDataSeeder extends Seeder
 {
@@ -152,7 +152,7 @@ class VendorTestDataSeeder extends Seeder
                     'stock_quantity' => 120,
                     'is_featured' => false,
                     'is_new' => true,
-                ]
+                ],
 
             ];
 
@@ -172,7 +172,7 @@ class VendorTestDataSeeder extends Seeder
                 $createdProducts->push($product);
             }
 
-            $this->command->info("Created/Updated " . $createdProducts->count() . " real products.");
+            $this->command->info('Created/Updated '.$createdProducts->count().' real products.');
 
             // 5. Create Orders
             // Create 5 random orders
@@ -191,11 +191,11 @@ class VendorTestDataSeeder extends Seeder
                     ]);
                 }
 
-                $total = $order->items->sum(fn($item) => $item->price * $item->quantity);
+                $total = $order->items->sum(fn ($item) => $item->price * $item->quantity);
                 $order->update(['total' => $total]);
             }
 
-            $this->command->info("Created 5 orders with real products.");
+            $this->command->info('Created 5 orders with real products.');
         });
     }
 }

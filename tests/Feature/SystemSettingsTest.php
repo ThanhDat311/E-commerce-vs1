@@ -4,7 +4,6 @@
 
 use App\Models\Setting;
 use App\Models\User;
-use Illuminate\Support\Facades\Cache;
 
 beforeEach(function () {
     $this->admin = User::factory()->create(['role_id' => 1, 'is_active' => true]);

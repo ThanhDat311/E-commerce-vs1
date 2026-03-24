@@ -38,14 +38,14 @@ class ProductController extends Controller
 
         if ($request->hasFile('image')) {
             $file = $request->file('image');
-            $filename = time() . '_' . ($file->getClientOriginalName() ?: $file->hashName());
+            $filename = time().'_'.($file->getClientOriginalName() ?: $file->hashName());
 
             if (! File::exists(public_path('img/products'))) {
                 File::makeDirectory(public_path('img/products'), 0755, true);
             }
 
             $file->move(public_path('img/products'), $filename);
-            $data['image_url'] = 'img/products/' . $filename;
+            $data['image_url'] = 'img/products/'.$filename;
         }
 
         $data['is_new'] = $request->has('is_new') ? 1 : 0;
@@ -55,11 +55,11 @@ class ProductController extends Controller
 
         if ($request->hasFile('gallery')) {
             foreach ($request->file('gallery') as $file) {
-                $filename = time() . '_' . uniqid() . '_' . ($file->getClientOriginalName() ?: $file->hashName());
+                $filename = time().'_'.uniqid().'_'.($file->getClientOriginalName() ?: $file->hashName());
                 $file->move(public_path('img/products/gallery'), $filename);
 
                 $product->images()->create([
-                    'image_path' => 'img/products/gallery/' . $filename,
+                    'image_path' => 'img/products/gallery/'.$filename,
                 ]);
             }
         }
@@ -87,9 +87,9 @@ class ProductController extends Controller
             }
 
             $file = $request->file('image');
-            $filename = time() . '_' . ($file->getClientOriginalName() ?: $file->hashName());
+            $filename = time().'_'.($file->getClientOriginalName() ?: $file->hashName());
             $file->move(public_path('img/products'), $filename);
-            $data['image_url'] = 'img/products/' . $filename;
+            $data['image_url'] = 'img/products/'.$filename;
         }
 
         $data['is_new'] = $request->has('is_new') ? 1 : 0;
@@ -99,7 +99,7 @@ class ProductController extends Controller
 
         if ($request->hasFile('gallery')) {
             foreach ($request->file('gallery') as $file) {
-                $filename = time() . '_' . uniqid() . '_' . ($file->getClientOriginalName() ?: $file->hashName());
+                $filename = time().'_'.uniqid().'_'.($file->getClientOriginalName() ?: $file->hashName());
 
                 if (! File::exists(public_path('img/products/gallery'))) {
                     File::makeDirectory(public_path('img/products/gallery'), 0755, true);
@@ -108,7 +108,7 @@ class ProductController extends Controller
                 $file->move(public_path('img/products/gallery'), $filename);
 
                 $product->images()->create([
-                    'image_path' => 'img/products/gallery/' . $filename,
+                    'image_path' => 'img/products/gallery/'.$filename,
                 ]);
             }
         }

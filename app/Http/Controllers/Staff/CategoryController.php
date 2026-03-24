@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Staff;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
@@ -46,9 +45,9 @@ class CategoryController extends Controller
             }
 
             $file = $request->file('image');
-            $filename = time() . '_' . Str::slug($data['name']) . '.' . $file->getClientOriginalExtension();
+            $filename = time().'_'.Str::slug($data['name']).'.'.$file->getClientOriginalExtension();
             $file->move(public_path('img/categories'), $filename);
-            $data['image_url'] = 'img/categories/' . $filename;
+            $data['image_url'] = 'img/categories/'.$filename;
         }
 
         $data['is_active'] = $request->has('is_active') ? 1 : 0;
@@ -88,9 +87,9 @@ class CategoryController extends Controller
             }
 
             $file = $request->file('image');
-            $filename = time() . '_' . Str::slug($data['name']) . '.' . $file->getClientOriginalExtension();
+            $filename = time().'_'.Str::slug($data['name']).'.'.$file->getClientOriginalExtension();
             $file->move(public_path('img/categories'), $filename);
-            $data['image_url'] = 'img/categories/' . $filename;
+            $data['image_url'] = 'img/categories/'.$filename;
         }
 
         $data['is_active'] = $request->has('is_active') ? 1 : 0;

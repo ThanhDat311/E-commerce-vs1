@@ -15,9 +15,6 @@ class AuthController extends Controller
 
     /**
      * Register a new user
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function register(Request $request): JsonResponse
     {
@@ -54,9 +51,6 @@ class AuthController extends Controller
 
     /**
      * Login user
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function login(Request $request): JsonResponse
     {
@@ -68,7 +62,7 @@ class AuthController extends Controller
 
             $user = User::where('email', $validated['email'])->first();
 
-            if (!$user || !password_verify($validated['password'], $user->password)) {
+            if (! $user || ! password_verify($validated['password'], $user->password)) {
                 return $this->errorResponse('Invalid credentials', 401);
             }
 
@@ -93,9 +87,6 @@ class AuthController extends Controller
 
     /**
      * Logout user (revoke token)
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function logout(Request $request): JsonResponse
     {
@@ -106,9 +97,6 @@ class AuthController extends Controller
 
     /**
      * Get current user
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function me(Request $request): JsonResponse
     {
@@ -125,9 +113,6 @@ class AuthController extends Controller
 
     /**
      * Refresh token
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function refreshToken(Request $request): JsonResponse
     {

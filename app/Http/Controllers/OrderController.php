@@ -78,7 +78,7 @@ class OrderController extends Controller
         // Log history
         $order->histories()->create([
             'status' => $validated['order_status'],
-            'note' => $request->note ?? 'Status updated by ' . Auth::user()->name,
+            'note' => $request->note ?? 'Status updated by '.Auth::user()->name,
         ]);
 
         return response()->json($order);

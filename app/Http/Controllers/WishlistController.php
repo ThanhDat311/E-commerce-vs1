@@ -29,7 +29,7 @@ class WishlistController extends Controller
             'product_id' => $request->product_id,
         ]);
 
-        return response()->json(['success' => true, 'message' => 'Product added to wishlist']);
+        return response()->json(['success' => true, 'message' => __('messages.product_added_wishlist')]);
     }
 
     public function remove($productId)
@@ -38,7 +38,7 @@ class WishlistController extends Controller
             ->where('product_id', $productId)
             ->delete();
 
-        return redirect()->route('wishlist.index')->with('success', 'Product removed from wishlist');
+        return redirect()->route('wishlist.index')->with('success', __('messages.product_removed_wishlist'));
     }
 
     public function toggle(Request $request)
@@ -54,14 +54,14 @@ class WishlistController extends Controller
         if ($wishlist) {
             $wishlist->delete();
             $inWishlist = false;
-            $message = 'Product removed from wishlist';
+            $message = __('messages.product_removed_wishlist');
         } else {
             Wishlist::create([
                 'user_id' => Auth::id(),
                 'product_id' => $request->product_id,
             ]);
             $inWishlist = true;
-            $message = 'Product added to wishlist';
+            $message = __('messages.product_added_wishlist');
         }
 
         // Return JSON for AJAX requests

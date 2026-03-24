@@ -47,7 +47,7 @@ class CheckoutController extends Controller
             // COD or local payment
             return redirect()->route('checkout.success')->with([
                 'order_id' => $order->id,
-                'success' => 'Đơn hàng đã được đặt thành công!'
+                'success' => 'Đơn hàng đã được đặt thành công!',
             ]);
         } catch (Exception $e) {
             Log::error('Checkout process failed', [

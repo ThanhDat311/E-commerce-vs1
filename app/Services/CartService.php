@@ -170,11 +170,9 @@ class CartService
     /**
      * Update quantity and return new cart totals (AJAX ready)
      * Includes flash sale prices and coupon discount if applicable
-     * 
-     * @param int|string $id
-     * @param int $quantity
-     * @param string|null $couponCode
-     * @param int|null $userId
+     *
+     * @param  int|string  $id
+     * @param  int  $quantity
      * @return array
      */
     public function updateQuantity($id, $quantity, ?string $couponCode = null, ?int $userId = null)

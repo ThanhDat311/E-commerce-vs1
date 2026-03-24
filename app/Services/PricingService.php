@@ -2,13 +2,14 @@
 
 namespace App\Services;
 
-use App\Repositories\Interfaces\ProductRepositoryInterface;
 use App\Models\PriceSuggestion;
 use App\Models\Product;
+use App\Repositories\Interfaces\ProductRepositoryInterface;
 
 class PricingService
 {
     protected $productRepository;
+
     protected $aiEngine;
 
     public function __construct(

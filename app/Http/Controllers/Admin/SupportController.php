@@ -25,7 +25,7 @@ class SupportController extends Controller
             // Avg processing time for resolved tickets (hours)
             'avg_response' => SupportTicket::where('status', 'resolved')
                 ->get()
-                ->avg(fn($ticket) => $ticket->updated_at->floatDiffInHours($ticket->created_at)) ?? 0,
+                ->avg(fn ($ticket) => $ticket->updated_at->floatDiffInHours($ticket->created_at)) ?? 0,
         ];
 
         // Query

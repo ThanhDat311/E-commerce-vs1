@@ -15,7 +15,7 @@ class AdminMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         // 1. Kiểm tra xem người dùng đã đăng nhập chưa
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login');
         }
 

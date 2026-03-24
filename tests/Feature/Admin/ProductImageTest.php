@@ -4,7 +4,6 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\User;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 
 beforeEach(function () {
@@ -23,20 +22,20 @@ beforeEach(function () {
 
 test('admin can delete a product gallery image', function () {
     // Fake storage
-    $filename = 'test_image_' . uniqid() . '.jpg';
+    $filename = 'test_image_'.uniqid().'.jpg';
     $directory = public_path('img/products/gallery');
 
-    if (!File::exists($directory)) {
+    if (! File::exists($directory)) {
         File::makeDirectory($directory, 0755, true);
     }
 
-    $path = $directory . '/' . $filename;
+    $path = $directory.'/'.$filename;
     file_put_contents($path, 'fake image content');
 
     // Create ProductImage record
     $image = ProductImage::create([
         'product_id' => $this->product->id,
-        'image_path' => 'img/products/gallery/' . $filename,
+        'image_path' => 'img/products/gallery/'.$filename,
     ]);
 
     $this->assertDatabaseHas('product_images', ['id' => $image->id]);

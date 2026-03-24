@@ -2,16 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Cart\UpdateCartRequest;
+use App\Http\Requests\CheckoutRequest;
+use App\Models\Product;
 use App\Services\CartService;
 use App\Services\OrderService;
-use Illuminate\Http\Request;
-use App\Http\Requests\CheckoutRequest;
-use App\Http\Requests\Cart\UpdateCartRequest; // Import Request validate
+use Illuminate\Http\Request; // Import Request validate
 use Illuminate\Support\Facades\Auth;
 
 class CartController extends Controller
 {
     protected $cartService;
+
     protected $orderService;
 
     public function __construct(CartService $cartService, OrderService $orderService)
@@ -23,6 +25,16 @@ class CartController extends Controller
     public function index()
     {
         $data = $this->cartService->getCartDetails();
+
+        $cartProductIds = collect($data['cartItems'])->pluck('id')->toArray();
+
+        $data['relatedProducts'] = Product::query()
+            ->whereNotIn('id', $cartProductIds)
+            ->with('category')
+            ->inRandomOrder()
+            ->limit(4)
+            ->get();
+
         return view('pages.store.cart.index', $data);
     }
 
@@ -31,9 +43,9 @@ class CartController extends Controller
     {
         $quantity = $request->input('quantity', 1);
         // Cast int để đảm bảo an toàn dữ liệu
-        $result = $this->cartService->addToCart($id, (int)$quantity);
+        $result = $this->cartService->addToCart($id, (int) $quantity);
 
-        if (!$result['status']) {
+        if (! $result['status']) {
             return redirect()->back()->with('error', $result['message']);
         }
 
@@ -48,14 +60,14 @@ class CartController extends Controller
             $quantity = $request->input('quantity');
 
             // Gọi Service
-            $result = $this->cartService->updateQuantity($id, (int)$quantity);
+            $result = $this->cartService->updateQuantity($id, (int) $quantity);
 
             // Trả về JSON cho Frontend
             return response()->json($result);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 400); // Bad Request
         }
     }
@@ -63,7 +75,8 @@ class CartController extends Controller
     public function remove($id)
     {
         $this->cartService->removeFromCart($id);
-        return redirect()->back()->with('success', 'Product removed successfully!');
+
+        return redirect()->back()->with('success', __('messages.product_removed_success'));
     }
 
     public function checkout()
@@ -71,7 +84,7 @@ class CartController extends Controller
         $data = $this->cartService->getCartDetails();
 
         if (empty($data['cartItems'])) {
-            return redirect()->route('shop')->with('error', 'Giỏ hàng trống!');
+            return redirect()->route('shop')->with('error', __('messages.cart_empty'));
         }
 
         return view('checkout', $data);
@@ -82,9 +95,9 @@ class CartController extends Controller
         try {
             $this->orderService->processCheckout($request->validated(), Auth::id());
 
-            return redirect()->route('cart.orderSuccess')->with('success', 'Đơn hàng đã được đặt thành công!');
+            return redirect()->route('cart.orderSuccess')->with('success', __('messages.order_placed_success'));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Lỗi: ' . $e->getMessage());
+            return redirect()->back()->with('error', __('messages.error_occurred').$e->getMessage());
         }
     }
 

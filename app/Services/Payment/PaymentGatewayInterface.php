@@ -1,9 +1,9 @@
 <?php
 
 namespace App\Services\Payment;
-use Illuminate\Http\Request;
 
 use App\Models\Order;
+use Illuminate\Http\Request;
 
 interface PaymentGatewayInterface
 {

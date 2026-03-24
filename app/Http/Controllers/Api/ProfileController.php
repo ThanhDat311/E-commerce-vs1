@@ -15,9 +15,6 @@ class ProfileController extends Controller
 
     /**
      * Get authenticated user's profile
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function show(Request $request): JsonResponse
     {
@@ -42,9 +39,6 @@ class ProfileController extends Controller
 
     /**
      * Update user's profile
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function update(Request $request): JsonResponse
     {
@@ -52,7 +46,7 @@ class ProfileController extends Controller
             $validated = $request->validate([
                 'name' => 'sometimes|required|string|max:255',
                 'phone' => 'sometimes|nullable|string|max:20',
-                'email' => 'sometimes|required|email|unique:users,email,' . $request->user()->id,
+                'email' => 'sometimes|required|email|unique:users,email,'.$request->user()->id,
             ]);
 
             $user = $request->user();
@@ -72,9 +66,6 @@ class ProfileController extends Controller
 
     /**
      * Update password
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function updatePassword(Request $request): JsonResponse
     {
@@ -86,7 +77,7 @@ class ProfileController extends Controller
 
             $user = $request->user();
 
-            if (!password_verify($validated['current_password'], $user->password)) {
+            if (! password_verify($validated['current_password'], $user->password)) {
                 return $this->errorResponse('Current password is incorrect', 422);
             }
 
@@ -100,9 +91,6 @@ class ProfileController extends Controller
 
     /**
      * Add address to profile
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function addAddress(Request $request): JsonResponse
     {
@@ -134,10 +122,6 @@ class ProfileController extends Controller
 
     /**
      * Update address
-     *
-     * @param Request $request
-     * @param int $addressId
-     * @return JsonResponse
      */
     public function updateAddress(Request $request, int $addressId): JsonResponse
     {
@@ -169,10 +153,6 @@ class ProfileController extends Controller
 
     /**
      * Delete address
-     *
-     * @param Request $request
-     * @param int $addressId
-     * @return JsonResponse
      */
     public function deleteAddress(Request $request, int $addressId): JsonResponse
     {

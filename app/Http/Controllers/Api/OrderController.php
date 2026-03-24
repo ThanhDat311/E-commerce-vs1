@@ -14,9 +14,6 @@ class OrderController extends Controller
 
     /**
      * Get user's order history
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function history(Request $request): JsonResponse
     {
@@ -35,10 +32,6 @@ class OrderController extends Controller
 
     /**
      * Get order details
-     *
-     * @param Request $request
-     * @param int $orderId
-     * @return JsonResponse
      */
     public function detail(Request $request, int $orderId): JsonResponse
     {
@@ -89,10 +82,6 @@ class OrderController extends Controller
 
     /**
      * Get order summary (brief)
-     *
-     * @param Request $request
-     * @param int $orderId
-     * @return JsonResponse
      */
     public function summary(Request $request, int $orderId): JsonResponse
     {
@@ -112,10 +101,6 @@ class OrderController extends Controller
 
     /**
      * Cancel order
-     *
-     * @param Request $request
-     * @param int $orderId
-     * @return JsonResponse
      */
     public function cancel(Request $request, int $orderId): JsonResponse
     {
@@ -124,7 +109,7 @@ class OrderController extends Controller
         $order = $user->orders()->findOrFail($orderId);
 
         // Only allow cancelling orders with certain statuses
-        if (!in_array($order->status, ['pending', 'confirmed'])) {
+        if (! in_array($order->status, ['pending', 'confirmed'])) {
             return $this->errorResponse('Order cannot be cancelled in current status', 400);
         }
 
@@ -138,10 +123,6 @@ class OrderController extends Controller
 
     /**
      * Track order
-     *
-     * @param Request $request
-     * @param int $orderId
-     * @return JsonResponse
      */
     public function track(Request $request, int $orderId): JsonResponse
     {

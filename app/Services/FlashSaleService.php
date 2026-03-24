@@ -8,19 +8,18 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * FlashSaleService
- * 
+ *
  * Handles flash sale retrieval, pricing, and inventory management
  * with real-time active status checking
  */
 class FlashSaleService
 {
     protected array $preloadedSales = [];
+
     protected bool $isPreloaded = false;
 
     /**
      * Preload active flash sales for multiple products to prevent N+1 queries
-     * 
-     * @param array $productIds
      */
     public function preloadForProducts(array $productIds): void
     {
@@ -39,10 +38,6 @@ class FlashSaleService
 
     /**
      * Get active flash sale for a product
-     * 
-     * @param int $productId
-     * 
-     * @return FlashSale|null
      */
     public function getActiveFlashSale(int $productId): ?FlashSale
     {
@@ -69,9 +64,8 @@ class FlashSaleService
     /**
      * Get sale price for a product if active flash sale exists
      * Falls back to regular product price if no sale
-     * 
-     * @param Product $product
-     * 
+     *
+     *
      * @return float|null Sale price, or null if product has no active sale
      */
     public function getSalePrice(Product $product)
@@ -83,9 +77,8 @@ class FlashSaleService
 
     /**
      * Get effective price for a product (sale price or regular price)
-     * 
-     * @param Product $product
-     * 
+     *
+     *
      * @return float Effective price (sale if active, else regular)
      */
     public function getEffectivePrice(Product $product): float
@@ -97,16 +90,15 @@ class FlashSaleService
 
     /**
      * Get discount percentage for display
-     * 
-     * @param Product $product
-     * 
+     *
+     *
      * @return float|null Discount percentage, null if no active sale
      */
     public function getDiscountPercentage(Product $product): ?float
     {
         $sale = $this->getActiveFlashSale($product->id);
 
-        if (!$sale) {
+        if (! $sale) {
             return null;
         }
 
@@ -117,16 +109,15 @@ class FlashSaleService
 
     /**
      * Get time remaining for flash sale in seconds
-     * 
-     * @param Product $product
-     * 
+     *
+     *
      * @return int|null Seconds remaining, null if no active sale
      */
     public function getTimeRemaining(Product $product): ?int
     {
         $sale = $this->getActiveFlashSale($product->id);
 
-        if (!$sale) {
+        if (! $sale) {
             return null;
         }
 
@@ -137,16 +128,15 @@ class FlashSaleService
 
     /**
      * Get formatted countdown (e.g., "2h 15m 30s")
-     * 
-     * @param Product $product
-     * 
+     *
+     *
      * @return string|null Formatted countdown, null if no active sale
      */
     public function getFormattedCountdown(Product $product): ?string
     {
         $seconds = $this->getTimeRemaining($product);
 
-        if (!$seconds) {
+        if (! $seconds) {
             return null;
         }
 
@@ -165,18 +155,13 @@ class FlashSaleService
 
     /**
      * Record a purchase against flash sale quantity
-     * 
-     * @param int $productId
-     * @param int $quantity
-     * 
-     * @return bool
      */
     public function recordSale(int $productId, int $quantity = 1): bool
     {
         try {
             $sale = $this->getActiveFlashSale($productId);
 
-            if (!$sale) {
+            if (! $sale) {
                 return true; // No active sale, nothing to record
             }
 
@@ -201,16 +186,13 @@ class FlashSaleService
             return true;
         } catch (\Exception $e) {
             Log::error('Error recording flash sale', ['product_id' => $productId, 'error' => $e->getMessage()]);
+
             return false;
         }
     }
 
     /**
      * Check if product has active flash sale
-     * 
-     * @param int $productId
-     * 
-     * @return bool
      */
     public function isOnSale(int $productId): bool
     {
@@ -219,9 +201,8 @@ class FlashSaleService
 
     /**
      * Get all currently active flash sales (for display on home page, etc.)
-     * 
-     * @param int $limit
-     * 
+     *
+     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getActiveFlashSales(int $limit = 10)
@@ -237,7 +218,7 @@ class FlashSaleService
 
     /**
      * Deactivate expired flash sales (call this via scheduler)
-     * 
+     *
      * @return int Number of sales deactivated
      */
     public function deactivateExpiredSales(): int

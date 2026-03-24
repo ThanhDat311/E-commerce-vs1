@@ -7,9 +7,8 @@ use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Models\Category;
 use App\Models\Product;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 
 class ProductController extends Controller
 {
@@ -33,6 +32,7 @@ class ProductController extends Controller
     public function create()
     {
         $categories = Category::all();
+
         return view('pages.vendor.products.create', compact('categories'));
     }
 
@@ -55,14 +55,14 @@ class ProductController extends Controller
 
         if ($request->hasFile('image')) {
             $file = $request->file('image');
-            $filename = time() . '_' . ($file->getClientOriginalName() ?: $file->hashName());
+            $filename = time().'_'.($file->getClientOriginalName() ?: $file->hashName());
 
-            if (!File::exists(public_path('img/products'))) {
+            if (! File::exists(public_path('img/products'))) {
                 File::makeDirectory(public_path('img/products'), 0755, true);
             }
 
             $file->move(public_path('img/products'), $filename);
-            $data['image_url'] = 'img/products/' . $filename;
+            $data['image_url'] = 'img/products/'.$filename;
         }
 
         $data['is_new'] = $request->has('is_new') ? 1 : 0;
@@ -73,7 +73,7 @@ class ProductController extends Controller
         // Handle Gallery Images
         if ($request->hasFile('gallery')) {
             foreach ($request->file('gallery') as $file) {
-                $filename = time() . '_' . uniqid() . '_' . ($file->getClientOriginalName() ?: $file->hashName());
+                $filename = time().'_'.uniqid().'_'.($file->getClientOriginalName() ?: $file->hashName());
                 // Ensure directory exists
                 if (! File::exists(public_path('img/products/gallery'))) {
                     File::makeDirectory(public_path('img/products/gallery'), 0755, true);
@@ -82,7 +82,7 @@ class ProductController extends Controller
                 $file->move(public_path('img/products/gallery'), $filename);
 
                 $product->images()->create([
-                    'image_path' => 'img/products/gallery/' . $filename
+                    'image_path' => 'img/products/gallery/'.$filename,
                 ]);
             }
         }
@@ -99,6 +99,7 @@ class ProductController extends Controller
         $this->authorize('update', $product);
 
         $categories = Category::all();
+
         return view('pages.vendor.products.edit', compact('product', 'categories'));
     }
 
@@ -129,14 +130,14 @@ class ProductController extends Controller
             }
 
             $file = $request->file('image');
-            $filename = time() . '_' . ($file->getClientOriginalName() ?: $file->hashName());
+            $filename = time().'_'.($file->getClientOriginalName() ?: $file->hashName());
 
-            if (!File::exists(public_path('img/products'))) {
+            if (! File::exists(public_path('img/products'))) {
                 File::makeDirectory(public_path('img/products'), 0755, true);
             }
 
             $file->move(public_path('img/products'), $filename);
-            $data['image_url'] = 'img/products/' . $filename;
+            $data['image_url'] = 'img/products/'.$filename;
         }
 
         $data['is_new'] = $request->has('is_new') ? 1 : 0;
@@ -147,7 +148,7 @@ class ProductController extends Controller
         // Handle Gallery Images
         if ($request->hasFile('gallery')) {
             foreach ($request->file('gallery') as $file) {
-                $filename = time() . '_' . uniqid() . '_' . ($file->getClientOriginalName() ?: $file->hashName());
+                $filename = time().'_'.uniqid().'_'.($file->getClientOriginalName() ?: $file->hashName());
                 // Ensure directory exists
                 if (! File::exists(public_path('img/products/gallery'))) {
                     File::makeDirectory(public_path('img/products/gallery'), 0755, true);
@@ -156,7 +157,7 @@ class ProductController extends Controller
                 $file->move(public_path('img/products/gallery'), $filename);
 
                 $product->images()->create([
-                    'image_path' => 'img/products/gallery/' . $filename
+                    'image_path' => 'img/products/gallery/'.$filename,
                 ]);
             }
         }

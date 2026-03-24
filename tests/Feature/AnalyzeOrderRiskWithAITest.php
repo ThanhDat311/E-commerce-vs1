@@ -1,10 +1,10 @@
 <?php
 
+use App\Jobs\AnalyzeOrderRiskWithAI;
 use App\Models\AiFeatureStore;
 use App\Models\Order;
-use App\Jobs\AnalyzeOrderRiskWithAI;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Http;
 
 test('it handles fallback simulation when no api key is present', function () {
     // Ensure API key is empty
@@ -16,7 +16,7 @@ test('it handles fallback simulation when no api key is present', function () {
         'order_id' => $order->id,
         'ip_address' => '127.0.0.1',
         'risk_score' => 0.65,
-        'reasons' => ['Medium value order ($1200)']
+        'reasons' => ['Medium value order ($1200)'],
     ]);
 
     // Run the job synchronously
@@ -40,18 +40,18 @@ test('it calls openai api and saves insight when api key is present', function (
                     'message' => [
                         'content' => json_encode([
                             'insight' => 'This order appears moderately risky due to the high amount but from a registered user.',
-                            'recommendation' => 'REVIEW'
-                        ])
-                    ]
-                ]
+                            'recommendation' => 'REVIEW',
+                        ]),
+                    ],
+                ],
             ],
             'usage' => [
                 'prompt_tokens' => 120,
                 'completion_tokens' => 30,
-                'total_tokens' => 150
+                'total_tokens' => 150,
             ],
-            'model' => 'gpt-3.5-turbo'
-        ], 200)
+            'model' => 'gpt-3.5-turbo',
+        ], 200),
     ]);
 
     // Create an order and a feature log
@@ -60,7 +60,7 @@ test('it calls openai api and saves insight when api key is present', function (
         'order_id' => $order->id,
         'ip_address' => '192.168.1.1',
         'risk_score' => 0.45,
-        'reasons' => ['Medium value order ($1200)']
+        'reasons' => ['Medium value order ($1200)'],
     ]);
 
     // Run the job
@@ -71,5 +71,5 @@ test('it calls openai api and saves insight when api key is present', function (
     expect($log->ai_insight)->toBe('[REVIEW] This order appears moderately risky due to the high amount but from a registered user.');
 
     // Verify HTTP call was made
-    Http::assertSent(fn($request) => $request->hasHeader('Authorization', 'Bearer fake-key'));
+    Http::assertSent(fn ($request) => $request->hasHeader('Authorization', 'Bearer fake-key'));
 });

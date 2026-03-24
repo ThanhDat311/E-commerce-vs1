@@ -45,10 +45,12 @@ class LoginRiskController extends Controller
      */
     public function show(AuthLog $loginRisk): View
     {
-        // Load the associated user if available
         $loginRisk->load('user');
 
-        return view('pages.admin.ai-login-risk.show', compact('loginRisk'));
+        $blockedIps = \App\Models\RiskList::where('type', 'ip')->where('action', 'block')->pluck('value')->toArray();
+        $whitelistedUsers = \App\Models\RiskList::where('type', 'user_id')->where('action', 'whitelist')->pluck('value')->toArray();
+
+        return view('pages.admin.ai-login-risk.show', compact('loginRisk', 'blockedIps', 'whitelistedUsers'));
     }
 
     public function toggleIpBlock(Request $request)

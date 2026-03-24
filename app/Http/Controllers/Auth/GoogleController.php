@@ -39,6 +39,7 @@ class GoogleController extends Controller
 
         if ($user) {
             Auth::login($user);
+
             return redirect()->intended(route('home'));
         }
 
@@ -52,6 +53,7 @@ class GoogleController extends Controller
             ]);
 
             Auth::login($user);
+
             return redirect()->intended(route('home'));
         }
 

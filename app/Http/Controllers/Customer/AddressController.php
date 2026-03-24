@@ -29,9 +29,9 @@ class AddressController extends Controller
         try {
             $this->addressService->createAddress(Auth::id(), $request->validated());
 
-            return redirect()->back()->with('success', 'Address added successfully.');
+            return redirect()->back()->with('success', __('messages.address_added_success'));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return redirect()->back()->with('error', __('messages.error_occurred').$e->getMessage());
         }
     }
 
@@ -40,9 +40,9 @@ class AddressController extends Controller
         try {
             $this->addressService->updateAddress($id, Auth::id(), $request->validated());
 
-            return redirect()->back()->with('success', 'Address updated successfully.');
+            return redirect()->back()->with('success', __('messages.address_updated_success'));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Update failed: '.$e->getMessage());
+            return redirect()->back()->with('error', __('messages.update_failed').$e->getMessage());
         }
     }
 
@@ -51,9 +51,9 @@ class AddressController extends Controller
         try {
             $this->addressService->setDefault($id, Auth::id());
 
-            return redirect()->back()->with('success', 'Default address updated.');
+            return redirect()->back()->with('success', __('messages.default_address_updated'));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return redirect()->back()->with('error', __('messages.error_occurred').$e->getMessage());
         }
     }
 
@@ -62,9 +62,9 @@ class AddressController extends Controller
         try {
             $this->addressService->deleteAddress($id, Auth::id());
 
-            return redirect()->back()->with('success', 'Address deleted.');
+            return redirect()->back()->with('success', __('messages.address_deleted'));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return redirect()->back()->with('error', __('messages.error_occurred').$e->getMessage());
         }
     }
 }

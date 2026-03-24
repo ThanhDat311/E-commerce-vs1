@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\User;
-use App\Models\Role;
 
 test('new users are assigned customer role', function () {
     $response = $this->post('/register', [

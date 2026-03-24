@@ -14,9 +14,11 @@ class CategoryRepository implements CategoryRepositoryInterface
 
     public function getFeaturedCategories($limit = 6)
     {
-        // Assuming 'is_featured' exists or just grab random/popular
-        // If no 'is_featured' column, use latest or most products
-        return Category::latest()->limit($limit)->get();
+        // Get categories ordered by the number of products they have
+        return Category::withCount('products')
+            ->orderByDesc('products_count')
+            ->limit($limit)
+            ->get();
     }
 
     public function getTree()

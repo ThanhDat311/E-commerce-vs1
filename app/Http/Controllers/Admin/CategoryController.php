@@ -84,9 +84,9 @@ class CategoryController extends Controller
             }
 
             $file = $request->file('image');
-            $filename = time() . '_' . Str::slug($data['name']) . '.' . $file->getClientOriginalExtension();
+            $filename = time().'_'.Str::slug($data['name']).'.'.$file->getClientOriginalExtension();
             $file->move(public_path('img/categories'), $filename);
-            $data['image_url'] = 'img/categories/' . $filename;
+            $data['image_url'] = 'img/categories/'.$filename;
         }
 
         $data['is_active'] = $request->has('is_active') ? 1 : 0;
@@ -111,9 +111,9 @@ class CategoryController extends Controller
     public function update(Request $request, Category $category)
     {
         $data = $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
+            'name' => 'required|string|max:255|unique:categories,name,'.$category->id,
             'parent_id' => 'nullable|exists:categories,id',
-            'slug' => 'nullable|string|max:255|unique:categories,slug,' . $category->id,
+            'slug' => 'nullable|string|max:255|unique:categories,slug,'.$category->id,
             'description' => 'nullable|string|max:1000',
             'is_active' => 'boolean',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
@@ -133,9 +133,9 @@ class CategoryController extends Controller
             }
 
             $file = $request->file('image');
-            $filename = time() . '_' . Str::slug($data['name']) . '.' . $file->getClientOriginalExtension();
+            $filename = time().'_'.Str::slug($data['name']).'.'.$file->getClientOriginalExtension();
             $file->move(public_path('img/categories'), $filename);
-            $data['image_url'] = 'img/categories/' . $filename;
+            $data['image_url'] = 'img/categories/'.$filename;
         }
 
         $data['is_active'] = $request->has('is_active') ? 1 : 0;

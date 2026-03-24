@@ -224,18 +224,18 @@ class TopSellingProductsController extends Controller
         $products = $analytics['products'] ?? [];
 
         // Build CSV
-        $filename = 'top-products-' . $startDate->format('Y-m-d') . '-to-' . $endDate->format('Y-m-d') . '.csv';
+        $filename = 'top-products-'.$startDate->format('Y-m-d').'-to-'.$endDate->format('Y-m-d').'.csv';
         $headers = [
             'Content-Encoding' => 'UTF-8',
             'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ];
 
         $callback = function () use ($products) {
             $file = fopen('php://output', 'w');
 
             // BOM for Excel UTF-8
-            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
 
             // Headers
             fputcsv($file, [
@@ -302,6 +302,7 @@ class TopSellingProductsController extends Controller
             } elseif ($sortBy === 'trend') {
                 return $b['trend'] <=> $a['trend'];
             }
+
             return $b['units'] <=> $a['units'];
         });
 

@@ -2,15 +2,17 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Models\AuthLog;
 use App\Models\User;
+use App\Services\AiMicroserviceClient;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Hash;
+use Tests\TestCase;
 
 class AuthTest extends TestCase
 {
-    use WithFaker, RefreshDatabase;
+    use RefreshDatabase, WithFaker;
 
     /**
      * Test user registration process.
@@ -55,6 +57,16 @@ class AuthTest extends TestCase
      */
     public function test_user_can_login_successfully()
     {
+        // Mock the AI microservice to return a low-risk score so login proceeds normally.
+        $this->mock(AiMicroserviceClient::class, function ($mock) {
+            $mock->shouldReceive('predictLoginRisk')
+                ->andReturn([
+                    'risk_score' => 0.01,
+                    'auth_decision' => 'passive_auth_allow',
+                    'reasons' => ['Mocked low-risk login for testing'],
+                ]);
+        });
+
         // Create a user in the database
         $user = User::factory()->create([
             'password' => Hash::make('password123'),
@@ -75,6 +87,14 @@ class AuthTest extends TestCase
 
         // Assert user is authenticated
         $this->assertAuthenticatedAs($user);
+
+        // Assert an AuthLog entry was created with low risk
+        $this->assertDatabaseHas('auth_logs', [
+            'user_id' => $user->id,
+            'risk_level' => 'low',
+            'auth_decision' => 'passive_auth_allow',
+            'is_successful' => true,
+        ]);
     }
 
     /**

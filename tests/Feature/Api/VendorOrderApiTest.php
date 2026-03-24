@@ -8,7 +8,6 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
 
-
 beforeEach(function () {
     $this->vendor = User::factory()->create(['role_id' => 4, 'is_active' => true]);
     $this->otherVendor = User::factory()->create(['role_id' => 4, 'is_active' => true]);

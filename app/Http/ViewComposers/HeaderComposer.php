@@ -2,9 +2,9 @@
 
 namespace App\Http\ViewComposers;
 
-use Illuminate\View\View;
 use App\Models\Category;
 use Illuminate\Support\Facades\Session;
+use Illuminate\View\View;
 
 class HeaderComposer
 {

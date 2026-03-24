@@ -50,11 +50,11 @@ trait Auditable
             if ($oldValues === $newValues) {
                 return;
             }
-        } else if ($action === 'created') {
+        } elseif ($action === 'created') {
             $newValues = collect($model->getAttributes())
                 ->only($model->getAuditableAttributes())
                 ->toArray();
-        } else if ($action === 'deleted') {
+        } elseif ($action === 'deleted') {
             $oldValues = collect($model->getAttributes())
                 ->only($model->getAuditableAttributes())
                 ->toArray();
@@ -75,8 +75,6 @@ trait Auditable
     /**
      * Get the attributes that should be audited.
      * Override this method in your model to specify custom attributes.
-     *
-     * @return array
      */
     public function getAuditableAttributes(): array
     {

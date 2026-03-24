@@ -4,7 +4,6 @@ namespace Database\Factories;
 
 use App\Models\Commission;
 use App\Models\Order;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class CommissionFactory extends Factory
@@ -30,7 +29,7 @@ class CommissionFactory extends Factory
 
     public function paid(): static
     {
-        return $this->state(fn() => [
+        return $this->state(fn () => [
             'status' => 'paid',
             'paid_at' => $this->faker->dateTimeBetween('-30 days', 'now'),
         ]);
@@ -38,7 +37,7 @@ class CommissionFactory extends Factory
 
     public function pending(): static
     {
-        return $this->state(fn() => [
+        return $this->state(fn () => [
             'status' => 'pending',
             'paid_at' => null,
         ]);

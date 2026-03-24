@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * CouponService
- * 
+ *
  * Handles coupon validation, discount calculation, and usage tracking
  * with comprehensive error handling and business rule enforcement
  */
@@ -16,11 +16,10 @@ class CouponService
 {
     /**
      * Validate coupon code and return discount details
-     * 
-     * @param string $code Coupon code to validate
-     * @param float $orderTotal Current order total before discount
-     * @param int|null $userId User ID for per-user limit checking
-     * 
+     *
+     * @param  string  $code  Coupon code to validate
+     * @param  float  $orderTotal  Current order total before discount
+     * @param  int|null  $userId  User ID for per-user limit checking
      * @return array ['valid' => bool, 'data' => array, 'error' => string|null]
      */
     public function validateCoupon(string $code, $orderTotal, ?int $userId = null): array
@@ -34,7 +33,7 @@ class CouponService
                 ->where('is_active', true)
                 ->first();
 
-            if (!$coupon) {
+            if (! $coupon) {
                 return [
                     'valid' => false,
                     'error' => 'Coupon code not found or inactive.',
@@ -43,7 +42,7 @@ class CouponService
             }
 
             // Check if coupon is valid (dates, usage limits)
-            if (!$coupon->isValid()) {
+            if (! $coupon->isValid()) {
                 $reason = $this->getInvalidReason($coupon);
 
                 return [
@@ -54,7 +53,7 @@ class CouponService
             }
 
             // Check per-user limit if userId provided
-            if ($userId && !$coupon->canUserUse($userId)) {
+            if ($userId && ! $coupon->canUserUse($userId)) {
                 return [
                     'valid' => false,
                     'error' => 'You have already used this coupon the maximum number of times.',
@@ -102,13 +101,11 @@ class CouponService
 
     /**
      * Apply coupon to an order/user
-     * 
-     * @param int $couponId Coupon ID
-     * @param int $userId User ID
-     * @param float $discountAmount Amount discounted
-     * @param int|null $orderId Order ID (optional, set when order is created)
-     * 
-     * @return bool
+     *
+     * @param  int  $couponId  Coupon ID
+     * @param  int  $userId  User ID
+     * @param  float  $discountAmount  Amount discounted
+     * @param  int|null  $orderId  Order ID (optional, set when order is created)
      */
     public function applyCoupon(int $couponId, int $userId, $discountAmount, ?int $orderId = null): bool
     {
@@ -136,17 +133,13 @@ class CouponService
             return true;
         } catch (\Exception $e) {
             Log::error('Error applying coupon', ['coupon_id' => $couponId, 'error' => $e->getMessage()]);
+
             return false;
         }
     }
 
     /**
      * Check if user has already used a specific coupon
-     * 
-     * @param int $couponId
-     * @param int $userId
-     * 
-     * @return bool
      */
     public function hasUserUsedCoupon(int $couponId, int $userId): bool
     {
@@ -158,9 +151,8 @@ class CouponService
 
     /**
      * Get user's coupon usage history
-     * 
-     * @param int $userId
-     * 
+     *
+     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getUserCouponHistory(int $userId)
@@ -173,16 +165,12 @@ class CouponService
 
     /**
      * Get detailed reason why coupon is invalid
-     * 
-     * @param Coupon $coupon
-     * 
-     * @return string
      */
     private function getInvalidReason(Coupon $coupon): string
     {
         $now = now();
 
-        if (!$coupon->is_active) {
+        if (! $coupon->is_active) {
             return 'This coupon is no longer active.';
         }
 

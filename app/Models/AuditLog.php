@@ -48,7 +48,7 @@ class AuditLog extends Model
     public function oldValues(): Attribute
     {
         return Attribute::make(
-            get: fn($value) => $value ? json_decode($value, true) : [],
+            get: fn ($value) => $value ? json_decode($value, true) : [],
         );
     }
 
@@ -58,7 +58,7 @@ class AuditLog extends Model
     public function newValues(): Attribute
     {
         return Attribute::make(
-            get: fn($value) => $value ? json_decode($value, true) : [],
+            get: fn ($value) => $value ? json_decode($value, true) : [],
         );
     }
 

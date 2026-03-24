@@ -3,10 +3,9 @@
 namespace App\Services\Payment;
 
 // [FIX 1] Import đúng Model Order (Thay vì App\Services\Payment\Order)
-use App\Models\Order; 
-
+use App\Models\Order;
 // [FIX 2] Import class Request của Laravel
-use Illuminate\Http\Request; 
+use Illuminate\Http\Request;
 
 class CodGateway implements PaymentGatewayInterface
 {
@@ -17,7 +16,7 @@ class CodGateway implements PaymentGatewayInterface
             'success' => true,
             'is_redirect' => false,
             'message' => 'Order placed successfully with COD.',
-            'redirect_url' => null
+            'redirect_url' => null,
         ];
     }
 
@@ -26,7 +25,7 @@ class CodGateway implements PaymentGatewayInterface
         // COD không có callback, trả về false nếu vô tình bị gọi
         return [
             'success' => false,
-            'message' => 'COD method does not support callback verification.'
+            'message' => 'COD method does not support callback verification.',
         ];
     }
 }

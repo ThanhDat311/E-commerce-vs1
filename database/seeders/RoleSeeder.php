@@ -28,7 +28,7 @@ class RoleSeeder extends Seeder
             [
                 'id' => 4,
                 'name' => 'Vendor',
-                'description' => 'Shop Owner / Seller'
+                'description' => 'Shop Owner / Seller',
             ],
         ]);
     }

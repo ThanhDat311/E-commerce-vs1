@@ -15,36 +15,36 @@ uses(RefreshDatabase::class);
 
 test('deal is not active after end date', function () {
     $deal = Deal::factory()->create([
-        'status'     => 'active',
+        'status' => 'active',
         'start_date' => now()->subDays(10),
-        'end_date'   => now()->subDay(),
+        'end_date' => now()->subDay(),
     ]);
 
-    $service = new DealService();
+    $service = new DealService;
     expect($service->isDealActive($deal))->toBeFalse();
 });
 
 test('deal is not active when status is draft', function () {
     $deal = Deal::factory()->create([
-        'status'     => 'draft',
+        'status' => 'draft',
         'start_date' => now()->subDay(),
-        'end_date'   => now()->addDay(),
+        'end_date' => now()->addDay(),
     ]);
 
-    $service = new DealService();
+    $service = new DealService;
     expect($service->isDealActive($deal))->toBeFalse();
 });
 
 test('usage limit exceeded makes deal inactive', function () {
     $deal = Deal::factory()->create([
-        'status'      => 'active',
-        'start_date'  => now()->subDay(),
-        'end_date'    => now()->addDay(),
+        'status' => 'active',
+        'start_date' => now()->subDay(),
+        'end_date' => now()->addDay(),
         'usage_limit' => 5,
         'usage_count' => 5,
     ]);
 
-    $service = new DealService();
+    $service = new DealService;
     expect($service->isDealActive($deal))->toBeFalse();
 });
 
@@ -52,22 +52,22 @@ test('higher discount deal wins in applyBestDeal', function () {
     $product = Product::factory()->create(['price' => 100]);
 
     $lowDeal = Deal::factory()->create([
-        'discount_type'  => 'percent',
+        'discount_type' => 'percent',
         'discount_value' => 10,
-        'apply_scope'    => 'global',
-        'priority'       => 1,
-        'vendor_id'      => null,
+        'apply_scope' => 'global',
+        'priority' => 1,
+        'vendor_id' => null,
     ]);
 
     $highDeal = Deal::factory()->create([
-        'discount_type'  => 'percent',
+        'discount_type' => 'percent',
         'discount_value' => 20,
-        'apply_scope'    => 'global',
-        'priority'       => 10,
-        'vendor_id'      => null,
+        'apply_scope' => 'global',
+        'priority' => 10,
+        'vendor_id' => null,
     ]);
 
-    $calc   = new PriceCalculatorService();
+    $calc = new PriceCalculatorService;
     $result = $calc->applyBestDeal($product, \Illuminate\Database\Eloquent\Collection::make([$lowDeal, $highDeal]));
 
     expect($result['discount_amount'])->toBe(20.0)
@@ -76,13 +76,13 @@ test('higher discount deal wins in applyBestDeal', function () {
 
 test('expireDeals marks expired active deals as expired', function () {
     $deal = Deal::factory()->create([
-        'status'     => 'active',
+        'status' => 'active',
         'start_date' => now()->subDays(5),
-        'end_date'   => now()->subHour(),
+        'end_date' => now()->subHour(),
     ]);
 
-    $service = new DealService();
-    $count   = $service->expireDeals();
+    $service = new DealService;
+    $count = $service->expireDeals();
 
     expect($count)->toBeGreaterThanOrEqual(1)
         ->and($deal->fresh()->status)->toBe('expired');
@@ -96,13 +96,13 @@ test('admin can create deal', function () {
     $admin = User::factory()->create(['role_id' => 1, 'is_active' => true]);
 
     $response = $this->actingAs($admin)->post(route('admin.deals.store'), [
-        'name'           => 'Test Deal',
-        'discount_type'  => 'percent',
+        'name' => 'Test Deal',
+        'discount_type' => 'percent',
         'discount_value' => 15,
-        'start_date'     => now()->addHour()->format('Y-m-d\TH:i'),
-        'end_date'       => now()->addDays(7)->format('Y-m-d\TH:i'),
-        'apply_scope'    => 'global',
-        'status'         => 'active',
+        'start_date' => now()->addHour()->format('Y-m-d\TH:i'),
+        'end_date' => now()->addDays(7)->format('Y-m-d\TH:i'),
+        'apply_scope' => 'global',
+        'status' => 'active',
     ]);
 
     $response->assertRedirect(route('admin.deals.index'));
@@ -110,12 +110,12 @@ test('admin can create deal', function () {
 });
 
 test('admin can approve vendor deal', function () {
-    $admin  = User::factory()->create(['role_id' => 1, 'is_active' => true]);
+    $admin = User::factory()->create(['role_id' => 1, 'is_active' => true]);
     $vendor = User::factory()->create(['role_id' => 4, 'is_active' => true]);
 
     $deal = Deal::factory()->create([
-        'status'     => 'pending',
-        'vendor_id'  => $vendor->id,
+        'status' => 'pending',
+        'vendor_id' => $vendor->id,
         'created_by' => $vendor->id,
     ]);
 
@@ -131,9 +131,9 @@ test('vendor cannot edit another vendors deal', function () {
     $vendor2 = User::factory()->create(['role_id' => 4, 'is_active' => true]);
 
     $deal = Deal::factory()->create([
-        'vendor_id'  => $vendor1->id,
+        'vendor_id' => $vendor1->id,
         'created_by' => $vendor1->id,
-        'status'     => 'draft',
+        'status' => 'draft',
     ]);
 
     $response = $this->actingAs($vendor2)->get(route('vendor.deals.edit', $deal));
@@ -142,7 +142,7 @@ test('vendor cannot edit another vendors deal', function () {
 
 test('staff cannot access admin deal delete route', function () {
     $staff = User::factory()->create(['role_id' => 2, 'is_active' => true]);
-    $deal  = Deal::factory()->create();
+    $deal = Deal::factory()->create();
 
     // Admin-only route → staff should get 403 from role middleware
     $response = $this->actingAs($staff)->delete(route('admin.deals.destroy', $deal));

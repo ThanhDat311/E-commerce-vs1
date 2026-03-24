@@ -28,18 +28,18 @@ class OrderCancellationController extends Controller
 
         try {
             $userId = Auth::id();
-            
+
             // Gọi Service để xử lý logic
             $this->orderService->cancelOrder($id, $userId, $request->input('reason'));
 
             // Redirect về trang chi tiết đơn hàng với thông báo thành công
             return redirect()->route('orders.show', $id)
-                ->with('success', 'Order has been cancelled successfully.');
+                ->with('success', __('messages.order_cancelled_success'));
 
         } catch (\Exception $e) {
             // Redirect lại với thông báo lỗi
             return redirect()->back()
-                ->with('error', 'Unable to cancel order: ' . $e->getMessage());
+                ->with('error', __('messages.unable_to_cancel_order').$e->getMessage());
         }
     }
 }

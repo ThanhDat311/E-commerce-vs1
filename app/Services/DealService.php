@@ -5,8 +5,8 @@ namespace App\Services;
 use App\Models\Deal;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 /**
  * DealService
@@ -62,7 +62,7 @@ class DealService
                 ->get();
         });
 
-        return $deals->filter(fn(Deal $deal) => $this->isValidForProduct($deal, $product))->values();
+        return $deals->filter(fn (Deal $deal) => $this->isValidForProduct($deal, $product))->values();
     }
 
     /**

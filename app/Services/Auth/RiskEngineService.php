@@ -101,13 +101,63 @@ class RiskEngineService
         $userAgent = $request->userAgent() ?? '';
         $deviceType = $this->detectDeviceType($userAgent);
 
+        // Resolve geo-location safely to get country and city before calling AI
+        $geoLocation = null;
+        $country = null;
+        $city = null;
+        try {
+            $position = Location::get($ip);
+            if ($position) {
+                $geoLocation = $position->toArray();
+                $country = $position->countryCode;
+                $city = $position->cityName;
+            }
+        } catch (\Throwable $e) {
+            Log::debug('[RiskEngine] Geo-location lookup failed.', ['ip' => $ip, 'error' => $e->getMessage()]);
+        }
+
+        $recentFailedAttempts = AuthLog::where('user_id', $user->id)
+            ->where('is_successful', false)
+            ->where('created_at', '>=', now()->subMinutes(30))
+            ->count();
+
+        // --- 2b. Velocity / Brute-Force OTP Challenge ---
+        // If >= 5 failures in the last 30 minutes, force OTP challenge without waiting for AI.
+        if ($recentFailedAttempts >= 5) {
+            Log::warning('[RiskEngine] Brute-force threshold exceeded. Forcing OTP.', [
+                'user_id' => $user->id,
+                'ip' => $ip,
+                'recent_failed_attempts' => $recentFailedAttempts,
+            ]);
+
+            AuthLog::create([
+                'user_id' => $user->id,
+                'session_id' => $request->hasSession() ? $request->session()->getId() : 'no-session',
+                'ip_address' => $ip,
+                'user_agent' => $request->userAgent(),
+                'risk_score' => 0.75, // high risk
+                'risk_level' => 'high',
+                'auth_decision' => 'challenge_otp',
+                'is_successful' => false,
+                'reasons' => ['Too many failed login attempts – OTP required'],
+            ]);
+
+            return true;
+        }
+
         // --- 3. Try AI Microservice ---
         $aiResult = $this->aiClient->predictLoginRisk(
             userId: $user->id,
             ip: $ip,
             userAgent: $userAgent,
             deviceType: $deviceType,
-            country: null, // geolocation lookup done below if needed
+            country: $country,
+            rttMs: null,
+            timestamp: now()->toIso8601String(),
+            city: $city,
+            deviceId: $deviceId,
+            isNewDevice: ! $isDeviceTrusted,
+            recentFailedAttempts: $recentFailedAttempts,
         );
 
         if ($aiResult !== null) {
@@ -133,15 +183,6 @@ class RiskEngineService
                 'reasons' => $reasons,
             ]);
 
-            // Resolve geo-location safely (may fail in test or local environments)
-            $geoLocation = null;
-            try {
-                $position = Location::get($ip);
-                $geoLocation = $position?->toArray();
-            } catch (\Throwable $e) {
-                Log::debug('[RiskEngine] Geo-location lookup failed.', ['ip' => $ip, 'error' => $e->getMessage()]);
-            }
-
             AuthLog::create([
                 'user_id' => $user->id,
                 'session_id' => $request->hasSession() ? $request->session()->getId() : 'no-session',
@@ -153,6 +194,7 @@ class RiskEngineService
                 'risk_level' => $riskLevel,
                 'auth_decision' => $authDecision,
                 'is_successful' => $authDecision === 'passive_auth_allow',
+                'reasons' => $reasons,
             ]);
 
             if ($authDecision === 'block_access') {
@@ -171,11 +213,27 @@ class RiskEngineService
         // --- 4. Fallback: Legacy IP/Location check (AI service offline) ---
         Log::warning('[RiskEngine] AI microservice unavailable, falling back to legacy IP check.');
 
-        if ($isDeviceTrusted) {
-            return false;
+        $isLegacyMfaRequired = false;
+        if (! $isDeviceTrusted) {
+            $isLegacyMfaRequired = $this->legacyIpRiskCheck($user, $ip);
         }
 
-        return $this->legacyIpRiskCheck($user, $ip);
+        // Record AuthLog to ensure reporting and velocity checks continue functioning
+        AuthLog::create([
+            'user_id' => $user->id,
+            'session_id' => $request->hasSession() ? $request->session()->getId() : 'no-session',
+            'ip_address' => $ip,
+            'device_fingerprint' => $deviceId ?? $request->cookie(self::DEVICE_COOKIE_NAME) ?? null,
+            'user_agent' => $userAgent,
+            'geo_location' => $geoLocation,
+            'risk_score' => $isLegacyMfaRequired ? 0.6 : 0.1, // Fallback dummy score
+            'risk_level' => $isLegacyMfaRequired ? 'high' : 'low',
+            'auth_decision' => $isLegacyMfaRequired ? 'challenge_otp' : 'passive_auth_allow',
+            'is_successful' => ! $isLegacyMfaRequired,
+            'reasons' => ['AI Microservice Unavailable - Applied Legacy IP Check'],
+        ]);
+
+        return $isLegacyMfaRequired;
     }
 
     /**
@@ -247,7 +305,7 @@ class RiskEngineService
     }
 
     /**
-     * Calculate risk level from risk score.
+     * Calculate risk level from risk score (public for reuse in simulations/tests).
      *
      * Thresholds:
      *   0.00 – 0.29 → low
@@ -255,7 +313,7 @@ class RiskEngineService
      *   0.60 – 0.79 → high
      *   0.80 – 1.00 → critical
      */
-    private function calculateRiskLevel(float $score): string
+    public function calculateRiskLevelPublic(float $score): string
     {
         return match (true) {
             $score >= 0.80 => 'critical',
@@ -266,7 +324,7 @@ class RiskEngineService
     }
 
     /**
-     * Calculate auth decision from risk score.
+     * Calculate auth decision from risk score (public for reuse in simulations/tests).
      *
      * Thresholds:
      *   0.00 – 0.29 → passive_auth_allow (safe)
@@ -274,7 +332,7 @@ class RiskEngineService
      *   0.60 – 0.79 → challenge_biometric
      *   0.80 – 1.00 → block_access
      */
-    private function calculateDecision(float $score): string
+    public function calculateDecisionPublic(float $score): string
     {
         return match (true) {
             $score >= 0.80 => 'block_access',
@@ -282,5 +340,17 @@ class RiskEngineService
             $score >= 0.30 => 'challenge_otp',
             default => 'passive_auth_allow',
         };
+    }
+
+    /** @internal Kept as private alias for internal use. */
+    private function calculateRiskLevel(float $score): string
+    {
+        return $this->calculateRiskLevelPublic($score);
+    }
+
+    /** @internal Kept as private alias for internal use. */
+    private function calculateDecision(float $score): string
+    {
+        return $this->calculateDecisionPublic($score);
     }
 }

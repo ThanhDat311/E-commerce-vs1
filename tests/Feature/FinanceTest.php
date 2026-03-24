@@ -9,7 +9,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 /** @var Tests\TestCase $this */
-
 test('admin can view finance dashboard', function () {
     $admin = User::factory()->create(['role_id' => 1]);
 

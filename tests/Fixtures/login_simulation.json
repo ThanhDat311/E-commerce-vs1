@@ -1,0 +1,11 @@
+{
+    "user_id": 7,
+    "ip_address": "42.112.160.15",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+    "device_type": "desktop",
+    "country": "VN",
+    "city": "Hanoi",
+    "is_new_device": true,
+    "recent_failed_attempts": 10,
+    "timestamp": "2026-03-24T13:22:14+07:00"
+}

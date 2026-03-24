@@ -68,7 +68,7 @@ test('staff cannot delete products', function () {
     $staff = User::factory()->create(['role_id' => 2, 'is_active' => true]);
     $product = Product::factory()->create();
 
-    $response = $this->actingAs($staff)->delete(route('staff.products.index') . '/' . $product->id);
+    $response = $this->actingAs($staff)->delete(route('staff.products.index').'/'.$product->id);
 
     $response->assertStatus(405);
 });

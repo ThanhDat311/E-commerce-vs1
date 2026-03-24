@@ -1,10 +1,9 @@
 <?php
 
-use App\Models\Product;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Product;
 use App\Models\User;
-use App\Models\Scopes\VendorScope;
 
 test('vendor can soft delete product with order items', function () {
     $vendor = User::factory()->create([

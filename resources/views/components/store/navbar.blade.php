@@ -11,15 +11,15 @@
                 <!-- Mega Menu Trigger (Desktop) -->
                 <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
                     <a href="{{ route('home') }}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium {{ request()->routeIs('home') ? 'border-blue-500 text-gray-900' : '' }}">
-                        Home
+                        {{ __('messages.home') }}
                     </a>
                     <a href="{{ route('shop.index') }}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium {{ request()->routeIs('shop.index') ? 'border-blue-500 text-gray-900' : '' }}">
-                        Shop
+                        {{ __('messages.shop') }}
                     </a>
                     
                     <div class="relative group" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
                         <button class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-full">
-                            Categories
+                            {{ __('messages.categories') }}
                             <svg class="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                             </svg>
@@ -67,7 +67,7 @@
                                             <svg class="flex-shrink-0 h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z" />
                                             </svg>
-                                            <span class="ml-3">View All Categories</span>
+                                            <span class="ml-3">{{ __('messages.view_all_categories') }}</span>
                                         </a>
                                     </div>
                                 </div>
@@ -76,13 +76,13 @@
                     </div>
 
                     <a href="{{ route('shop.index', ['on_sale' => 1]) }}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium {{ request()->has('on_sale') ? 'border-blue-500 text-gray-900' : '' }}">
-                        Deals
+                        {{ __('messages.deals') }}
                     </a>
                     <a href="{{ route('help.index') }}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium {{ request()->routeIs('help.index') ? 'border-blue-500 text-gray-900' : '' }}">
-                        Help
+                        {{ __('messages.help') }}
                     </a>
                     <a href="{{ route('contact.index') }}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium {{ request()->routeIs('contact.index') ? 'border-blue-500 text-gray-900' : '' }}">
-                        Contact
+                        {{ __('messages.contact') }}
                     </a>
                 </div>
             </div>
@@ -97,7 +97,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                         </div>
-                        <input id="search" name="search" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Search product..." type="search">
+                        <input id="search" name="search" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="{{ __('messages.search_product') }}" type="search">
                     </div>
                 </div>
             </div>
@@ -106,13 +106,38 @@
             <div class="flex items-center lg:ml-6">
                 <!-- Cart -->
                 <a href="{{ route('cart.index') }}" class="p-2 text-gray-400 hover:text-gray-500 relative group">
-                    <span class="sr-only">View Cart</span>
+                    <span class="sr-only">{{ __('messages.view_cart') }}</span>
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                     <!-- Badge -->
-                    <span class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 transform translate-x-1/4 -translate-y-1/4 bg-red-600 rounded-full group-hover:bg-red-700">0</span>
+                    @php $cartCount = collect(session('cart', []))->sum('quantity'); @endphp
+                    <span class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 transform translate-x-1/4 -translate-y-1/4 bg-red-600 rounded-full group-hover:bg-red-700">{{ $cartCount }}</span>
                 </a>
+
+                <!-- Language Switcher -->
+                <div class="ml-3 relative" x-data="{ open: false }">
+                    <div>
+                        <button type="button" @click="open = !open" @click.outside="open = false" class="bg-white rounded-md flex text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 text-gray-500 hover:text-gray-700 p-2 uppercase font-medium" id="lang-menu-button" aria-expanded="false" aria-haspopup="true">
+                            {{ app()->getLocale() }}
+                            <svg class="ml-1 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div x-show="open" 
+                         x-transition:enter="transition ease-out duration-100"
+                         x-transition:enter-start="transform opacity-0 scale-95"
+                         x-transition:enter-end="transform opacity-100 scale-100"
+                         x-transition:leave="transition ease-in duration-75"
+                         x-transition:leave-start="transform opacity-100 scale-100"
+                         x-transition:leave-end="transform opacity-0 scale-95"
+                         class="origin-top-right absolute right-0 mt-2 w-32 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="lang-menu-button" tabindex="-1" style="display: none;">
+                        <a href="{{ route('locale.switch', ['lang' => 'en']) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ app()->getLocale() === 'en' ? 'bg-blue-50 text-blue-700 font-bold' : '' }}" role="menuitem" tabindex="-1">English (EN)</a>
+                        <a href="{{ route('locale.switch', ['lang' => 'vi']) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ app()->getLocale() === 'vi' ? 'bg-blue-50 text-blue-700 font-bold' : '' }}" role="menuitem" tabindex="-1">Tiếng Việt (VI)</a>
+                    </div>
+                </div>
 
                 <!-- Account -->
                 <div class="ml-3 relative" x-data="{ open: false }">
@@ -139,18 +164,18 @@
                          class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1" style="display: none;">
                         @auth
                             @if(Auth::user()->hasRole('admin'))
-                                <a href="{{ route('admin.dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1">Admin Dashboard</a>
+                                <a href="{{ route('admin.dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1">{{ __('messages.admin_dashboard') }}</a>
                             @elseif(Auth::user()->hasRole('vendor'))
-                                <a href="{{ route('vendor.dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1">Vendor Dashboard</a>
+                                <a href="{{ route('vendor.dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1">{{ __('messages.vendor_dashboard') }}</a>
                             @endif
-                            <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1">Your Profile</a>
+                            <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1">{{ __('messages.your_profile') }}</a>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1">Logout</button>
+                                <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1">{{ __('messages.logout') }}</button>
                             </form>
                         @else
-                            <a href="{{ route('login') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1">Sign In</a>
-                            <a href="{{ route('register') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1">Register</a>
+                            <a href="{{ route('login') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1">{{ __('messages.sign_in') }}</a>
+                            <a href="{{ route('register') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1">{{ __('messages.register') }}</a>
                         @endauth
                     </div>
                 </div>
@@ -171,12 +196,12 @@
     <!-- Mobile Menu -->
     <div class="sm:hidden" id="mobile-menu" x-show="mobileMenuOpen" style="display: none;">
         <div class="pt-2 pb-3 space-y-1">
-            <a href="{{ route('home') }}" class="bg-blue-50 border-blue-500 text-blue-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">Home</a>
-             <a href="{{ route('shop.index') }}" class="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">Shop</a>
-            <a href="#" class="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">Categories</a>
-            <a href="{{ route('shop.index', ['on_sale' => 1]) }}" class="{{ request()->has('on_sale') ? 'bg-blue-50 border-blue-500 text-blue-700' : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700' }} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">Deals</a>
-            <a href="{{ route('help.index') }}" class="{{ request()->routeIs('help.index') ? 'bg-blue-50 border-blue-500 text-blue-700' : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700' }} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">Help</a>
-            <a href="{{ route('contact.index') }}" class="{{ request()->routeIs('contact.index') ? 'bg-blue-50 border-blue-500 text-blue-700' : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700' }} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">Contact</a>
+            <a href="{{ route('home') }}" class="bg-blue-50 border-blue-500 text-blue-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">{{ __('messages.home') }}</a>
+             <a href="{{ route('shop.index') }}" class="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">{{ __('messages.shop') }}</a>
+            <a href="#" class="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">{{ __('messages.categories') }}</a>
+            <a href="{{ route('shop.index', ['on_sale' => 1]) }}" class="{{ request()->has('on_sale') ? 'bg-blue-50 border-blue-500 text-blue-700' : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700' }} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">{{ __('messages.deals') }}</a>
+            <a href="{{ route('help.index') }}" class="{{ request()->routeIs('help.index') ? 'bg-blue-50 border-blue-500 text-blue-700' : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700' }} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">{{ __('messages.help') }}</a>
+            <a href="{{ route('contact.index') }}" class="{{ request()->routeIs('contact.index') ? 'bg-blue-50 border-blue-500 text-blue-700' : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700' }} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">{{ __('messages.contact') }}</a>
         </div>
     </div>
 </nav>

@@ -18,16 +18,16 @@ class ProductRequest extends FormRequest
         $productId = $this->route('product') ? $this->route('product')->id : null;
 
         return [
-            'name'           => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             // SKU là duy nhất, nhưng khi Edit thì bỏ qua ID hiện tại
-            'sku'            => ['required', Rule::unique('products')->ignore($productId)],
-            'category_id'    => 'required|exists:categories,id',
-            'price'          => 'required|numeric|min:0',
-            'sale_price'     => 'nullable|numeric|min:0|lt:price', // Giá sale phải nhỏ hơn giá gốc
+            'sku' => ['required', Rule::unique('products')->ignore($productId)],
+            'category_id' => 'required|exists:categories,id',
+            'price' => 'required|numeric|min:0',
+            'sale_price' => 'nullable|numeric|min:0|lt:price', // Giá sale phải nhỏ hơn giá gốc
             'stock_quantity' => 'required|integer|min:0',
             // Ảnh: bắt buộc khi Tạo mới, không bắt buộc khi Edit
-            'image'          => ($this->isMethod('post') ? 'required' : 'nullable') . '|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'description'    => 'nullable|string',
+            'image' => ($this->isMethod('post') ? 'required' : 'nullable').'|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'description' => 'nullable|string',
         ];
     }
 }

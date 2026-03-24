@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Services\ProductSearchService;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 /**
  * SearchController
- * 
+ *
  * Handles all search-related API endpoints for product discovery
  */
 class SearchController extends Controller
@@ -23,9 +23,9 @@ class SearchController extends Controller
 
     /**
      * Search products with advanced filtering
-     * 
+     *
      * GET /api/v1/search
-     * 
+     *
      * Query Parameters:
      * - q (string): Search query (name, description, SKU)
      * - category (integer): Filter by category ID
@@ -33,11 +33,8 @@ class SearchController extends Controller
      * - max_price (decimal): Maximum price filter
      * - sort (string): Sort option (price_asc, price_desc, newest)
      * - per_page (integer): Results per page (default: 6)
-     * 
+     *
      * Example: /api/v1/search?q=laptop&category=1&min_price=100&max_price=2000&sort=price_asc
-     * 
-     * @param Request $request
-     * @return JsonResponse
      */
     public function search(Request $request): JsonResponse
     {
@@ -82,15 +79,15 @@ class SearchController extends Controller
 
     /**
      * Get search suggestions for autocomplete
-     * 
+     *
      * GET /api/v1/search/suggestions
-     * 
+     *
      * Query Parameters:
      * - q (string, required): Search query (minimum 2 characters)
      * - limit (integer): Maximum suggestions (default: 10)
-     * 
+     *
      * Example: /api/v1/search/suggestions?q=lap&limit=5
-     * 
+     *
      * Response:
      * [
      *     {
@@ -101,9 +98,6 @@ class SearchController extends Controller
      *         "category": "Electronics"
      *     }
      * ]
-     * 
-     * @param Request $request
-     * @return JsonResponse
      */
     public function suggestions(Request $request): JsonResponse
     {
@@ -127,16 +121,13 @@ class SearchController extends Controller
 
     /**
      * Re-index all products (Admin only)
-     * 
+     *
      * POST /api/v1/search/reindex
-     * 
-     * @param Request $request
-     * @return JsonResponse
      */
     public function reindex(Request $request): JsonResponse
     {
         // Authorization check (admin only)
-        if (!auth()->check() || !auth()->user()->isAdmin) {
+        if (! auth()->check() || ! auth()->user()->isAdmin) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Unauthorized',

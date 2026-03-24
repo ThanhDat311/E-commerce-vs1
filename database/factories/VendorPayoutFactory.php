@@ -28,7 +28,7 @@ class VendorPayoutFactory extends Factory
 
     public function completed(): static
     {
-        return $this->state(fn() => [
+        return $this->state(fn () => [
             'status' => 'completed',
             'processed_at' => $this->faker->dateTimeBetween('-30 days', 'now'),
         ]);

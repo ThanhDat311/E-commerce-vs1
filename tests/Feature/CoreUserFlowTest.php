@@ -1,10 +1,9 @@
 <?php
 
-use App\Models\User;
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\Role;
-use App\Models\Category;
-
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -28,18 +27,18 @@ test('product view loads successfully', function () {
 
     // Create category if needed
     $category = Category::first();
-    if (!$category) {
+    if (! $category) {
         $category = Category::create(['name' => 'Test Category', 'slug' => 'test-category']);
     }
 
     $product = Product::create([
         'name' => 'Test Product',
-        'sku' => 'TEST-SKU-' . rand(1000, 9999),
+        'sku' => 'TEST-SKU-'.rand(1000, 9999),
         'price' => 100,
         'stock_quantity' => 10,
         'vendor_id' => $vendor->id,
         'category_id' => $category->id,
-        'description' => 'Test Description'
+        'description' => 'Test Description',
     ]);
 
     $response = $this->get(route('shop.show', $product->slug));

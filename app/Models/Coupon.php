@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Coupon extends Model
@@ -46,7 +46,7 @@ class Coupon extends Model
     public function isValid(): bool
     {
         // Check if active
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return false;
         }
 
@@ -72,7 +72,7 @@ class Coupon extends Model
      */
     public function canUserUse($userId): bool
     {
-        if (!$this->isValid()) {
+        if (! $this->isValid()) {
             return false;
         }
 

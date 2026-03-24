@@ -28,7 +28,7 @@ class CreateAiFeatureLogJob implements ShouldQueue
         try {
             AiFeatureStore::create($this->featureData);
         } catch (\Exception $e) {
-            Log::error("Failed to store AI features in job: " . $e->getMessage());
+            Log::error('Failed to store AI features in job: '.$e->getMessage());
         }
     }
 }

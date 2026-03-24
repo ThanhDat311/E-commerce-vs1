@@ -6,10 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Commission;
 use App\Models\CommissionSetting;
 use App\Models\Order;
-use App\Models\VendorPayout;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FinanceController extends Controller
@@ -63,8 +61,8 @@ class FinanceController extends Controller
         if ($search = $request->input('search')) {
             $transactionsQuery->where(function ($q) use ($search) {
                 $q->where('id', 'like', "%{$search}%")
-                    ->orWhereHas('order', fn($oq) => $oq->where('id', 'like', "%{$search}%"))
-                    ->orWhereHas('vendor', fn($vq) => $vq->where('name', 'like', "%{$search}%"));
+                    ->orWhereHas('order', fn ($oq) => $oq->where('id', 'like', "%{$search}%"))
+                    ->orWhereHas('vendor', fn ($vq) => $vq->where('name', 'like', "%{$search}%"));
             });
         }
 
@@ -120,12 +118,12 @@ class FinanceController extends Controller
         );
 
         return redirect()->route('admin.finance.index')
-            ->with('success', 'Global commission rate updated to ' . $request->input('rate') . '%');
+            ->with('success', 'Global commission rate updated to '.$request->input('rate').'%');
     }
 
     public function exportReport(Request $request): StreamedResponse
     {
-        $filename = 'finance-report-' . now()->format('Y-m-d') . '.csv';
+        $filename = 'finance-report-'.now()->format('Y-m-d').'.csv';
 
         return response()->streamDownload(function () {
             $handle = fopen('php://output', 'w');
@@ -147,13 +145,13 @@ class FinanceController extends Controller
                 ->chunk(200, function ($commissions) use ($handle) {
                     foreach ($commissions as $commission) {
                         fputcsv($handle, [
-                            'TRX-' . str_pad($commission->id, 5, '0', STR_PAD_LEFT),
-                            '#ORD-' . $commission->order_id,
+                            'TRX-'.str_pad($commission->id, 5, '0', STR_PAD_LEFT),
+                            '#ORD-'.$commission->order_id,
                             $commission->vendor->name ?? 'N/A',
-                            '$' . number_format($commission->order_total, 2),
-                            $commission->commission_rate . '%',
-                            '$' . number_format($commission->commission_amount, 2),
-                            '$' . number_format($commission->net_payout, 2),
+                            '$'.number_format($commission->order_total, 2),
+                            $commission->commission_rate.'%',
+                            '$'.number_format($commission->commission_amount, 2),
+                            '$'.number_format($commission->net_payout, 2),
                             ucfirst($commission->status),
                             $commission->created_at->format('M d, Y'),
                         ]);

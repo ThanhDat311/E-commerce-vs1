@@ -3,14 +3,14 @@
 namespace Database\Seeders;
 
 use App\Models\AuditLog;
-use App\Models\Product;
 use App\Models\Order;
+use App\Models\Product;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
 /**
  * Seeder to demonstrate the Audit Log feature
- * 
+ *
  * Run with: php artisan db:seed --class=AuditLogDemoSeeder
  */
 class AuditLogDemoSeeder extends Seeder
@@ -106,6 +106,6 @@ class AuditLogDemoSeeder extends Seeder
 
         echo "\n=== Demo Complete ===\n";
         echo "✓ Visit /admin/audit-logs to see the audit log interface\n";
-        echo "✓ " . AuditLog::count() . " audit logs created\n\n";
+        echo '✓ '.AuditLog::count()." audit logs created\n\n";
     }
 }

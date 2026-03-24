@@ -16,59 +16,59 @@ class VnpayGateway implements PaymentGatewayInterface
         $vnp_TmnCode = config('services.vnpay.tmn_code');
         $vnp_HashSecret = config('services.vnpay.hash_secret');
 
-        $vnp_TxnRef = $order->id; //Mã giao dịch thanh toán tham chiếu của merchant
+        $vnp_TxnRef = $order->id; // Mã giao dịch thanh toán tham chiếu của merchant
         $vnp_Amount = intval($order->total); // Số tiền thanh toán
-        $vnp_Locale = 'vn'; //Ngôn ngữ chuyển hướng thanh toán
-        $vnp_BankCode = ''; //Mã phương thức thanh toán
-        $vnp_IpAddr = $_SERVER['REMOTE_ADDR']; //IP Khách hàng thanh toán
+        $vnp_Locale = 'vn'; // Ngôn ngữ chuyển hướng thanh toán
+        $vnp_BankCode = ''; // Mã phương thức thanh toán
+        $vnp_IpAddr = $_SERVER['REMOTE_ADDR']; // IP Khách hàng thanh toán
 
-        $startTime = date("YmdHis");
+        $startTime = date('YmdHis');
         $expire = date('YmdHis', strtotime('+15 minutes', strtotime($startTime)));
 
-        $inputData = array(
-            "vnp_Version" => "2.1.0",
-            "vnp_TmnCode" => $vnp_TmnCode,
-            "vnp_Amount" => $vnp_Amount * 1000,
-            "vnp_Command" => "pay",
-            "vnp_CreateDate" => date('YmdHis'),
-            "vnp_CurrCode" => "VND",
-            "vnp_IpAddr" => $vnp_IpAddr,
-            "vnp_Locale" => $vnp_Locale,
-            "vnp_OrderInfo" => "Thanh toan GD:" . $vnp_TxnRef,
-            "vnp_OrderType" => "other",
-            "vnp_ReturnUrl" => $vnp_Returnurl,
-            "vnp_TxnRef" => $vnp_TxnRef,
-            "vnp_ExpireDate" => $expire
-        );
+        $inputData = [
+            'vnp_Version' => '2.1.0',
+            'vnp_TmnCode' => $vnp_TmnCode,
+            'vnp_Amount' => $vnp_Amount * 1000,
+            'vnp_Command' => 'pay',
+            'vnp_CreateDate' => date('YmdHis'),
+            'vnp_CurrCode' => 'VND',
+            'vnp_IpAddr' => $vnp_IpAddr,
+            'vnp_Locale' => $vnp_Locale,
+            'vnp_OrderInfo' => 'Thanh toan GD:'.$vnp_TxnRef,
+            'vnp_OrderType' => 'other',
+            'vnp_ReturnUrl' => $vnp_Returnurl,
+            'vnp_TxnRef' => $vnp_TxnRef,
+            'vnp_ExpireDate' => $expire,
+        ];
 
-        if (isset($vnp_BankCode) && $vnp_BankCode != "") {
+        if (isset($vnp_BankCode) && $vnp_BankCode != '') {
             $inputData['vnp_BankCode'] = $vnp_BankCode;
         }
 
         ksort($inputData);
-        $query = "";
+        $query = '';
         $i = 0;
-        $hashdata = "";
+        $hashdata = '';
         foreach ($inputData as $key => $value) {
             if ($i == 1) {
-                $hashdata .= '&' . urlencode($key) . "=" . urlencode($value);
+                $hashdata .= '&'.urlencode($key).'='.urlencode($value);
             } else {
-                $hashdata .= urlencode($key) . "=" . urlencode($value);
+                $hashdata .= urlencode($key).'='.urlencode($value);
                 $i = 1;
             }
-            $query .= urlencode($key) . "=" . urlencode($value) . '&';
+            $query .= urlencode($key).'='.urlencode($value).'&';
         }
 
-        $vnp_Url = $vnp_Url . "?" . $query;
+        $vnp_Url = $vnp_Url.'?'.$query;
         if (isset($vnp_HashSecret)) {
             $vnpSecureHash = hash_hmac('sha512', $hashdata, $vnp_HashSecret);
-            $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
+            $vnp_Url .= 'vnp_SecureHash='.$vnpSecureHash;
         }
 
         return [
             'success' => true,
             'is_redirect' => true,
-            'redirect_url' => $vnp_Url
+            'redirect_url' => $vnp_Url,
         ];
     }
 
@@ -77,10 +77,10 @@ class VnpayGateway implements PaymentGatewayInterface
         // Validate required parameters
         $requiredParams = ['vnp_TxnRef', 'vnp_Amount', 'vnp_ResponseCode'];
         foreach ($requiredParams as $param) {
-            if (!$request->has($param) || $request->input($param) === null || $request->input($param) === '') {
+            if (! $request->has($param) || $request->input($param) === null || $request->input($param) === '') {
                 return [
                     'success' => false,
-                    'message' => "Missing required parameter: {$param}"
+                    'message' => "Missing required parameter: {$param}",
                 ];
             }
         }
@@ -90,10 +90,10 @@ class VnpayGateway implements PaymentGatewayInterface
         $amount = (int) $request->input('vnp_Amount');
         $responseCode = (string) $request->input('vnp_ResponseCode');
 
-        if (!is_numeric($request->input('vnp_Amount'))) {
+        if (! is_numeric($request->input('vnp_Amount'))) {
             return [
                 'success' => false,
-                'message' => 'Invalid amount format'
+                'message' => 'Invalid amount format',
             ];
         }
 
@@ -109,12 +109,12 @@ class VnpayGateway implements PaymentGatewayInterface
 
         ksort($inputData);
         $i = 0;
-        $hashData = "";
+        $hashData = '';
         foreach ($inputData as $key => $value) {
             if ($i == 1) {
-                $hashData = $hashData . '&' . urlencode($key) . "=" . urlencode($value);
+                $hashData = $hashData.'&'.urlencode($key).'='.urlencode($value);
             } else {
-                $hashData = $hashData . urlencode($key) . "=" . urlencode($value);
+                $hashData = $hashData.urlencode($key).'='.urlencode($value);
                 $i = 1;
             }
         }
@@ -125,7 +125,7 @@ class VnpayGateway implements PaymentGatewayInterface
         if ($secureHash !== $vnp_SecureHash) {
             return [
                 'success' => false,
-                'message' => 'Invalid signature'
+                'message' => 'Invalid signature',
             ];
         }
 
@@ -135,7 +135,7 @@ class VnpayGateway implements PaymentGatewayInterface
                 'order_id' => $txnRef,
                 'amount' => $amount / 100,
                 'transaction_no' => $request->input('vnp_TransactionNo', ''),
-                'message' => 'Transaction successful'
+                'message' => 'Transaction successful',
             ];
         } else {
             return [
@@ -143,7 +143,7 @@ class VnpayGateway implements PaymentGatewayInterface
                 'order_id' => $txnRef,
                 'amount' => $amount / 100,
                 'response_code' => $responseCode,
-                'message' => 'Transaction failed (Code: ' . $responseCode . ')'
+                'message' => 'Transaction failed (Code: '.$responseCode.')',
             ];
         }
     }

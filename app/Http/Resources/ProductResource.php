@@ -26,15 +26,15 @@ class ProductResource extends JsonResource
             'is_new' => (bool) $this->is_new,
             'is_featured' => (bool) $this->is_featured,
             'average_rating' => $this->average_rating,
-            'category' => $this->whenLoaded('category', fn() => [
+            'category' => $this->whenLoaded('category', fn () => [
                 'id' => $this->category->id,
                 'name' => $this->category->name,
             ]),
-            'vendor' => $this->whenLoaded('vendor', fn() => [
+            'vendor' => $this->whenLoaded('vendor', fn () => [
                 'id' => $this->vendor->id,
                 'name' => $this->vendor->name,
             ]),
-            'gallery' => $this->whenLoaded('images', fn() => $this->images->map(fn($img) => [
+            'gallery' => $this->whenLoaded('images', fn () => $this->images->map(fn ($img) => [
                 'id' => $img->id,
                 'url' => asset($img->image_path),
             ])),

@@ -21,14 +21,14 @@ class CommissionSettingFactory extends Factory
 
     public function forVendor(User $vendor): static
     {
-        return $this->state(fn() => [
+        return $this->state(fn () => [
             'vendor_id' => $vendor->id,
         ]);
     }
 
     public function global(): static
     {
-        return $this->state(fn() => [
+        return $this->state(fn () => [
             'vendor_id' => null,
             'rate' => 8.50,
         ]);

@@ -11,10 +11,10 @@ use Illuminate\Foundation\Configuration\Exceptions;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        channels: __DIR__ . '/../routes/channels.php',
-        web: __DIR__ . '/../routes/web.php',
-        api: __DIR__ . '/../routes/api.php',
-        commands: __DIR__ . '/../routes/console.php',
+        channels: __DIR__.'/../routes/channels.php',
+        web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
+        commands: __DIR__.'/../routes/console.php',
         health: '/up',
         then: function () {
             \Illuminate\Support\Facades\RateLimiter::for('api', function (\Illuminate\Http\Request $request) {
@@ -22,7 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
             });
 
             \Illuminate\Support\Facades\RateLimiter::for('login', function (\Illuminate\Http\Request $request) {
-                return \Illuminate\Cache\RateLimiting\Limit::perMinute(5)->by($request->ip());
+                return \Illuminate\Cache\RateLimiting\Limit::perMinute(20)->by($request->ip());
             });
 
             \Illuminate\Support\Facades\RateLimiter::for('checkout', function (\Illuminate\Http\Request $request) {
@@ -36,8 +36,8 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withMiddleware(function ($middleware) {
         $middleware->web(append: [
-            \App\Http\Middleware\Localization::class,
-            \App\Http\Middleware\Currency::class,
+            Localization::class,
+            Currency::class,
         ]);
 
         $middleware->alias([

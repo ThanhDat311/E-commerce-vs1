@@ -15,9 +15,6 @@ class CartController extends Controller
 
     /**
      * Get user's cart
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function list(Request $request): JsonResponse
     {
@@ -57,9 +54,6 @@ class CartController extends Controller
 
     /**
      * Add product to cart
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function add(Request $request): JsonResponse
     {
@@ -108,10 +102,6 @@ class CartController extends Controller
 
     /**
      * Update cart item quantity
-     *
-     * @param Request $request
-     * @param int $productId
-     * @return JsonResponse
      */
     public function update(Request $request, int $productId): JsonResponse
     {
@@ -123,7 +113,7 @@ class CartController extends Controller
             $product = Product::findOrFail($productId);
             $cart = $request->session()->get('cart', []);
 
-            if (!isset($cart[$productId])) {
+            if (! isset($cart[$productId])) {
                 return $this->errorResponse('Product not in cart', 404);
             }
 
@@ -146,16 +136,12 @@ class CartController extends Controller
 
     /**
      * Remove product from cart
-     *
-     * @param Request $request
-     * @param int $productId
-     * @return JsonResponse
      */
     public function remove(Request $request, int $productId): JsonResponse
     {
         $cart = $request->session()->get('cart', []);
 
-        if (!isset($cart[$productId])) {
+        if (! isset($cart[$productId])) {
             return $this->errorResponse('Product not in cart', 404);
         }
 
@@ -169,9 +155,6 @@ class CartController extends Controller
 
     /**
      * Clear entire cart
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function clear(Request $request): JsonResponse
     {
@@ -182,9 +165,6 @@ class CartController extends Controller
 
     /**
      * Apply coupon to cart
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function applyCoupon(Request $request): JsonResponse
     {

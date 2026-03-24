@@ -48,7 +48,12 @@ class AiMicroserviceClient
         string $userAgent,
         string $deviceType = 'desktop',
         ?string $country = null,
-        ?int $rttMs = null
+        ?int $rttMs = null,
+        ?string $timestamp = null,
+        ?string $city = null,
+        ?string $deviceId = null,
+        ?bool $isNewDevice = null,
+        ?int $recentFailedAttempts = null
     ): ?array {
         try {
             $payload = [
@@ -58,6 +63,11 @@ class AiMicroserviceClient
                 'device_type' => $deviceType,
                 'country' => $country,
                 'rtt_ms' => $rttMs,
+                'timestamp' => $timestamp,
+                'city' => $city,
+                'device_id' => $deviceId,
+                'is_new_device' => $isNewDevice,
+                'recent_failed_attempts' => $recentFailedAttempts,
             ];
 
             Log::info('[AiMicroserviceClient] Sending Login Risk Request', [

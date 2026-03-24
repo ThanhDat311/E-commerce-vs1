@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Log;
 class RiskManagementService
 {
     protected AIDecisionEngine $aiEngine;
+
     protected AiMicroserviceClient $aiClient;
 
     public function __construct(AIDecisionEngine $aiEngine, AiMicroserviceClient $aiClient)
@@ -32,8 +33,7 @@ class RiskManagementService
     /**
      * Phân tích rủi ro và GHI LOG vào Feature Store.
      *
-     * @param array    $orderData ['total' => float, 'quantity' => int, 'id' => int|null, 'payment_method' => string|null]
-     * @param int|null $userId
+     * @param  array  $orderData  ['total' => float, 'quantity' => int, 'id' => int|null, 'payment_method' => string|null]
      * @return array ['allowed' => bool, 'score' => int, 'reason' => string, 'log_id' => int|null, 'decision' => string, 'ai_source' => string]
      */
     public function assessOrderRisk(array $orderData, ?int $userId): array
@@ -48,18 +48,19 @@ class RiskManagementService
 
             // --- 2. Fallback: Rule-based AIDecisionEngine ---
             Log::warning('[RiskManagement] AI microservice unavailable, falling back to rule-based engine.');
+
             return $this->callRuleBasedEngine($orderData, $userId);
         } catch (\Exception $e) {
             // Fail-Open Principle: If both AI and rules fail, allow the order
-            Log::error('Risk Management Service Error: ' . $e->getMessage());
+            Log::error('Risk Management Service Error: '.$e->getMessage());
 
             return [
-                'allowed'    => true,
-                'score'      => 0,
-                'reason'     => 'Risk assessment unavailable',
-                'log_id'     => null,
-                'decision'   => 'APPROVE',
-                'ai_source'  => 'error_fallback',
+                'allowed' => true,
+                'score' => 0,
+                'reason' => 'Risk assessment unavailable',
+                'log_id' => null,
+                'decision' => 'APPROVE',
+                'ai_source' => 'error_fallback',
             ];
         }
     }
@@ -73,14 +74,14 @@ class RiskManagementService
             return null; // Guest checkout: microservice cần user_id
         }
 
-        $orderId       = $orderData['id'] ?? 0;
-        $totalAmount   = (float) ($orderData['total'] ?? 0);
+        $orderId = $orderData['id'] ?? 0;
+        $totalAmount = (float) ($orderData['total'] ?? 0);
         $paymentMethod = $orderData['payment_method'] ?? 'card';
 
         // Lấy tuổi user nếu có
         $customerAge = null;
         try {
-            $user        = \App\Models\User::find($userId);
+            $user = \App\Models\User::find($userId);
             $customerAge = $user?->created_at
                 ? (int) $user->created_at->diffInYears(now())
                 : null;
@@ -103,16 +104,16 @@ class RiskManagementService
      */
     private function buildResultFromAi(array $aiResult, array $orderData): array
     {
-        $aiDecision = $aiResult['decision']    ?? 'allow';
-        $riskScore  = (float) ($aiResult['risk_score'] ?? 0.0);
-        $reasons    = $aiResult['reasons']     ?? [];
+        $aiDecision = $aiResult['decision'] ?? 'allow';
+        $riskScore = (float) ($aiResult['risk_score'] ?? 0.0);
+        $reasons = $aiResult['reasons'] ?? [];
 
         // Map AI decision → business decision
         $isBlocked = ($aiDecision === 'block');
-        $label     = match ($aiDecision) {
-            'block'  => 'block',
+        $label = match ($aiDecision) {
+            'block' => 'block',
             'review' => 'flag',
-            default  => 'allow',
+            default => 'allow',
         };
 
         // Laravel score convention: 0-100 int
@@ -122,16 +123,16 @@ class RiskManagementService
         $featureLogId = null;
         try {
             $featureLog = AiFeatureStore::create([
-                'order_id'    => $orderData['id'] ?? null,
+                'order_id' => $orderData['id'] ?? null,
                 'total_amount' => $orderData['total'] ?? 0,
-                'ip_address'  => request()->ip(),
-                'risk_score'  => $riskScore, // already 0.0–1.0 from microservice
-                'reasons'     => $reasons,
-                'label'       => $label,
+                'ip_address' => request()->ip(),
+                'risk_score' => $riskScore, // already 0.0–1.0 from microservice
+                'reasons' => $reasons,
+                'label' => $label,
             ]);
             $featureLogId = $featureLog->id;
         } catch (\Exception $e) {
-            Log::error('[RiskManagement] Failed to store AI features: ' . $e->getMessage());
+            Log::error('[RiskManagement] Failed to store AI features: '.$e->getMessage());
         }
 
         if ($isBlocked) {
@@ -141,11 +142,11 @@ class RiskManagementService
         }
 
         return [
-            'allowed'   => !$isBlocked,
-            'score'     => $scoreInt,
-            'reason'    => implode(', ', $reasons),
-            'log_id'    => $featureLogId,
-            'decision'  => strtoupper($label === 'flag' ? 'FLAG' : ($isBlocked ? 'BLOCK' : 'APPROVE')),
+            'allowed' => ! $isBlocked,
+            'score' => $scoreInt,
+            'reason' => implode(', ', $reasons),
+            'log_id' => $featureLogId,
+            'decision' => strtoupper($label === 'flag' ? 'FLAG' : ($isBlocked ? 'BLOCK' : 'APPROVE')),
             'ai_source' => 'microservice',
         ];
     }
@@ -167,32 +168,32 @@ class RiskManagementService
         // Prepare context data
         $contextData = [
             'hour' => now()->hour,
-            'ip'   => request()->ip(),
+            'ip' => request()->ip(),
         ];
 
         // Call rule-based engine
         $fraudResult = $this->aiEngine->assessFraudRisk($orderData, $userData, $contextData);
 
         $riskScore = $fraudResult['score'];    // 0-100
-        $decision  = $fraudResult['decision']; // APPROVE, FLAG, BLOCK
-        $reasons   = $fraudResult['reasons'] ?? [];
+        $decision = $fraudResult['decision']; // APPROVE, FLAG, BLOCK
+        $reasons = $fraudResult['reasons'] ?? [];
 
         $isBlocked = ($decision === 'BLOCK');
-        $label     = $isBlocked ? 'block' : ($decision === 'FLAG' ? 'flag' : 'allow');
+        $label = $isBlocked ? 'block' : ($decision === 'FLAG' ? 'flag' : 'allow');
 
         // Store to Feature Store
         $featureLogId = null;
         try {
             $featureLog = AiFeatureStore::create([
                 'total_amount' => $orderData['total'] ?? 0,
-                'ip_address'   => $contextData['ip'],
-                'risk_score'   => $riskScore / 100.0,
-                'reasons'      => $reasons,
-                'label'        => $label,
+                'ip_address' => $contextData['ip'],
+                'risk_score' => $riskScore / 100.0,
+                'reasons' => $reasons,
+                'label' => $label,
             ]);
             $featureLogId = $featureLog->id;
         } catch (\Exception $e) {
-            Log::error('[RiskManagement] Failed to store rule-based features: ' . $e->getMessage());
+            Log::error('[RiskManagement] Failed to store rule-based features: '.$e->getMessage());
         }
 
         if ($isBlocked) {
@@ -202,11 +203,11 @@ class RiskManagementService
         }
 
         return [
-            'allowed'   => !$isBlocked,
-            'score'     => $riskScore,
-            'reason'    => implode(', ', $reasons),
-            'log_id'    => $featureLogId,
-            'decision'  => $decision,
+            'allowed' => ! $isBlocked,
+            'score' => $riskScore,
+            'reason' => implode(', ', $reasons),
+            'log_id' => $featureLogId,
+            'decision' => $decision,
             'ai_source' => 'rule_based_fallback',
         ];
     }

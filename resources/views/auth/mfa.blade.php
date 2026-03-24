@@ -43,8 +43,14 @@
                         </div>
                     </form>
                     
-                    <div class="mt-6 border-t pt-4 text-sm text-gray-500">
-                        <p>Didn't receive the email? <a href="{{ route('login') }}" class="text-blue-500 hover:underline">Cancel and login again</a></p>
+                    <div class="mt-6 border-t pt-4 text-sm text-gray-500 flex flex-col items-center gap-2">
+                        <form method="POST" action="{{ route('auth.mfa.resend') }}">
+                            @csrf
+                            <button type="submit" class="text-blue-600 hover:text-blue-800 hover:underline focus:outline-none font-medium text-sm transition ease-in-out duration-150">
+                                Resend Authentication Code
+                            </button>
+                        </form>
+                        <p><a href="{{ route('login') }}" class="text-gray-400 hover:text-gray-600 hover:underline transition ease-in-out duration-150">Cancel and back to login</a></p>
                     </div>
                 </div>
             </div>

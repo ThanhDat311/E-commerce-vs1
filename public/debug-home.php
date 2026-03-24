@@ -6,9 +6,9 @@
  * Access at: http://localhost:8080/debug-home.php
  */
 
-require __DIR__ . '/../vendor/autoload.php';
+require __DIR__.'/../vendor/autoload.php';
 
-$app = require __DIR__ . '/../bootstrap/app.php';
+$app = require __DIR__.'/../bootstrap/app.php';
 $kernel = $app->make(\Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
@@ -34,7 +34,7 @@ echo "\n";
 echo "2. PRODUCT MODEL QUERY (HomeController method):\n";
 $newProducts = Product::latest()->take(8)->get();
 echo "   Query: Product::latest()->take(8)->get()\n";
-echo "   Results: " . $newProducts->count() . " products\n";
+echo '   Results: '.$newProducts->count()." products\n";
 
 if ($newProducts->isEmpty()) {
     echo "   ❌ ISSUE FOUND: Query returned empty collection!\n";
@@ -42,7 +42,7 @@ if ($newProducts->isEmpty()) {
     $sqlQuery = Product::latest()->take(8)->toSql();
     $bindings = Product::latest()->take(8)->getBindings();
     echo "   SQL: $sqlQuery\n";
-    echo "   Bindings: " . json_encode($bindings) . "\n";
+    echo '   Bindings: '.json_encode($bindings)."\n";
 } else {
     echo "   ✓ Products retrieved successfully\n";
     echo "   Sample products:\n";
@@ -59,7 +59,7 @@ echo "   Component: <x-product-grid :products=\"\$newProducts\" />\n";
 echo "   Expected props: ['products' => Collection]\n";
 
 if ($newProducts->isNotEmpty()) {
-    echo "   ✓ Will pass " . $newProducts->count() . " products to component\n";
+    echo '   ✓ Will pass '.$newProducts->count()." products to component\n";
 } else {
     echo "   ❌ Empty collection passed to component\n";
 }
@@ -116,7 +116,7 @@ echo "\n";
 echo "7. FEATURED PRODUCTS (for Tab 2):\n";
 $featuredProducts = Product::inRandomOrder()->take(8)->get();
 echo "   Query: Product::inRandomOrder()->take(8)->get()\n";
-echo "   Results: " . $featuredProducts->count() . " products\n";
+echo '   Results: '.$featuredProducts->count()." products\n";
 
 echo "\n";
 

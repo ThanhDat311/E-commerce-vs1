@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Services\OrderService;
-use Illuminate\Http\Request;
 use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
@@ -34,10 +34,11 @@ class PaymentController extends Controller
             } else {
                 // Redirect về trang lỗi hoặc trang thanh toán lại
                 return redirect()->route('checkout.index') // Hoặc route hiển thị lỗi
-                    ->withErrors(['error' => 'Thanh toán thất bại: ' . $result['message']]);
+                    ->withErrors(['error' => 'Thanh toán thất bại: '.$result['message']]);
             }
         } catch (Exception $e) {
-            Log::error('Vnpay Callback Error: ' . $e->getMessage());
+            Log::error('Vnpay Callback Error: '.$e->getMessage());
+
             return redirect()->route('home')
                 ->withErrors(['error' => 'Lỗi hệ thống khi xử lý thanh toán.']);
         }
@@ -55,19 +56,20 @@ class PaymentController extends Controller
             if ($result['success']) {
                 return response()->json([
                     'RspCode' => '00',
-                    'Message' => 'Confirm Success'
+                    'Message' => 'Confirm Success',
                 ]);
             } else {
                 return response()->json([
                     'RspCode' => '99',
-                    'Message' => 'Confirm Failed: ' . $result['message']
+                    'Message' => 'Confirm Failed: '.$result['message'],
                 ]);
             }
         } catch (Exception $e) {
-            Log::error('Vnpay IPN Error: ' . $e->getMessage());
+            Log::error('Vnpay IPN Error: '.$e->getMessage());
+
             return response()->json([
                 'RspCode' => '99',
-                'Message' => 'System Error'
+                'Message' => 'System Error',
             ]);
         }
     }

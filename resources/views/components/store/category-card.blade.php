@@ -15,4 +15,5 @@
     <h3 class="mt-3 text-sm font-medium text-gray-900 group-hover:text-blue-600">
         {{ $category->name }}
     </h3>
+    <p class="text-xs text-gray-500 mt-1">{{ $category->products_count ?? 0 }} {{ trans_choice('messages.items', $category->products_count ?? 0) }}</p>
 </a>

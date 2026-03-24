@@ -4,7 +4,6 @@
 
 use App\Models\SupportTicket;
 use App\Models\User;
-use Illuminate\Http\UploadedFile;
 
 beforeEach(function () {
     $this->admin = User::factory()->create(['role_id' => 1, 'is_active' => true]);

@@ -25,7 +25,7 @@ return new class extends Migration
                 'passive_auth_allow',
                 'challenge_otp',
                 'challenge_biometric',
-                'block_access'
+                'block_access',
             ])->nullable();
             $table->boolean('is_successful')->default(false);
             $table->timestamp('login_timestamp')->useCurrent();

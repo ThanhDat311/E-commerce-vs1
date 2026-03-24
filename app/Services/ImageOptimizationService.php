@@ -32,8 +32,8 @@ class ImageOptimizationService
         $encoded = $image->toWebp($this->quality);
 
         // Generate a unique filename with .webp extension
-        $filename = pathinfo($file->hashName(), PATHINFO_FILENAME) . '.webp';
-        $path = $directory . '/' . $filename;
+        $filename = pathinfo($file->hashName(), PATHINFO_FILENAME).'.webp';
+        $path = $directory.'/'.$filename;
 
         // Store the optimized image in public disk
         Storage::disk('public')->put($path, (string) $encoded);
@@ -56,7 +56,7 @@ class ImageOptimizationService
         return response($disk->get($path), 200, [
             'Content-Type' => $disk->mimeType($path) ?? 'image/webp',
             'Cache-Control' => 'public, max-age=2592000, immutable',
-            'Last-Modified' => gmdate('D, d M Y H:i:s', $disk->lastModified($path)) . ' GMT',
+            'Last-Modified' => gmdate('D, d M Y H:i:s', $disk->lastModified($path)).' GMT',
         ]);
     }
 }

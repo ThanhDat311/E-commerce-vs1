@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+
 // use App\Models\ContactMessage; // Bỏ comment nếu bạn muốn lưu vào DB
 
 class ContactController extends Controller
@@ -43,6 +44,6 @@ class ContactController extends Controller
         // \Mail::to(config('mail.from.address'))->send(new \App\Mail\ContactFormSubmitted($validated));
 
         // 3. Quay lại trang trước với thông báo thành công
-        return back()->with('success', 'Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi sớm nhất có thể.');
+        return back()->with('success', __('messages.contact_success'));
     }
 }

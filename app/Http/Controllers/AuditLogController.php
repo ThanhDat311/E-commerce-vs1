@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
-use App\Models\Order;
-use App\Models\Product;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -154,11 +152,11 @@ class AuditLogController extends Controller
         $logs = $query->get();
 
         // Create CSV with proper escaping
-        $filename = 'audit-logs-' . date('Y-m-d-H-i-s') . '.csv';
+        $filename = 'audit-logs-'.date('Y-m-d-H-i-s').'.csv';
 
         $headers = [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ];
 
         $callback = function () use ($logs) {
@@ -175,7 +173,7 @@ class AuditLogController extends Controller
                 'User Agent',
                 'Created At',
                 'Old Values',
-                'New Values'
+                'New Values',
             ]);
 
             // Data rows
@@ -190,7 +188,7 @@ class AuditLogController extends Controller
                     $log->user_agent ?? '',
                     $log->created_at->format('Y-m-d H:i:s'),
                     is_array($log->old_values) || is_object($log->old_values) ? json_encode($log->old_values) : ($log->old_values ?? ''),
-                    is_array($log->new_values) || is_object($log->new_values) ? json_encode($log->new_values) : ($log->new_values ?? '')
+                    is_array($log->new_values) || is_object($log->new_values) ? json_encode($log->new_values) : ($log->new_values ?? ''),
                 ]);
             }
 

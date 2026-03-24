@@ -56,7 +56,7 @@ class StoreFilterTest extends TestCase
         $product1 = Product::factory()->create(['name' => 'Product A', 'vendor_id' => $vendor1->id]);
         $product2 = Product::factory()->create(['name' => 'Product B', 'vendor_id' => $vendor2->id]);
 
-        $response = $this->get('/shop?brands[]=' . $vendor1->id);
+        $response = $this->get('/shop?brands[]='.$vendor1->id);
 
         $response->assertStatus(200);
         $response->assertSee('Product A');

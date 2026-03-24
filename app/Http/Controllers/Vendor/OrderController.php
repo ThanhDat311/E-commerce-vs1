@@ -55,7 +55,7 @@ class OrderController extends Controller
             return $item->product->vendor_id === $vendor->id;
         });
 
-        if (!$hasVendorProduct) {
+        if (! $hasVendorProduct) {
             abort(403, 'Unauthorized to view this order');
         }
 
@@ -78,20 +78,20 @@ class OrderController extends Controller
             return $item->product->vendor_id === $vendor->id;
         });
 
-        if (!$hasVendorProduct) {
+        if (! $hasVendorProduct) {
             abort(403, 'Unauthorized to update this order');
         }
 
         $validated = $request->validate([
-            'order_status' => 'required|in:pending,processing,completed,cancelled,shipped'
+            'order_status' => 'required|in:pending,processing,completed,cancelled,shipped',
         ]);
 
         // Record the status change in history with correct field names
         OrderHistory::create([
             'order_id' => $order->id,
             'user_id' => $vendor->id,
-            'action' => 'Status changed from ' . $order->order_status . ' to ' . $validated['order_status'],
-            'description' => $request->input('notes', 'Status updated by vendor')
+            'action' => 'Status changed from '.$order->order_status.' to '.$validated['order_status'],
+            'description' => $request->input('notes', 'Status updated by vendor'),
         ]);
 
         $order->update(['order_status' => $validated['order_status']]);

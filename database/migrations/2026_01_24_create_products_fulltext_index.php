@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * Adds full-text index to products table for columns: name, description
      * Improves performance of full-text search queries in MySQL
      */

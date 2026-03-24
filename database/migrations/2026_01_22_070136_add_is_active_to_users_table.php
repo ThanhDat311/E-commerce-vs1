@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             // Thêm cột is_active (boolean), mặc định là true (được phép đăng nhập)
             // Đặt sau cột password cho dễ nhìn
-            if (!Schema::hasColumn('users', 'is_active')) {
+            if (! Schema::hasColumn('users', 'is_active')) {
                 $table->boolean('is_active')->default(true)->after('password');
             }
         });

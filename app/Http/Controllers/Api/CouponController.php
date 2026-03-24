@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 
 /**
  * CouponController
- * 
+ *
  * API endpoints for coupon validation and application
  * Handles AJAX requests from checkout page
  */
@@ -24,10 +24,9 @@ class CouponController extends Controller
 
     /**
      * Validate coupon code and get discount details
-     * 
+     *
      * POST /api/v1/coupons/validate
-     * 
-     * @param Request $request
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function validateCoupon(Request $request)
@@ -82,15 +81,15 @@ class CouponController extends Controller
 
     /**
      * Get coupon usage history for authenticated user
-     * 
+     *
      * GET /api/v1/coupons/history
-     * 
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function history()
     {
         try {
-            if (!Auth::check()) {
+            if (! Auth::check()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Unauthenticated',
@@ -121,16 +120,15 @@ class CouponController extends Controller
 
     /**
      * Check if user has already used a specific coupon
-     * 
+     *
      * POST /api/v1/coupons/check-usage
-     * 
-     * @param Request $request
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function checkUsage(Request $request)
     {
         try {
-            if (!Auth::check()) {
+            if (! Auth::check()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Unauthenticated',

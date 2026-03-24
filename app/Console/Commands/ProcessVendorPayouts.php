@@ -109,14 +109,14 @@ class ProcessVendorPayouts extends Command
             return;
         }
 
-        $filename = 'payouts_' . $periodStart->format('Y-m') . '_' . now()->format('YmdHis') . '.csv';
+        $filename = 'payouts_'.$periodStart->format('Y-m').'_'.now()->format('YmdHis').'.csv';
         $directory = storage_path('app/payouts');
 
         if (! is_dir($directory)) {
             mkdir($directory, 0755, true);
         }
 
-        $path = $directory . '/' . $filename;
+        $path = $directory.'/'.$filename;
         $handle = fopen($path, 'w');
 
         // Header row
