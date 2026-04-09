@@ -79,3 +79,6 @@ The system already has test accounts for you. The password for all accounts is `
 
 ## 🔗 Connect to the AI System
 *Note:* To use the smart security features (for login and checkout), you must run the **E-commerce-AI** app too. Please read the `README.md` file in the AI folder for more details.
+
+---
+*(You can view the source code here: https://github.com/ThanhDat311/E-commerce-AI.git)*
